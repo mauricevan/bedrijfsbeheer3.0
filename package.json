@@ -1,7 +1,7 @@
 {
   "name": "bedrijfsbeheer-dashboard",
   "private": true,
-  "version": "0.0.0",
+  "version": "3.0.0",
   "type": "module",
   "homepage": "https://mauricevan.github.io/bedrijfsbeheer",
   "scripts": {
