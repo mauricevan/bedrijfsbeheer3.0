@@ -45,7 +45,7 @@ docs/
 │   └── security.md
 │
 ├── 03-modules/                 # Module documentatie
-│   ├── overview.md
+│   ├── README.md
 │   ├── dashboard.md
 │   ├── inventory.md
 │   └── ... (13 files totaal)
@@ -58,11 +58,11 @@ docs/
 │   └── mobile-optimization.md
 │
 ├── 05-api/                     # API documentatie
-│   ├── overview.md
+│   ├── README.md
 │   └── mock-server.md
 │
 └── 06-changelog/               # Versiegeschiedenis
-    ├── overview.md
+    ├── README.md
     ├── v5.x.md
     ├── v4.x.md
     ├── v3.x.md
@@ -92,7 +92,7 @@ docs/
 | UI/UX update | Relevante module file | 🔶 Medium |
 | Bug fix | Changelog | 🔷 Laag |
 | Performance | `02-architecture/*.md` | 🔶 Medium |
-| API change | `05-api/overview.md` | ⚠️ Hoog |
+| API change | `05-api/README.md` | ⚠️ Hoog |
 | New version release | `06-changelog/*.md` | ⚠️ Hoog |
 
 ### Workflow
@@ -200,7 +200,7 @@ DELETE /api/module-name/:id
 
 ### Stap 2: Update Overview
 
-**File:** `/docs/03-modules/overview.md`
+**File:** `/docs/03-modules/README.md`
 
 Voeg toe aan lijst:
 ```markdown
@@ -360,7 +360,7 @@ Patch (x.y.Z): Bug fixes, kleine updates
 
 **Stap 3: Update Overview**
 
-**Locatie:** `/docs/06-changelog/overview.md`
+**Locatie:** `/docs/06-changelog/README.md`
 
 Update de version table en current version info.
 
@@ -416,7 +416,7 @@ docs/
 NA (georganiseerd):
 docs/
 └── 07-advanced-features/
-    ├── overview.md
+    ├── README.md
     ├── feature-1.md
     ├── feature-2.md
     ├── feature-3.md
@@ -701,7 +701,7 @@ const example: ExampleType = { ... };
 - Breaking changes in code zonder docs update
 - Nieuwe module zonder documentatie
 - Permission changes zonder update in user-roles.md
-- API changes zonder update in api/overview.md
+- API changes zonder update in api/README.md
 - Versie mismatch tussen code en docs
 
 ---

@@ -8,20 +8,18 @@ Volledig geïntegreerd boekhoudsysteem met offertes, facturen, grootboekrekening
 
 ---
 
-## Module 5: Boekhouding, Offertes & Facturen
-
-### Transacties Tab
+## Transacties Tab
 
 - ✅ **Overzicht transacties** (inkomsten/uitgaven)
 - ✅ **Filter op type** (alle/inkomsten/uitgaven)
 - ✅ **KPI cards** (totale inkomsten, uitgaven, netto winst)
 - ✅ **Transactie historie** met datum
 
-### Offertes Tab
+## Offertes Tab
 
 🆕 **UITGEBREID MET OVERZICHT MODALS V4.7 + EMAIL INTEGRATIE V5.8**
 
-#### Basis Offerte Beheer
+### Basis Offerte Beheer
 
 - ✅ **Offertes maken en beheren** met meerdere items
 - ✅ **Items uit voorraad selecteren** - Dropdown met alle voorraad items inclusief prijzen
@@ -29,7 +27,7 @@ Volledig geïntegreerd boekhoudsysteem met offertes, facturen, grootboekrekening
 - ✅ **Werkuren toevoegen (optioneel)** - Uren, uurtarief en automatische berekening
 - ✅ **BTW berekeningen** - Instelbaar BTW percentage (standaard 21%)
 
-#### Prijsweergave
+### Prijsweergave
 
 - ✅ **Duidelijke prijsweergave:**
   - Subtotaal (excl. BTW)
@@ -37,7 +35,7 @@ Volledig geïntegreerd boekhoudsysteem met offertes, facturen, grootboekrekening
   - Totaal (incl. BTW)
 - ✅ **Automatische berekeningen** - Real-time updates bij aanpassingen
 
-#### Status & Beheer
+### Status & Beheer
 
 - ✅ **Status tracking**: draft → sent → approved/rejected
 - ✅ **Klant koppeling**
@@ -46,7 +44,7 @@ Volledig geïntegreerd boekhoudsysteem met offertes, facturen, grootboekrekening
 - ✅ **Notities per offerte**
 - ✅ **Status updaten** (admin)
 
-#### Conversie Functies
+### Conversie Functies
 
 - ✅ **Omzetten naar factuur** - Geaccepteerde offertes direct converteren
 - 🆕 **Omzetten naar werkorder** - Geaccepteerde offertes worden werkorder met alle details
@@ -54,13 +52,13 @@ Volledig geïntegreerd boekhoudsysteem met offertes, facturen, grootboekrekening
 - 🆕 **Live synchronisatie** - Wijzigingen in offerte worden doorgevoerd naar werkorder
 - 🆕 **Voltooiing indicator** - Visueel zien wanneer werkorder voltooid is
 
-#### Clone Functionaliteit
+### Clone Functionaliteit
 
 - 🆕 **Offerte clonen** - Dupliceer bestaande offerte met automatisch nieuw ID en datum 🔄 **V4.6**
 - 🆕 **Aanpasbaar tijdens clonen** - Wijzig klant, items, prijzen tijdens het clonen 🔄 **V4.6**
 - 🆕 **Automatische kloon bij acceptatie** (V5.6) - Checkbox in acceptatie modal om offerte automatisch te klonen voor volgende periode (+30 dagen)
 
-#### Statistieken & Overzichten
+### Statistieken & Overzichten
 
 - 🆕 **Offerte statistieken** - Totaal geoffreerd, geaccepteerd, verzonden, verlopen (klikbaar)
 - 🆕 **Overzicht Modals** - Bij klikken op statistiek badges:
@@ -70,7 +68,7 @@ Volledig geïntegreerd boekhoudsysteem met offertes, facturen, grootboekrekening
   - 📋 Clonen knop bij elke offerte
   - 📤 Naar Werkorder knop (alleen voor approved/sent zonder werkorder)
 
-#### Email Integratie (V5.8)
+### Email Integratie (V5.8)
 
 - 🆕 **Email integratie** - Sleep .eml bestanden naar offertes tab:
   - Automatische offerte creatie vanuit emails
@@ -78,11 +76,11 @@ Volledig geïntegreerd boekhoudsysteem met offertes, facturen, grootboekrekening
   - Klant selectie of creatie vanuit email adres
   - Preview modal voor verificatie voordat offerte wordt aangemaakt
 
-### Facturen Tab
+## Facturen Tab
 
 🆕 **NIEUW TOEGEVOEGD + WERKORDER INTEGRATIE V4.0 + OVERZICHT MODAL V4.7**
 
-#### Statistieken Dashboard
+### Statistieken Dashboard
 
 - ✅ **4 Statistiek Cards:**
   - **Totaal Gefactureerd** (€ alle facturen) - Klikbaar → Overzicht modal
@@ -90,7 +88,7 @@ Volledig geïntegreerd boekhoudsysteem met offertes, facturen, grootboekrekening
   - **Uitstaand** (€ en aantal verzonden/verlopen) - Klikbaar → Overzicht modal
   - **Verlopen** (€ en aantal met rode alert) - Klikbaar → Overzicht modal
 
-#### Overzicht Modals
+### Overzicht Modals
 
 - 🆕 **Overzicht Modals** - Bij klikken op statistiek cards:
   - Filter op klantnaam, datum, bedrag
@@ -99,7 +97,7 @@ Volledig geïntegreerd boekhoudsysteem met offertes, facturen, grootboekrekening
   - 📋 Clonen knop bij elke factuur
   - 📤 Naar Werkorder knop (alleen voor sent/draft zonder werkorder)
 
-#### Factuur Aanmaken
+### Factuur Aanmaken
 
 - ✅ **Automatische factuurnummer generatie** (2025-001, 2025-002, etc.)
 - ✅ **Handmatig facturen aanmaken:**
@@ -110,7 +108,7 @@ Volledig geïntegreerd boekhoudsysteem met offertes, facturen, grootboekrekening
   - Factuurdatum en vervaldatum
   - Betalingsvoorwaarden (14/30 dagen)
 
-#### Offerte Conversie
+### Offerte Conversie
 
 - ✅ **Offertes omzetten naar facturen:**
   - Paarse knop "🧾 Omzetten naar Factuur" bij geaccepteerde offertes
@@ -118,21 +116,21 @@ Volledig geïntegreerd boekhoudsysteem met offertes, facturen, grootboekrekening
   - Link naar originele offerte behouden
   - Betalingstermijn automatisch berekenen
 
-#### Status Beheer
+### Status Beheer
 
 - ✅ **Status beheer:**
   - Draft → Verzenden → Betaald
   - Overdue status voor verlopen facturen
   - Annuleren functionaliteit
 
-#### Betalings Tracking
+### Betalings Tracking
 
 - ✅ **Betalings tracking:**
   - Factuurdatum (issue date)
   - Vervaldatum (due date)
   - Betaaldatum (paid date) - automatisch bij markeren als betaald
 
-#### Visuele Indicatoren
+### Visuele Indicatoren
 
 - ✅ **Visuele indicatoren:**
   - Rode border voor verlopen facturen
@@ -140,7 +138,7 @@ Volledig geïntegreerd boekhoudsysteem met offertes, facturen, grootboekrekening
   - Blauwe link naar originele offerte
   - Status badges met kleuren
 
-#### Factuur Details
+### Factuur Details
 
 - ✅ **Factuur details:**
   - Items met voorraad koppeling
@@ -149,7 +147,7 @@ Volledig geïntegreerd boekhoudsysteem met offertes, facturen, grootboekrekening
   - Notities per factuur
   - Betalingsvoorwaarden zichtbaar
 
-#### Werkorder Integratie
+### Werkorder Integratie
 
 - 🆕 **Omzetten naar werkorder** - Verzonden facturen worden werkorder
 - 🆕 **Werkorder status tracking** - Zie de status van gekoppelde werkorder in factuur
@@ -158,13 +156,13 @@ Volledig geïntegreerd boekhoudsysteem met offertes, facturen, grootboekrekening
 - 🆕 **Tussentijdse aanpassing** - Facturen en werkorders blijven gesynchroniseerd
 - 🆕 **Automatische factuur generatie** - Voltooide werkorders worden automatisch omgezet naar facturen
 
-#### Herinneringen & Automatisering
+### Herinneringen & Automatisering
 
 - 🆕 **Automatische herinneringsplanning** (V5.6) - Bij verzenden worden herinneringsdatums automatisch berekend (+7 en +14 dagen na vervaldatum)
 - 🆕 **Herinnering nu sturen** (V5.6) - Handmatige trigger voor directe herinnering met template tekst
 - 🆕 **Betaalde facturen verbergen** (V5.6) - Betaalde facturen zijn alleen zichtbaar in Boekhouding & Dossier, niet in Facturen-tab
 
-#### Toekomstige Features
+### Toekomstige Features
 
 - 🔄 **Digitale goedkeuring** door klant
 - 🔄 **PDF generatie**

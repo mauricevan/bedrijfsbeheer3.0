@@ -18,7 +18,7 @@ Start hier als je het systeem nog niet kent:
 
 1. [📖 Quick Start](./01-getting-started/quick-start.md) (5 min)
 2. [🔐 Login & Demo Accounts](./01-getting-started/demo-accounts.md) (2 min)
-3. [📚 Modules Overzicht](./03-modules/overview.md) (5 min)
+3. [📚 Modules Overzicht](./03-modules/README.md) (5 min)
 
 **Next:** [Bekijk wat jouw rol kan doen →](./04-features/user-roles.md)
 
@@ -31,12 +31,6 @@ Start hier als je gaat ontwikkelen:
 2. [🏗️ Technical Stack](./02-architecture/technical-stack.md) (5 min) - React 19, TypeScript, Vite
 3. [📝 Code Conventions](../CONVENTIONS.md) (5 min) - **VERPLICHT TE LEZEN**
 4. [🤖 AI Guide](./AI_GUIDE.md) (10 min) - Voor AI-assisted development
-5. [📖 Glossary](./GLOSSARY.md) (5 min) - Terminologie
-
-**Multi-Agent Development?**
-- [🤖 Multi-Agent Workflow](./MULTI_AGENT_WORKFLOW.md) - Agent coördinatie
-- [🎯 Task Boundaries](./AGENT_TASK_BOUNDARIES.md) - Module ownership
-- [🔒 State Management](./AGENT_STATE_MANAGEMENT.md) - Locking mechanism
 
 **Next:** [Security Guide →](./02-architecture/security.md) | [State Management →](./02-architecture/state-management.md)
 
@@ -77,14 +71,13 @@ Kies je rol:
 - [File Structure](./02-architecture/file-structure.md)
 - [State Management](./02-architecture/state-management.md)
 - [Security](./02-architecture/security.md) ⚠️ **CRITICAL**
-- [Security OWASP Mapping](./02-architecture/security-owasp-mapping.md)
 
 </details>
 
 <details>
 <summary><b>03. Modules</b> - 12 Bedrijfsmodules</summary>
 
-- [Overview](./03-modules/overview.md)
+- [Overview](./03-modules/README.md)
 - [Dashboard](./03-modules/dashboard.md) - Email Drop Zone (V5.8)
 - [Voorraadbeheer](./03-modules/inventory.md) - 3 SKU types
 - [Werkorders](./03-modules/workorders.md) - Kanban workboard
@@ -114,7 +107,7 @@ Kies je rol:
 <details>
 <summary><b>05. API</b> - Backend Integratie (Toekomstig)</summary>
 
-- [API Overview](./05-api/overview.md)
+- [API Overview](./05-api/README.md)
 - [Mock Server](./05-api/mock-server.md)
 
 </details>
@@ -122,10 +115,10 @@ Kies je rol:
 <details>
 <summary><b>06. Changelog</b> - Versiegeschiedenis</summary>
 
-- [Overview](./06-changelog/overview.md)
+- [Overview](./06-changelog/README.md)
 - [Version 5.x](./06-changelog/v5.x.md) - Email, Categorieën
 - [Version 4.x](./06-changelog/v4.x.md) - Werkorder Integratie
-- [Older Versions](./06-changelog/overview.md)
+- [Older Versions](./06-changelog/README.md)
 
 </details>
 
@@ -157,13 +150,11 @@ START HERE
 |----------|------|--------------|
 | 🚀 **Start** | [Quick Start](./01-getting-started/quick-start.md) | Begin binnen 5 minuten |
 | 📝 **Code** | [Conventions](../CONVENTIONS.md) | Code style & patterns |
-| 📖 **Terms** | [Glossary](./GLOSSARY.md) | Terminologie A-Z |
 | 🤖 **AI** | [AI Guide](./AI_GUIDE.md) | Voor AI assistents |
-| 🤖 **Multi-Agent** | [Multi-Agent Workflow](./MULTI_AGENT_WORKFLOW.md) | Agent samenwerking |
-| 🔒 **Security** | [Security OWASP](./02-architecture/security-owasp-mapping.md) | OWASP Top 10 |
+| 🔒 **Security** | [Security](./02-architecture/security.md) | Security best practices |
 | 👥 **Roles** | [User Roles](./04-features/user-roles.md) | Rechten matrix |
 | 📱 **Mobile** | [Mobile Guide](./04-features/mobile-optimization.md) | Touch-optimized |
-| 🔄 **Changelog** | [Version History](./06-changelog/overview.md) | Alle releases |
+| 🔄 **Changelog** | [Version History](./06-changelog/README.md) | Alle releases |
 
 ---
 
@@ -172,11 +163,8 @@ START HERE
 **Q: Waar begin ik als nieuwe developer?**
 A: [Installation](./01-getting-started/installation.md) → [CONVENTIONS.md](../CONVENTIONS.md) → [AI_GUIDE.md](./AI_GUIDE.md)
 
-**Q: Hoe werk ik samen met andere AI agents?**
-A: Lees [MULTI_AGENT_WORKFLOW.md](./MULTI_AGENT_WORKFLOW.md) en [AGENT_TASK_BOUNDARIES.md](./AGENT_TASK_BOUNDARIES.md)
-
 **Q: Wat zijn de security risico's?**
-A: Check [Security](./02-architecture/security.md) en [OWASP Mapping](./02-architecture/security-owasp-mapping.md)
+A: Check [Security](./02-architecture/security.md) voor alle beveiligingsmaatregelen
 
 **Q: Welke rechten heeft mijn rol?**
 A: Zie [User Roles](./04-features/user-roles.md) voor complete matrix
