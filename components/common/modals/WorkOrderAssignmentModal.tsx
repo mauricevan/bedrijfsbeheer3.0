@@ -35,7 +35,6 @@ export const WorkOrderAssignmentModal: React.FC<WorkOrderAssignmentModalProps> =
   const [notes, setNotes] = useState('');
   const [errors, setErrors] = useState<string[]>([]);
 
-  // Set default scheduled date (today + 7 days)
   useEffect(() => {
     if (isOpen && !scheduledDate) {
       const defaultDate = new Date();
@@ -44,42 +43,20 @@ export const WorkOrderAssignmentModal: React.FC<WorkOrderAssignmentModalProps> =
     }
   }, [isOpen]);
 
-  const validateAssignment = (): { isValid: boolean; errors: string[] } => {
-    const validationErrors: string[] = [];
-
-    if (!selectedAssignee) {
-      validationErrors.push('Selecteer een medewerker');
-    }
-
-    return {
-      isValid: validationErrors.length === 0,
-      errors: validationErrors,
-    };
-  };
-
   const handleAssign = () => {
-    const validation = validateAssignment();
-
-    if (!validation.isValid) {
-      setErrors(validation.errors);
+    if (!selectedAssignee) {
+      setErrors(['Selecteer een medewerker']);
       return;
     }
 
-    const assignmentData: WorkOrderAssignmentData = {
+    onAssign({
       assigneeId: selectedAssignee,
       scheduledDate: scheduledDate || undefined,
       location: location || undefined,
       priority,
       notes: notes || undefined,
-    };
-
-    onAssign(assignmentData);
+    });
     handleReset();
-  };
-
-  const handleCancel = () => {
-    handleReset();
-    onClose();
   };
 
   const handleReset = () => {
@@ -93,9 +70,20 @@ export const WorkOrderAssignmentModal: React.FC<WorkOrderAssignmentModalProps> =
     setErrors([]);
   };
 
+  const handleCancel = () => {
+    handleReset();
+    onClose();
+  };
+
   if (!isOpen) return null;
 
   const today = new Date().toISOString().split('T')[0];
+  const priorityConfig = {
+    low: { label: '⬇️ Laag', border: 'gray-400', bg: 'gray-100', text: 'gray-800' },
+    normal: { label: '➡️ Normaal', border: 'blue-400', bg: 'blue-100', text: 'blue-800' },
+    high: { label: '⬆️ Hoog', border: 'orange-400', bg: 'orange-100', text: 'orange-800' },
+    urgent: { label: '🔥 Urgent', border: 'red-400', bg: 'red-100', text: 'red-800' },
+  };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60] p-4">
@@ -105,13 +93,10 @@ export const WorkOrderAssignmentModal: React.FC<WorkOrderAssignmentModalProps> =
             <span>🔧</span>
             <span>Werkorder Toewijzen</span>
           </h2>
-          <p className="text-sm text-gray-600 mt-1">
-            Wijs een medewerker toe aan deze werkorder
-          </p>
+          <p className="text-sm text-gray-600 mt-1">Wijs een medewerker toe aan deze werkorder</p>
         </div>
 
         <div className="p-6 space-y-6">
-          {/* Context Info */}
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
             <h3 className="font-semibold text-blue-900 mb-3 flex items-center gap-2">
               <span>💼</span>
@@ -146,15 +131,12 @@ export const WorkOrderAssignmentModal: React.FC<WorkOrderAssignmentModalProps> =
             </div>
           </div>
 
-          {/* Error Display */}
           {errors.length > 0 && (
             <div className="bg-red-50 border border-red-200 rounded-lg p-3">
               <div className="flex items-start gap-2">
                 <span className="text-red-600">⚠️</span>
                 <div className="flex-1">
-                  <p className="text-sm font-semibold text-red-800 mb-1">
-                    Corrigeer de volgende fouten:
-                  </p>
+                  <p className="text-sm font-semibold text-red-800 mb-1">Corrigeer de volgende fouten:</p>
                   <ul className="text-sm text-red-700 list-disc list-inside">
                     {errors.map((error, idx) => (
                       <li key={idx}>{error}</li>
@@ -165,7 +147,6 @@ export const WorkOrderAssignmentModal: React.FC<WorkOrderAssignmentModalProps> =
             </div>
           )}
 
-          {/* Medewerker Dropdown (VERPLICHT) */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Medewerker * <span className="text-red-600">verplicht</span>
@@ -177,9 +158,7 @@ export const WorkOrderAssignmentModal: React.FC<WorkOrderAssignmentModalProps> =
                 setErrors([]);
               }}
               className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary ${
-                errors.length > 0 && !selectedAssignee
-                  ? 'border-red-500'
-                  : 'border-gray-300'
+                errors.length > 0 && !selectedAssignee ? 'border-red-500' : 'border-gray-300'
               }`}
             >
               <option value="">-- Kies een medewerker --</option>
@@ -190,17 +169,12 @@ export const WorkOrderAssignmentModal: React.FC<WorkOrderAssignmentModalProps> =
               ))}
             </select>
             {errors.length > 0 && !selectedAssignee && (
-              <p className="text-xs text-red-600 mt-1">
-                ⚠️ Je moet een medewerker selecteren
-              </p>
+              <p className="text-xs text-red-600 mt-1">⚠️ Je moet een medewerker selecteren</p>
             )}
           </div>
 
-          {/* Geplande Datum (Optioneel) */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Geplande Datum
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Geplande Datum</label>
             <input
               type="date"
               value={scheduledDate}
@@ -208,16 +182,11 @@ export const WorkOrderAssignmentModal: React.FC<WorkOrderAssignmentModalProps> =
               min={today}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
             />
-            <p className="text-xs text-gray-500 mt-1">
-              Standaard: 7 dagen vanaf vandaag
-            </p>
+            <p className="text-xs text-gray-500 mt-1">Standaard: 7 dagen vanaf vandaag</p>
           </div>
 
-          {/* Locatie (Optioneel) */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Locatie
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Locatie</label>
             <input
               type="text"
               value={location}
@@ -227,43 +196,28 @@ export const WorkOrderAssignmentModal: React.FC<WorkOrderAssignmentModalProps> =
             />
           </div>
 
-          {/* Prioriteit (Optioneel) */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Prioriteit
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Prioriteit</label>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-              {(['low', 'normal', 'high', 'urgent'] as const).map((p) => (
+              {(Object.keys(priorityConfig) as Array<keyof typeof priorityConfig>).map((p) => (
                 <button
                   key={p}
                   type="button"
                   onClick={() => setPriority(p)}
                   className={`px-4 py-2 rounded-lg border-2 transition-all text-sm font-medium ${
                     priority === p
-                      ? p === 'low'
-                        ? 'border-gray-400 bg-gray-100 text-gray-800'
-                        : p === 'normal'
-                        ? 'border-blue-400 bg-blue-100 text-blue-800'
-                        : p === 'high'
-                        ? 'border-orange-400 bg-orange-100 text-orange-800'
-                        : 'border-red-400 bg-red-100 text-red-800'
+                      ? `border-${priorityConfig[p].border} bg-${priorityConfig[p].bg} text-${priorityConfig[p].text}`
                       : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
                   }`}
                 >
-                  {p === 'low' && '⬇️ Laag'}
-                  {p === 'normal' && '➡️ Normaal'}
-                  {p === 'high' && '⬆️ Hoog'}
-                  {p === 'urgent' && '🔥 Urgent'}
+                  {priorityConfig[p].label}
                 </button>
               ))}
             </div>
           </div>
 
-          {/* Notities (Optioneel) */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Notities
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Notities</label>
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
@@ -272,13 +226,10 @@ export const WorkOrderAssignmentModal: React.FC<WorkOrderAssignmentModalProps> =
               rows={4}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary resize-none"
             />
-            <p className="text-xs text-gray-500 mt-1">
-              {notes.length}/500 karakters
-            </p>
+            <p className="text-xs text-gray-500 mt-1">{notes.length}/500 karakters</p>
           </div>
         </div>
 
-        {/* Action Buttons */}
         <div className="p-6 border-t border-gray-200 flex gap-3">
           <button
             onClick={handleAssign}

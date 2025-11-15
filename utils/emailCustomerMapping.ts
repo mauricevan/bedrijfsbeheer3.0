@@ -1,7 +1,3 @@
-/**
- * Email Customer Mapping Utility
- * Persistent storage voor email → customer koppelingen
- */
 
 export interface EmailCustomerMapping {
   email: string;
@@ -15,9 +11,6 @@ export interface EmailCustomerMapping {
 
 const STORAGE_KEY = 'emailCustomerMappings';
 
-/**
- * Opslaan email → customer mapping
- */
 export const saveEmailCustomerMapping = (
   email: string,
   customerId: string,
@@ -43,16 +36,12 @@ export const saveEmailCustomerMapping = (
   }
 };
 
-/**
- * Ophalen customerId op basis van email
- */
 export const getCustomerByEmail = (email: string): string | null => {
   try {
     const mappings = getAllEmailMappings();
     const mapping = mappings.find((m) => m.email.toLowerCase() === email.toLowerCase());
 
     if (mapping) {
-      // Update lastUsed en usageCount
       mapping.lastUsed = new Date().toISOString();
       mapping.usageCount += 1;
       localStorage.setItem(STORAGE_KEY, JSON.stringify(mappings));
@@ -66,9 +55,6 @@ export const getCustomerByEmail = (email: string): string | null => {
   }
 };
 
-/**
- * Update bestaande mapping naar nieuwe customer
- */
 export const updateEmailCustomerMapping = (
   email: string,
   newCustomerId: string,
@@ -90,9 +76,6 @@ export const updateEmailCustomerMapping = (
   }
 };
 
-/**
- * Alle mappings ophalen
- */
 export const getAllEmailMappings = (): EmailCustomerMapping[] => {
   try {
     const data = localStorage.getItem(STORAGE_KEY);
@@ -103,9 +86,6 @@ export const getAllEmailMappings = (): EmailCustomerMapping[] => {
   }
 };
 
-/**
- * Verwijder mapping op basis van email
- */
 export const deleteEmailMapping = (email: string): void => {
   try {
     const mappings = getAllEmailMappings();
@@ -116,9 +96,6 @@ export const deleteEmailMapping = (email: string): void => {
   }
 };
 
-/**
- * Statistieken over mappings
- */
 export const getMappingStats = () => {
   try {
     const mappings = getAllEmailMappings();
@@ -145,10 +122,8 @@ export const getMappingStats = () => {
   }
 };
 
-// Backwards compatibility - behoud oude functienamen
 export const loadEmailMappings = getAllEmailMappings;
 export const saveEmailMapping = saveEmailCustomerMapping;
 export const findCustomerByEmail = getCustomerByEmail;
 export const removeEmailMapping = deleteEmailMapping;
-
 

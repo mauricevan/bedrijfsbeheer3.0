@@ -1,12 +1,5 @@
 import type { Quote, QuoteItem, QuoteLabor, Invoice, Transaction } from "../../../types";
 
-/**
- * Calculate totals for a quote based on items and labor
- * @param items - Array of quote items
- * @param labor - Array of quote labor entries
- * @param vatRate - VAT rate percentage (default: 21)
- * @returns Object with subtotal, vatAmount, and total
- */
 export const calculateQuoteTotals = (
   items: QuoteItem[],
   labor: QuoteLabor[],
@@ -21,13 +14,6 @@ export const calculateQuoteTotals = (
   return { subtotal, vatAmount, total };
 };
 
-/**
- * Calculate totals for an invoice based on items and labor
- * @param items - Array of invoice items
- * @param labor - Array of invoice labor entries
- * @param vatRate - VAT rate percentage (default: 21)
- * @returns Object with subtotal, vatAmount, and total
- */
 export const calculateInvoiceTotals = (
   items: QuoteItem[],
   labor: QuoteLabor[],
@@ -42,11 +28,6 @@ export const calculateInvoiceTotals = (
   return { subtotal, vatAmount, total };
 };
 
-/**
- * Generate a unique invoice number based on year and existing invoices
- * @param invoices - Array of existing invoices
- * @returns Invoice number in format "YYYY-XXX"
- */
 export const generateInvoiceNumber = (invoices: Invoice[]): string => {
   const year = new Date().getFullYear();
   const existingNumbers = invoices
@@ -59,11 +40,6 @@ export const generateInvoiceNumber = (invoices: Invoice[]): string => {
   return `${year}-${String(nextNumber).padStart(3, "0")}`;
 };
 
-/**
- * Calculate transaction statistics
- * @param transactions - Array of transactions
- * @returns Object with totalIncome, totalExpense, and netProfit
- */
 export const calculateTransactionStats = (
   transactions: Transaction[]
 ): { totalIncome: number; totalExpense: number; netProfit: number } => {
@@ -80,11 +56,6 @@ export const calculateTransactionStats = (
   return { totalIncome, totalExpense, netProfit };
 };
 
-/**
- * Calculate invoice statistics
- * @param invoices - Array of invoices
- * @returns Object with various invoice statistics
- */
 export const calculateInvoiceStats = (invoices: Invoice[]): {
   totalInvoiced: number;
   totalPaid: number;
@@ -118,11 +89,6 @@ export const calculateInvoiceStats = (invoices: Invoice[]): {
   };
 };
 
-/**
- * Calculate quote statistics
- * @param quotes - Array of quotes
- * @returns Object with various quote statistics
- */
 export const calculateQuoteStats = (quotes: Quote[]): {
   totalQuoted: number;
   totalApproved: number;
@@ -155,11 +121,6 @@ export const calculateQuoteStats = (quotes: Quote[]): {
   };
 };
 
-/**
- * Calculate average payment days for paid invoices
- * @param invoices - Array of invoices
- * @returns Average payment days (rounded)
- */
 export const calculateAveragePaymentDays = (invoices: Invoice[]): number => {
   const paidInvoicesWithDates = invoices.filter(
     (inv) => inv.status === "paid" && inv.issueDate && inv.paidDate
