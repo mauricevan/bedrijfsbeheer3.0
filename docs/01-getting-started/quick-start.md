@@ -104,6 +104,6 @@ npm install && npm run dev
 
 ## Volgende Stappen
 
-- [Modules Overzicht](../03-modules/overview.md) - Leer meer over alle modules
+- [Modules Overzicht](../03-modules/README.md) - Leer meer over alle modules
 - [User Roles](../04-features/user-roles.md) - Begrijp de rechten per rol
 - [Workflows](../04-features/workorder-workflow.md) - Gedetailleerde workflow documentatie
