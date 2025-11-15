@@ -1,3 +1,6 @@
+/* Tailwind CSS v4 import */
+@import "tailwindcss";
+
 /* Base styles and mobile optimizations */
 * {
   -webkit-tap-highlight-color: transparent;
@@ -7,6 +10,9 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
+  /* Subtle gradient background - Professional but Human */
+  background: linear-gradient(to bottom right, #f9fafb 0%, #ffffff 50%, #eff6ff 100%);
+  background-attachment: fixed;
 }
 
 /* Touch-friendly button minimum size (48x48px for accessibility) */

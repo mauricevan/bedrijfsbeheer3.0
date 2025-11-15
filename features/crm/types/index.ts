@@ -1,5 +1,5 @@
 // features/crm/types/index.ts
-export type { Lead, LeadStatus, Customer, Interaction, InteractionType, Task, TaskPriority, TaskStatus, Employee, User, Email } from '../../../types';
+export type { Lead, LeadStatus, Customer, Interaction, InteractionType, Task, TaskPriority, TaskStatus, Employee, User, Email } from '../../types';
 
 export interface CRMProps {
   leads: any[];

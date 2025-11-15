@@ -1,5 +1,5 @@
 // features/inventory/index.ts
-export * from '../../../types';
+export * from '../../types';
 export const calculateStockStatus = (qty: number, reorder: number) =>
   qty === 0 ? 'out' : qty <= reorder ? 'low' : 'ok';
 export const getStockColor = (status: string) =>

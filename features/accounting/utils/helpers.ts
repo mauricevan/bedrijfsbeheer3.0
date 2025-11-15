@@ -1,4 +1,4 @@
-import type { Employee, Customer, InventoryItem, WorkOrder, Invoice, QuoteHistoryEntry, InvoiceHistoryEntry, User } from "../../../types";
+import type { Employee, Customer, InventoryItem, WorkOrder, Invoice, QuoteHistoryEntry, InvoiceHistoryEntry, User } from '../../types';
 
 export const getEmployeeName = (id: string, employees: Employee[]): string => {
   return employees.find((e) => e.id === id)?.name || "Onbekend";
