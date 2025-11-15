@@ -42,3 +42,5 @@ nul
 # Cache
 .cache/
 .vite/
+.env
+dev.db
