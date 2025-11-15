@@ -1,6 +1,3 @@
-/**
- * Email Parser - Extracteert klantgegevens en items uit emails
- */
 
 import { Quote, QuoteItem, QuoteLabor, Customer, Email } from '../../types';
 
@@ -12,28 +9,20 @@ export interface ParsedEmailData {
   estimatedValue?: number;
 }
 
-/**
- * Parse email content en extract klantgegevens
- */
 export function parseEmailForCustomer(from: string, subject: string, body: string): Partial<Customer> {
-  // Extract naam uit from field
   const nameMatch = from.match(/^([^<@]+)/);
   const name = nameMatch ? nameMatch[1].trim() : from.split('@')[0];
   
-  // Extract email
   const emailMatch = from.match(/<(.+?)>/) || from.match(/([^\s]+@[^\s]+)/);
   const email = emailMatch ? emailMatch[1] : from;
   
-  // Extract telefoon uit subject of body
   const phoneRegex = /(\+31|0)[- ]?(\d{1,3})[- ]?(\d{6,7})/g;
   const phoneMatch = subject.match(phoneRegex) || body.match(phoneRegex);
   const phone = phoneMatch ? phoneMatch[0].replace(/[- ]/g, '') : '';
   
-  // Bepaal type (business als bedrijfsnaam in body)
   const hasCompanyIndicators = /B\.?V\.?|N\.?V\.?|VOF|Eenmanszaak|bedrijf|company/i.test(body);
   const type = hasCompanyIndicators ? 'business' : 'private';
   
-  // Extract bedrijfsnaam als aanwezig
   const companyMatch = body.match(/(?:bedrijf|company)[:;]?\s*([^\n]+)/i);
   const company = companyMatch ? companyMatch[1].trim() : undefined;
   
@@ -48,15 +37,10 @@ export function parseEmailForCustomer(from: string, subject: string, body: strin
   };
 }
 
-/**
- * Parse email body voor items en diensten
- */
 export function parseEmailForItems(body: string, subject: string): { items: QuoteItem[]; labor: QuoteLabor[] } {
   const items: QuoteItem[] = [];
   const labor: QuoteLabor[] = [];
   
-  // Zoek naar producten met prijzen
-  // Patronen: "Product X - €50", "2x Product Y €100", "Product Z: 3 stuks à €25"
   const itemPatterns = [
     /(\d+)x?\s+([^€\n]+?)\s*[-–]\s*€\s*(\d+(?:[.,]\d{2})?)/gi,
     /([^€\n]+?)\s*[-–:]\s*(\d+)\s*stuks?\s*[aà@]\s*€\s*(\d+(?:[.,]\d{2})?)/gi,
@@ -82,8 +66,6 @@ export function parseEmailForItems(body: string, subject: string): { items: Quot
     }
   });
   
-  // Zoek naar werkuren
-  // Patronen: "5 uur werk", "3 uren à €75", "Montage: 2 uur"
   const laborPatterns = [
     /(\d+)\s*(?:uur|uren|hours?)\s+(?:werk|arbeid|montage)?(?:\s*[aà@]\s*€\s*(\d+(?:[.,]\d{2})?))?/gi,
     /([^:\n]+?):\s*(\d+)\s*(?:uur|uren|hours?)/gi,
@@ -107,14 +89,11 @@ export function parseEmailForItems(body: string, subject: string): { items: Quot
     }
   });
   
-  // Als geen items gevonden, probeer algemene items uit subject te halen
   if (items.length === 0 && subject) {
-    // Extract keywords die op producten lijken
     const productKeywords = ['offerte', 'prijsopgave', 'quote', 'aanvraag', 'bestelling'];
     const hasProductKeyword = productKeywords.some(kw => subject.toLowerCase().includes(kw));
     
     if (hasProductKeyword) {
-      // Maak een algemeen item aan
       items.push({
         description: subject.replace(/^(re:|fw:|offerte|prijsopgave|quote|aanvraag)[:;]?\s*/gi, '').trim(),
         quantity: 1,
@@ -127,16 +106,11 @@ export function parseEmailForItems(body: string, subject: string): { items: Quot
   return { items, labor };
 }
 
-/**
- * Parse volledige email en maak Quote concept
- */
 export function parseEmailToQuote(email: Partial<Email>): Partial<Quote> {
   const { from = '', subject = '', body = '' } = email;
   
-  // Parse items en labor
   const { items, labor } = parseEmailForItems(body, subject);
   
-  // Bereken totalen
   const itemsSubtotal = items.reduce((sum, item) => sum + item.total, 0);
   const laborSubtotal = labor.reduce((sum, l) => sum + l.total, 0);
   const subtotal = itemsSubtotal + laborSubtotal;
@@ -144,7 +118,6 @@ export function parseEmailToQuote(email: Partial<Email>): Partial<Quote> {
   const vatAmount = subtotal * (vatRate / 100);
   const total = subtotal + vatAmount;
   
-  // Extract locatie/adres uit body
   const locationPatterns = [
     /(?:locatie|adres|address)[:;]?\s*([^\n]+)/i,
     /(?:op|naar|aan)\s+(?:het\s+)?([A-Z][a-zé]+(?:\s+\d+)?(?:,\s*\d{4}\s*[A-Z]{2})?)/,
@@ -159,7 +132,6 @@ export function parseEmailToQuote(email: Partial<Email>): Partial<Quote> {
     }
   }
   
-  // Probeer datum te extraheren
   const datePatterns = [
     /(\d{1,2})[/-](\d{1,2})[/-](\d{4})/,
     /(\d{4})[/-](\d{1,2})[/-](\d{1,2})/,
@@ -169,7 +141,6 @@ export function parseEmailToQuote(email: Partial<Email>): Partial<Quote> {
   for (const pattern of datePatterns) {
     const match = body.match(pattern);
     if (match) {
-      // Parse naar ISO formaat
       const date = new Date(match[0]);
       if (!isNaN(date.getTime())) {
         scheduledDate = date.toISOString();
@@ -178,7 +149,6 @@ export function parseEmailToQuote(email: Partial<Email>): Partial<Quote> {
     }
   }
   
-  // Validity period: 30 dagen vanaf nu
   const validUntil = new Date();
   validUntil.setDate(validUntil.getDate() + 30);
   
@@ -198,9 +168,6 @@ export function parseEmailToQuote(email: Partial<Email>): Partial<Quote> {
   };
 }
 
-/**
- * Parse email data voor opslag
- */
 export function parseEmailForStorage(emailData: any): Partial<Email> {
   const { from, to, subject, body, date, htmlBody } = emailData;
   
@@ -219,9 +186,6 @@ export function parseEmailForStorage(emailData: any): Partial<Email> {
   };
 }
 
-/**
- * Extract samenvattende info voor notificatie
- */
 export function getEmailSummary(email: Partial<Email>): string {
   const { from = 'Onbekend', subject = 'Geen onderwerp' } = email;
   const fromName = from.split('<')[0].trim() || from.split('@')[0];

@@ -1,8 +1,5 @@
 import { Notification, NotificationAction, Quote, Invoice, WorkOrder, ModuleKey } from '../types';
 
-/**
- * Create a smart notification with action buttons
- */
 export function createSmartNotification(
   type: 'info' | 'warning' | 'error' | 'success',
   message: string,
@@ -22,9 +19,6 @@ export function createSmartNotification(
   };
 }
 
-/**
- * Create notification for approved quote - suggests creating work order
- */
 export function createQuoteApprovedNotification(
   quote: Quote,
   onCreateWorkOrder: () => void,
@@ -50,9 +44,6 @@ export function createQuoteApprovedNotification(
   );
 }
 
-/**
- * Create notification for completed work order - suggests creating invoice
- */
 export function createWorkOrderCompletedNotification(
   workOrder: WorkOrder,
   onCreateInvoice: () => void,
@@ -78,9 +69,6 @@ export function createWorkOrderCompletedNotification(
   );
 }
 
-/**
- * Create notification for sent invoice - suggests marking as paid when payment arrives
- */
 export function createInvoiceSentNotification(
   invoice: Invoice,
   onMarkAsPaid: () => void,
@@ -106,9 +94,6 @@ export function createInvoiceSentNotification(
   );
 }
 
-/**
- * Create notification for overdue invoice - suggests follow-up action
- */
 export function createInvoiceOverdueNotification(
   invoice: Invoice,
   onSendReminder: () => void,
@@ -138,9 +123,6 @@ export function createInvoiceOverdueNotification(
   );
 }
 
-/**
- * Create notification for low stock - suggests reordering
- */
 export function createLowStockNotification(
   itemName: string,
   itemId: string,
