@@ -6,6 +6,7 @@ import morgan from 'morgan';
 import dotenv from 'dotenv';
 import apiRoutes from './routes/api/index.js';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
+import { apiRateLimiter } from './middleware/rateLimiter.js';
 
 // Load environment variables
 dotenv.config();
@@ -41,6 +42,9 @@ if (process.env.NODE_ENV === 'development') {
   app.use(morgan('combined'));
 }
 
+// Rate limiting (apply to all API routes)
+app.use('/api', apiRateLimiter);
+
 // ============================================
 // Routes
 // ============================================
@@ -54,14 +58,25 @@ app.get('/', (req, res) => {
     name: 'Bedrijfsbeheer 3.0 API',
     version: '1.0.0',
     status: 'running',
+    documentation: 'See backend/README.md',
     endpoints: {
-      health: '/api/health',
-      auth: {
-        register: 'POST /api/auth/register',
-        login: 'POST /api/auth/login',
-        profile: 'GET /api/auth/me',
-        logout: 'POST /api/auth/logout',
-      },
+      info: 'GET /api',
+      health: 'GET /api/health',
+      auth: 'GET/POST /api/auth/*',
+      quotes: 'GET/POST/PUT/DELETE /api/quotes',
+      invoices: 'GET/POST/PUT/DELETE /api/invoices',
+      workOrders: 'GET/POST/PUT/DELETE /api/work-orders',
+      customers: 'GET/POST/PUT/DELETE /api/customers',
+      inventory: 'GET/POST/PUT/DELETE /api/inventory',
+      employees: 'GET/POST/PUT/DELETE /api/employees',
+      transactions: 'GET/POST/PUT/DELETE /api/transactions',
+    },
+    features: {
+      authentication: 'JWT tokens',
+      authorization: 'Role-based (admin/user)',
+      security: 'bcrypt, helmet, CORS',
+      rateLimiting: '100 requests per 15 minutes',
+      database: 'SQLite (dev) / PostgreSQL (prod)',
     },
   });
 });
@@ -82,12 +97,24 @@ app.use(errorHandler);
 
 app.listen(PORT, () => {
   console.log('========================================');
-  console.log(`🚀 Backend Server Running`);
+  console.log(`🚀 Bedrijfsbeheer 3.0 Backend Running`);
   console.log(`📍 Port: ${PORT}`);
   console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`🔗 API: http://localhost:${PORT}`);
-  console.log(`🔗 Health: http://localhost:${PORT}/api/health`);
-  console.log(`📝 CORS Origin: ${CORS_ORIGIN}`);
+  console.log(`🔗 API: http://localhost:${PORT}/api`);
+  console.log(`❤️  Health: http://localhost:${PORT}/api/health`);
+  console.log(`📝 CORS: ${CORS_ORIGIN}`);
+  console.log(`🔒 Rate Limit: 100 req/15min`);
+  console.log(`📊 Database: ${process.env.DATABASE_URL.includes('postgresql') ? 'PostgreSQL' : 'SQLite'}`);
+  console.log('========================================');
+  console.log(`📚 Endpoints:`);
+  console.log(`   /api/auth          - Authentication`);
+  console.log(`   /api/quotes        - Offertes`);
+  console.log(`   /api/invoices      - Facturen`);
+  console.log(`   /api/work-orders   - Werkbonnen`);
+  console.log(`   /api/customers     - Klanten`);
+  console.log(`   /api/inventory     - Voorraad`);
+  console.log(`   /api/employees     - Medewerkers`);
+  console.log(`   /api/transactions  - Transacties`);
   console.log('========================================');
 });
 
