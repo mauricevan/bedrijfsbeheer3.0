@@ -90,8 +90,8 @@ export const validateDateRange = (fromDate: string, toDate: string): ValidationR
 };
 
 export const validateAmount = (amount: number, fieldName: string = 'Bedrag'): ValidationResult => {
-  if (amount === undefined || amount === null) return fail(`${fieldName} is verplicht!');
-  if (amount < 0) return fail(`${fieldName} moet positief zijn!');
+  if (amount === undefined || amount === null) return fail(`${fieldName} is verplicht!`);
+  if (amount < 0) return fail(`${fieldName} moet positief zijn!`);
   return pass();
 };
 
