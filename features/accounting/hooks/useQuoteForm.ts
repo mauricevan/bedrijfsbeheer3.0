@@ -143,7 +143,7 @@ export const useQuoteForm = (inventory: InventoryItem[] = []) => {
    * Handle item field change
    */
   const handleItemChange = useCallback(
-    (index: number, field: keyof QuoteItem, value: any) => {
+    (index: number, field: keyof QuoteItem, value: QuoteItem[keyof QuoteItem]) => {
       form.handleNestedChange("items", (items) => {
         const updatedItems = [...items];
         updatedItems[index] = { ...updatedItems[index], [field]: value };
@@ -164,7 +164,7 @@ export const useQuoteForm = (inventory: InventoryItem[] = []) => {
    * Handle labor field change
    */
   const handleLaborChange = useCallback(
-    (index: number, field: keyof QuoteLabor, value: any) => {
+    (index: number, field: keyof QuoteLabor, value: QuoteLabor[keyof QuoteLabor]) => {
       form.handleNestedChange("labor", (labor) => {
         const updatedLabor = [...labor];
         updatedLabor[index] = { ...updatedLabor[index], [field]: value };

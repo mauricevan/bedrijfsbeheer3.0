@@ -1,16 +1,23 @@
+/**
+ * Quote Service - CRUD Operations Only
+ * Refactored to be < 250 lines per CONVENTIONS.md
+ *
+ * Workflow functions moved to quoteWorkflowService.ts:
+ * - convertQuoteToInvoice
+ * - syncQuoteToWorkOrder
+ */
+
 import type {
   Quote,
   QuoteItem,
   QuoteLabor,
   QuoteHistoryEntry,
-  Invoice,
-  WorkOrder,
   User,
   Employee,
+  Customer,
 } from '../../types';
 import {
   calculateQuoteTotals,
-  generateInvoiceNumber,
 } from "../utils/calculations";
 import {
   validateQuoteForm,
@@ -21,10 +28,6 @@ import {
   getEmployeeName,
   getCustomerName,
 } from "../utils/helpers";
-import {
-  validateQuoteToWorkOrder,
-  validateQuoteToInvoice,
-} from "../../../utils/workflowValidation";
 
 /**
  * Quote form data interface
@@ -51,7 +54,7 @@ export const createQuote = (
   data: CreateQuoteData,
   currentUser: User,
   employees: Employee[],
-  customers: any[],
+  customers: Customer[],
   existingQuotes: Quote[] = []
 ): Quote => {
   // Validate form data
@@ -252,7 +255,7 @@ export const cloneQuote = (
   quote: Quote,
   currentUser: User,
   employees: Employee[],
-  customers: any[]
+  customers: Customer[]
 ): Quote => {
   const now = new Date().toISOString();
   const customerName = getCustomerName(quote.customerId, customers);
@@ -290,124 +293,8 @@ export const cloneQuote = (
   return clonedQuote;
 };
 
-/**
- * Convert quote to invoice
- * @param quote - Quote to convert
- * @param currentUser - Current user
- * @param employees - Array of employees
- * @param invoices - Array of existing invoices (for invoice number generation)
- * @returns New invoice object and updated quote object
- */
-export const convertQuoteToInvoice = (
-  quote: Quote,
-  currentUser: User,
-  employees: Employee[],
-  invoices: Invoice[] = []
-): { invoice: Invoice; updatedQuote: Quote } => {
-  // Validate conversion
-  const validation = validateQuoteToInvoice(quote, []);
-  if (!validation.canProceed) {
-    throw new Error(validation.message);
-  }
-
-  const issueDate = new Date().toISOString().split("T")[0];
-  const dueDate = new Date();
-  dueDate.setDate(dueDate.getDate() + 14);
-  const now = new Date().toISOString();
-
-  const invoice: Invoice = {
-    id: `inv${Date.now()}`,
-    invoiceNumber: generateInvoiceNumber(invoices),
-    customerId: quote.customerId,
-    quoteId: quote.id,
-    items: quote.items,
-    labor: quote.labor,
-    subtotal: quote.subtotal,
-    vatRate: quote.vatRate,
-    vatAmount: quote.vatAmount,
-    total: quote.total,
-    status: "draft",
-    issueDate: issueDate,
-    dueDate: dueDate.toISOString().split("T")[0],
-    notes: quote.notes,
-    paymentTerms: "14 dagen",
-    workOrderId: quote.workOrderId,
-    createdBy: currentUser.employeeId,
-    timestamps: {
-      created: now,
-    },
-    history: [
-      createHistoryEntry(
-        "invoice",
-        "created",
-        `Factuur aangemaakt door ${getEmployeeName(
-          currentUser.employeeId,
-          employees
-        )} vanuit offerte ${quote.id}`,
-        currentUser
-      ) as any,
-    ],
-  };
-
-  // Update quote with conversion timestamp
-  const updatedQuote: Quote = {
-    ...quote,
-    timestamps: {
-      ...quote.timestamps,
-      convertedToInvoice: now,
-    },
-    history: [
-      ...(quote.history || []),
-      createHistoryEntry(
-        "quote",
-        "converted_to_invoice",
-        `Geconverteerd naar factuur ${invoice.invoiceNumber} door ${getEmployeeName(
-          currentUser.employeeId,
-          employees
-        )}`,
-        currentUser
-      ) as QuoteHistoryEntry,
-    ],
-  };
-
-  return { invoice, updatedQuote };
-};
-
-/**
- * Sync quote data to work order
- * @param quote - Quote to sync
- * @param workOrder - Work order to update
- * @returns Updated work order object or null if sync not possible
- */
-export const syncQuoteToWorkOrder = (
-  quote: Quote,
-  workOrder: WorkOrder
-): WorkOrder | null => {
-  // Check if workorder is completed
-  if (workOrder.status === "Completed") {
-    return null; // Cannot sync completed work orders
-  }
-
-  // Calculate total hours
-  const totalHours =
-    quote.labor?.reduce((sum, labor) => sum + labor.hours, 0) || 0;
-
-  // Update workorder with new data from quote
-  const updatedWorkOrder: WorkOrder = {
-    ...workOrder,
-    requiredInventory: quote.items
-      .filter((item) => item.inventoryItemId)
-      .map((item) => ({
-        itemId: item.inventoryItemId!,
-        quantity: item.quantity,
-      })),
-    estimatedHours: totalHours,
-    estimatedCost: quote.total,
-    notes: `${
-      workOrder.notes || ""
-    }\n\n[Update: ${new Date().toLocaleDateString()}] Offerte aangepast - Geschatte uren: ${totalHours}u, Kosten: €${quote.total.toFixed(2)}`,
-  };
-
-  return updatedWorkOrder;
-};
-
+// Re-export workflow functions from quoteWorkflowService for backward compatibility
+export {
+  convertQuoteToInvoice,
+  syncQuoteToWorkOrder,
+} from './quoteWorkflowService';

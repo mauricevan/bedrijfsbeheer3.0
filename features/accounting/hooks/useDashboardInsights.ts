@@ -2,6 +2,10 @@
 import { useMemo } from 'react';
 import type { Invoice, Quote, Customer } from '../../../types';
 
+// Type definitions for chart data
+type OpenByCustomerData = { name: string; amount: number; avgDaysOpen: number; }[];
+type PaymentBehaviorData = { month: string; 'Op tijd': number; 'Te laat': number; }[];
+
 export const useDashboardInsights = (
   invoices: Invoice[],
   quotes: Quote[],
@@ -9,8 +13,8 @@ export const useDashboardInsights = (
   outstandingInvoices: Invoice[],
   overdueInvoices: Invoice[],
   customers: Customer[],
-  openByCustomer: any[],
-  paymentBehavior: any[]
+  openByCustomer: OpenByCustomerData,
+  paymentBehavior: PaymentBehaviorData
 ) => {
   const comparisonToPrevious = useMemo(() => {
     const now = new Date();
