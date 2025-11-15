@@ -1,6 +1,4 @@
-
 import { Quote, QuoteItem, QuoteLabor, Customer, Email } from '../../types';
-
 export interface ParsedEmailData {
   customer: Partial<Customer>;
   items: QuoteItem[];
@@ -8,7 +6,6 @@ export interface ParsedEmailData {
   notes: string;
   estimatedValue?: number;
 }
-
 export function parseEmailForCustomer(from: string, subject: string, body: string): Partial<Customer> {
   const nameMatch = from.match(/^([^<@]+)/);
   const name = nameMatch ? nameMatch[1].trim() : from.split('@')[0];
@@ -36,7 +33,6 @@ export function parseEmailForCustomer(from: string, subject: string, body: strin
     since: new Date().toISOString(),
   };
 }
-
 export function parseEmailForItems(body: string, subject: string): { items: QuoteItem[]; labor: QuoteLabor[] } {
   const items: QuoteItem[] = [];
   const labor: QuoteLabor[] = [];
@@ -76,7 +72,7 @@ export function parseEmailForItems(body: string, subject: string): { items: Quot
     while ((match = pattern.exec(body)) !== null) {
       const hours = parseInt(match[2] || match[1]);
       const description = match[1] && !/^\d+$/.test(match[1]) ? match[1].trim() : 'Werkuren';
-      const hourlyRate = match[2] ? parseFloat(match[2].replace(',', '.')) : 75; // Default €75/uur
+      const hourlyRate = match[2] ? parseFloat(match[2].replace(',', '.')) : 75;
       
       if (hours > 0) {
         labor.push({
@@ -97,7 +93,7 @@ export function parseEmailForItems(body: string, subject: string): { items: Quot
       items.push({
         description: subject.replace(/^(re:|fw:|offerte|prijsopgave|quote|aanvraag)[:;]?\s*/gi, '').trim(),
         quantity: 1,
-        pricePerUnit: 0, // Moet handmatig ingevuld worden
+        pricePerUnit: 0,
         total: 0,
       });
     }
@@ -105,7 +101,6 @@ export function parseEmailForItems(body: string, subject: string): { items: Quot
   
   return { items, labor };
 }
-
 export function parseEmailToQuote(email: Partial<Email>): Partial<Quote> {
   const { from = '', subject = '', body = '' } = email;
   
@@ -114,7 +109,7 @@ export function parseEmailToQuote(email: Partial<Email>): Partial<Quote> {
   const itemsSubtotal = items.reduce((sum, item) => sum + item.total, 0);
   const laborSubtotal = labor.reduce((sum, l) => sum + l.total, 0);
   const subtotal = itemsSubtotal + laborSubtotal;
-  const vatRate = 21; // Standaard 21% BTW
+  const vatRate = 21;
   const vatAmount = subtotal * (vatRate / 100);
   const total = subtotal + vatAmount;
   
@@ -167,7 +162,6 @@ export function parseEmailToQuote(email: Partial<Email>): Partial<Quote> {
     scheduledDate,
   };
 }
-
 export function parseEmailForStorage(emailData: any): Partial<Email> {
   const { from, to, subject, body, date, htmlBody } = emailData;
   
@@ -185,7 +179,6 @@ export function parseEmailForStorage(emailData: any): Partial<Email> {
     updatedAt: new Date().toISOString(),
   };
 }
-
 export function getEmailSummary(email: Partial<Email>): string {
   const { from = 'Onbekend', subject = 'Geen onderwerp' } = email;
   const fromName = from.split('<')[0].trim() || from.split('@')[0];
