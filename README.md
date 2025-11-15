@@ -172,6 +172,13 @@ Belangrijke functionaliteiten:
 - **[Mobile Optimization](./docs/04-features/mobile-optimization.md)** - Responsive design guide
 - **[Notifications](./docs/04-features/notifications.md)** - Real-time alerts systeem
 
+**Visual Design 🎨 (NIEUW):**
+- **[Visual Design Guide](./docs/04-features/visual-design-guide.md)** - Design filosofie & principes
+- **[Brand Identity](./docs/04-features/brand-identity.md)** - Kleuren, typography, iconografie
+- **[Component Visual Patterns](./docs/04-features/component-visual-patterns.md)** - Styling per component
+- **[Design Quick Wins](./docs/04-features/design-quick-wins.md)** - 5 snelle verbeteringen (1-2 uur)
+- **[Design Implementation Checklist](./docs/04-features/design-implementation-checklist.md)** - QA checklist
+
 ### 📅 Changelog
 
 Versiegeschiedenis en release notes:
