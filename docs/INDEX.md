@@ -103,11 +103,19 @@ Kies je rol:
 <details>
 <summary><b>04. Features</b> - Belangrijke Functionaliteiten</summary>
 
+#### Functionaliteit
 - [User Roles](./04-features/user-roles.md) - Admin vs User rechten
 - [Email Integration](./04-features/email-integration.md) - Drag & drop (V5.8)
 - [Workorder Workflow](./04-features/workorder-workflow.md) - End-to-end
 - [Mobile Optimization](./04-features/mobile-optimization.md)
 - [Notifications](./04-features/notifications.md)
+
+#### Visual Design 🎨 **NIEUW**
+- [Visual Design Guide](./04-features/visual-design-guide.md) - Design filosofie & principes
+- [Brand Identity](./04-features/brand-identity.md) - Kleuren, typography, iconografie
+- [Component Visual Patterns](./04-features/component-visual-patterns.md) - Styling per component
+- [Design Quick Wins](./04-features/design-quick-wins.md) - 5 snelle verbeteringen (1-2 uur)
+- [Design Implementation Checklist](./04-features/design-implementation-checklist.md) - QA checklist
 
 </details>
 
