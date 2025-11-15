@@ -1,7 +1,7 @@
 // components/QuoteEmailIntegration.tsx - Refactored < 300 lines
 import React, { useState } from 'react';
 import type { Quote, Customer, InventoryItem } from '../types';
-import { parseEmailToQuote } from '../utils/emailQuoteParser';
+import { parseEmailForQuote } from '../utils/emailQuoteParser';
 import { parseEmlFile } from '../utils/emlParser';
 
 interface QuoteEmailIntegrationProps {
@@ -40,7 +40,7 @@ export const QuoteEmailIntegration: React.FC<QuoteEmailIntegrationProps> = ({
     for (const file of emlFiles) {
       try {
         const parsed = await parseEmlFile(file);
-        const quoteData = parseEmailToQuote(parsed, customers, inventory);
+        const quoteData = parseEmailForQuote(parsed.body, parsed.subject);
 
         if (quoteData) {
           const newQuote: Quote = {
