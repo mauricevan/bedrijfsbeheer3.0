@@ -1,4 +1,4 @@
-import type { Quote, Invoice, Transaction } from '../../types';
+import type { Quote, Invoice, Transaction, Customer } from '../../types';
 import { getCustomerName } from "./helpers";
 
 /**
@@ -34,7 +34,7 @@ export interface QuoteFilterOptions {
  */
 export const filterInvoices = (
   invoices: Invoice[],
-  customers: any[],
+  customers: Customer[],
   options: InvoiceFilterOptions
 ): Invoice[] => {
   let filtered = [...invoices];
@@ -106,7 +106,7 @@ export const filterInvoices = (
  */
 export const filterQuotes = (
   quotes: Quote[],
-  customers: any[],
+  customers: Customer[],
   options: QuoteFilterOptions
 ): Quote[] => {
   let filtered = [...quotes];

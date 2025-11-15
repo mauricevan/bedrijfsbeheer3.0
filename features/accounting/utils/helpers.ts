@@ -115,11 +115,11 @@ export const createHistoryEntry = (
   action: string,
   details: string,
   currentUser: User,
-  extra?: any
+  extra?: Partial<QuoteHistoryEntry | InvoiceHistoryEntry>
 ): QuoteHistoryEntry | InvoiceHistoryEntry => {
   return {
     timestamp: new Date().toISOString(),
-    action: action as any,
+    action: action as QuoteHistoryEntry['action'] | InvoiceHistoryEntry['action'],
     performedBy: currentUser.employeeId,
     details,
     ...extra,

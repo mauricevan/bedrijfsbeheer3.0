@@ -34,6 +34,11 @@ export interface AccountingProps {
 }
 
 /**
+ * Navigation data types
+ */
+export type NavigationData = Quote | Invoice | Customer | { customerId: string } | undefined;
+
+/**
  * Props for the AccountingDashboard component
  */
 export interface AccountingDashboardProps {
@@ -41,7 +46,7 @@ export interface AccountingDashboardProps {
   quotes: Quote[];
   transactions: Transaction[];
   customers: Customer[];
-  onNavigate: (view: string, data?: any) => void;
+  onNavigate: (view: string, data?: NavigationData) => void;
 }
 
 /**

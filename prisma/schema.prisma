@@ -6,7 +6,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -75,10 +75,10 @@ model Quote {
   customerId  String   @map("customer_id")
   userId      String   @map("user_id")
   status      String   @default("draft") // draft, sent, approved, rejected
-  subtotal    Float
-  vatRate     Float    @map("vat_rate")
-  vatAmount   Float    @map("vat_amount")
-  total       Float
+  subtotal    Decimal  @db.Decimal(10, 2)
+  vatRate     Decimal  @db.Decimal(5, 2) @map("vat_rate")
+  vatAmount   Decimal  @db.Decimal(10, 2) @map("vat_amount")
+  total       Decimal  @db.Decimal(10, 2)
   notes       String?
   validUntil  String?  @map("valid_until")
   workOrderId String?  @unique @map("work_order_id")
@@ -105,8 +105,8 @@ model QuoteItem {
   name            String
   description     String?
   quantity        Int
-  unitPrice       Float   @map("unit_price")
-  total           Float
+  unitPrice       Decimal @db.Decimal(10, 2) @map("unit_price")
+  total           Decimal @db.Decimal(10, 2)
 
   quote           Quote          @relation(fields: [quoteId], references: [id], onDelete: Cascade)
   inventoryItem   InventoryItem? @relation(fields: [inventoryItemId], references: [id])
@@ -155,7 +155,7 @@ model WorkOrderMaterial {
   workOrderId     String  @map("work_order_id")
   inventoryItemId String  @map("inventory_item_id")
   quantity        Int
-  unitPrice       Float   @map("unit_price")
+  unitPrice       Decimal @db.Decimal(10, 2) @map("unit_price")
 
   workOrder       WorkOrder     @relation(fields: [workOrderId], references: [id], onDelete: Cascade)
   inventoryItem   InventoryItem @relation(fields: [inventoryItemId], references: [id])
@@ -174,11 +174,11 @@ model Invoice {
   userId         String    @map("user_id")
   workOrderId    String?   @unique @map("work_order_id")
   status         String    @default("draft") // draft, sent, paid, overdue, cancelled
-  subtotal       Float
-  vatRate        Float     @map("vat_rate")
-  vatAmount      Float     @map("vat_amount")
-  total          Float
-  amountPaid     Float     @default(0) @map("amount_paid")
+  subtotal       Decimal   @db.Decimal(10, 2)
+  vatRate        Decimal   @db.Decimal(5, 2) @map("vat_rate")
+  vatAmount      Decimal   @db.Decimal(10, 2) @map("vat_amount")
+  total          Decimal   @db.Decimal(10, 2)
+  amountPaid     Decimal   @default(0) @db.Decimal(10, 2) @map("amount_paid")
   dueDate        String    @map("due_date")
   paidDate       String?   @map("paid_date")
   paymentMethod  String?   @map("payment_method") // bank_transfer, cash, card, etc.
@@ -205,8 +205,8 @@ model InvoiceItem {
   name        String
   description String?
   quantity    Int
-  unitPrice   Float   @map("unit_price")
-  total       Float
+  unitPrice   Decimal @db.Decimal(10, 2) @map("unit_price")
+  total       Decimal @db.Decimal(10, 2)
 
   invoice     Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
 
@@ -225,8 +225,8 @@ model InventoryItem {
   description  String?
   category     String
   unit         String   @default("stuks") // stuks, meter, kg, etc.
-  purchasePrice Float   @map("purchase_price")
-  sellingPrice  Float   @map("selling_price")
+  purchasePrice Decimal @db.Decimal(10, 2) @map("purchase_price")
+  sellingPrice  Decimal @db.Decimal(10, 2) @map("selling_price")
   quantity     Int      @default(0)
   minStock     Int      @default(0) @map("min_stock")
   location     String?
@@ -259,7 +259,7 @@ model Employee {
   postalCode  String?   @map("postal_code")
   role        String    // technician, manager, admin, etc.
   department  String?
-  hourlyRate  Float?    @map("hourly_rate")
+  hourlyRate  Decimal?  @db.Decimal(10, 2) @map("hourly_rate")
   hireDate    String    @map("hire_date")
   terminationDate String? @map("termination_date")
   status      String    @default("active") // active, inactive, on_leave
@@ -282,7 +282,7 @@ model Transaction {
   type        String   // income, expense
   category    String   // sales, purchase, salary, rent, etc.
   description String
-  amount      Float
+  amount      Decimal  @db.Decimal(10, 2)
   invoiceId   String?  @map("invoice_id")
   paymentMethod String? @map("payment_method")
   notes       String?
