@@ -19,24 +19,25 @@ export const useAccountingDashboard = (
   transactions: Transaction[],
   customers: Customer[]
 ) => {
-  // Calculate basic stats
   const stats = useDashboardStats(invoices, quotes, transactions);
-
   const { invoiceStats, quoteStats } = stats;
   const { paidInvoices, overdueInvoices, outstandingInvoices } = invoiceStats;
   const { approvedQuotes, sentQuotes, expiredQuotes } = quoteStats;
-
-  // Open quotes
   const openQuotes = quotes.filter((q) => !['approved', 'rejected'].includes(q.status));
 
-  // Calculate chart data
   const charts = useDashboardCharts(invoices, quotes, customers, paidInvoices, outstandingInvoices);
-
-  // Calculate insights
-  const insights = useDashboardInsights(invoices, quotes, paidInvoices, outstandingInvoices);
+  const insightsData = useDashboardInsights(
+    invoices,
+    quotes,
+    paidInvoices,
+    outstandingInvoices,
+    overdueInvoices,
+    customers,
+    charts.openByCustomer,
+    charts.paymentBehavior
+  );
 
   return {
-    // Statistics
     stats: {
       transaction: stats.transactionStats,
       invoice: invoiceStats,
@@ -44,14 +45,8 @@ export const useAccountingDashboard = (
       openQuotesCount: stats.openQuotesCount,
       avgPaymentDays: stats.avgPaymentDays,
     },
-
-    // Charts data
     charts,
-
-    // Insights
-    insights,
-
-    // Raw data for convenience
+    insights: insightsData,
     raw: {
       paidInvoices,
       overdueInvoices,
