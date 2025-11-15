@@ -10,7 +10,7 @@ import {
   Employee,
   User,
   Notification,
-} from "../../../types";
+} from '../../types';
 
 /**
  * Props for the main Accounting component

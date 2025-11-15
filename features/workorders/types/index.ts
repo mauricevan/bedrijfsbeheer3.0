@@ -14,7 +14,7 @@ import type {
   Invoice,
   QuoteItem,
   QuoteLabor,
-} from '../../../types';
+} from '../../types';
 
 export interface WorkOrdersProps {
   workOrders: WorkOrder[];

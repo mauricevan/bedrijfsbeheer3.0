@@ -1,5 +1,5 @@
 // features/bookkeeping/index.ts
-export * from '../../../types';
+export * from '../../types';
 export const calculateVAT = (amount: number, rate: number) => amount * (rate / 100);
 export const ledgerAccounts = [
   { id: '1300', name: 'Debiteuren', type: 'asset' },

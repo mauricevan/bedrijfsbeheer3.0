@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import type { Transaction } from "../../../types";
+import type { Transaction } from '../../types';
 import { filterTransactions } from "../utils/filters";
 
 /**
