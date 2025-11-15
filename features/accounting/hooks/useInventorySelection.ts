@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import type { InventoryItem, InventoryCategory } from "../../../types";
+import type { InventoryItem, InventoryCategory } from '../../types';
 
 /**
  * Hook for managing inventory selection and filtering

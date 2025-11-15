@@ -1,9 +1,11 @@
-// features/accounting/utils/filters.ts - Refactored < 150 lines
-import type { Quote, Invoice, Transaction } from '../../../types';
-import { getCustomerName } from './helpers';
+import type { Quote, Invoice, Transaction } from '../../types';
+import { getCustomerName } from "./helpers";
 
+/**
+ * Filter options for invoices
+ */
 export interface InvoiceFilterOptions {
-  type?: 'all' | 'paid' | 'outstanding' | 'overdue';
+  type?: "all" | "paid" | "outstanding" | "overdue";
   customerName?: string;
   dateFrom?: string;
   dateTo?: string;
@@ -11,8 +13,11 @@ export interface InvoiceFilterOptions {
   maxAmount?: string;
 }
 
+/**
+ * Filter options for quotes
+ */
 export interface QuoteFilterOptions {
-  type?: 'all' | 'approved' | 'sent' | 'expired';
+  type?: "all" | "approved" | "sent" | "expired";
   customerName?: string;
   dateFrom?: string;
   dateTo?: string;
@@ -20,114 +25,177 @@ export interface QuoteFilterOptions {
   maxAmount?: string;
 }
 
-export const filterInvoices = (invoices: Invoice[], customers: any[], options: InvoiceFilterOptions): Invoice[] => {
-  return invoices.filter((inv) => {
-    // Type filter
-    if (options.type === 'paid' && inv.status !== 'paid') return false;
-    if (options.type === 'outstanding' && !['sent', 'overdue'].includes(inv.status)) return false;
-    if (options.type === 'overdue' && inv.status !== 'overdue') return false;
-    if (options.type === 'all' && inv.status === 'paid') return false;
+/**
+ * Filter invoices based on various criteria
+ * @param invoices - Array of invoices to filter
+ * @param customers - Array of customers (for name lookup)
+ * @param options - Filter options
+ * @returns Filtered array of invoices
+ */
+export const filterInvoices = (
+  invoices: Invoice[],
+  customers: any[],
+  options: InvoiceFilterOptions
+): Invoice[] => {
+  let filtered = [...invoices];
 
-    // Customer filter
-    if (
-      options.customerName &&
-      !getCustomerName(inv.customerId, customers).toLowerCase().includes(options.customerName.toLowerCase())
-    )
-      return false;
+  // Filter by type
+  switch (options.type) {
+    case "paid":
+      filtered = filtered.filter((inv) => inv.status === "paid");
+      break;
+    case "outstanding":
+      filtered = filtered.filter((inv) =>
+        ["sent", "overdue"].includes(inv.status)
+      );
+      break;
+    case "overdue":
+      filtered = filtered.filter((inv) => inv.status === "overdue");
+      break;
+    case "all":
+    default:
+      // Hide paid invoices in "all" view (only visible in Accounting & Dossier)
+      filtered = filtered.filter((inv) => inv.status !== "paid");
+      break;
+  }
 
-    // Date filters
-    if (options.dateFrom && inv.issueDate < options.dateFrom) return false;
-    if (options.dateTo && inv.issueDate > options.dateTo) return false;
+  // Filter by customer name
+  if (options.customerName) {
+    filtered = filtered.filter((inv) => {
+      const customerName = getCustomerName(
+        inv.customerId,
+        customers
+      ).toLowerCase();
+      return customerName.includes(options.customerName!.toLowerCase());
+    });
+  }
 
-    // Amount filters
-    if (options.minAmount && inv.total < parseFloat(options.minAmount)) return false;
-    if (options.maxAmount && inv.total > parseFloat(options.maxAmount)) return false;
+  // Filter by date range
+  if (options.dateFrom) {
+    filtered = filtered.filter(
+      (inv) => inv.issueDate >= options.dateFrom!
+    );
+  }
+  if (options.dateTo) {
+    filtered = filtered.filter(
+      (inv) => inv.issueDate <= options.dateTo!
+    );
+  }
 
-    return true;
-  });
+  // Filter by amount range
+  if (options.minAmount) {
+    filtered = filtered.filter(
+      (inv) => inv.total >= parseFloat(options.minAmount!)
+    );
+  }
+  if (options.maxAmount) {
+    filtered = filtered.filter(
+      (inv) => inv.total <= parseFloat(options.maxAmount!)
+    );
+  }
+
+  return filtered;
 };
 
-export const filterQuotes = (quotes: Quote[], customers: any[], options: QuoteFilterOptions): Quote[] => {
-  return quotes.filter((q) => {
-    // Type filter
-    if (options.type === 'approved' && q.status !== 'approved') return false;
-    if (options.type === 'sent' && q.status !== 'sent') return false;
-    if (options.type === 'expired' && q.status !== 'expired' && !(q.validUntil && new Date(q.validUntil) < new Date()))
-      return false;
+/**
+ * Filter quotes based on various criteria
+ * @param quotes - Array of quotes to filter
+ * @param customers - Array of customers (for name lookup)
+ * @param options - Filter options
+ * @returns Filtered array of quotes
+ */
+export const filterQuotes = (
+  quotes: Quote[],
+  customers: any[],
+  options: QuoteFilterOptions
+): Quote[] => {
+  let filtered = [...quotes];
 
-    // Customer filter
-    if (
-      options.customerName &&
-      !getCustomerName(q.customerId, customers).toLowerCase().includes(options.customerName.toLowerCase())
-    )
-      return false;
+  // Filter by type
+  switch (options.type) {
+    case "approved":
+      filtered = filtered.filter((q) => q.status === "approved");
+      break;
+    case "sent":
+      filtered = filtered.filter((q) => q.status === "sent");
+      break;
+    case "expired":
+      filtered = filtered.filter(
+        (q) =>
+          q.status === "expired" ||
+          (q.validUntil && new Date(q.validUntil) < new Date())
+      );
+      break;
+    case "all":
+    default:
+      break;
+  }
 
-    // Date filters
-    if (options.dateFrom && q.createdDate < options.dateFrom) return false;
-    if (options.dateTo && q.createdDate > options.dateTo) return false;
+  // Apply text filters
+  if (options.customerName) {
+    filtered = filtered.filter((q) =>
+      getCustomerName(q.customerId, customers)
+        .toLowerCase()
+        .includes(options.customerName!.toLowerCase())
+    );
+  }
 
-    // Amount filters
-    if (options.minAmount && q.total < parseFloat(options.minAmount)) return false;
-    if (options.maxAmount && q.total > parseFloat(options.maxAmount)) return false;
+  if (options.dateFrom) {
+    filtered = filtered.filter(
+      (q) => q.createdDate >= options.dateFrom!
+    );
+  }
+  if (options.dateTo) {
+    filtered = filtered.filter(
+      (q) => q.createdDate <= options.dateTo!
+    );
+  }
 
-    return true;
-  });
+  if (options.minAmount) {
+    filtered = filtered.filter(
+      (q) => q.total >= parseFloat(options.minAmount!)
+    );
+  }
+  if (options.maxAmount) {
+    filtered = filtered.filter(
+      (q) => q.total <= parseFloat(options.maxAmount!)
+    );
+  }
+
+  return filtered;
 };
 
+/**
+ * Filter transactions by type
+ * @param transactions - Array of transactions to filter
+ * @param filter - Filter type ("all", "income", or "expense")
+ * @returns Filtered array of transactions
+ */
 export const filterTransactions = (
   transactions: Transaction[],
-  filter: 'all' | 'income' | 'expense'
+  filter: "all" | "income" | "expense"
 ): Transaction[] => {
-  if (filter === 'all') return transactions;
+  if (filter === "all") {
+    return transactions;
+  }
   return transactions.filter((t) => t.type === filter);
 };
 
-export const sortInvoices = (invoices: Invoice[], sortBy: 'date' | 'amount' | 'customer'): Invoice[] => {
-  const sorted = [...invoices];
-  switch (sortBy) {
-    case 'date':
-      return sorted.sort((a, b) => new Date(b.issueDate).getTime() - new Date(a.issueDate).getTime());
-    case 'amount':
-      return sorted.sort((a, b) => b.total - a.total);
-    case 'customer':
-      return sorted.sort((a, b) => a.customerId.localeCompare(b.customerId));
-    default:
-      return sorted;
-  }
+/**
+ * Calculate total amount from filtered invoices
+ * @param invoices - Array of invoices
+ * @returns Total amount
+ */
+export const calculateFilteredInvoiceTotal = (invoices: Invoice[]): number => {
+  return invoices.reduce((sum, inv) => sum + inv.total, 0);
 };
 
-export const sortQuotes = (quotes: Quote[], sortBy: 'date' | 'amount' | 'customer'): Quote[] => {
-  const sorted = [...quotes];
-  switch (sortBy) {
-    case 'date':
-      return sorted.sort((a, b) => new Date(b.createdDate).getTime() - new Date(a.createdDate).getTime());
-    case 'amount':
-      return sorted.sort((a, b) => b.total - a.total);
-    case 'customer':
-      return sorted.sort((a, b) => a.customerId.localeCompare(b.customerId));
-    default:
-      return sorted;
-  }
+/**
+ * Calculate total amount from filtered quotes
+ * @param quotes - Array of quotes
+ * @returns Total amount
+ */
+export const calculateFilteredQuoteTotal = (quotes: Quote[]): number => {
+  return quotes.reduce((sum, q) => sum + q.total, 0);
 };
 
-export const searchInvoices = (invoices: Invoice[], searchTerm: string, customers: any[]): Invoice[] => {
-  if (!searchTerm) return invoices;
-  const term = searchTerm.toLowerCase();
-  return invoices.filter(
-    (inv) =>
-      inv.invoiceNumber.toLowerCase().includes(term) ||
-      getCustomerName(inv.customerId, customers).toLowerCase().includes(term) ||
-      inv.notes?.toLowerCase().includes(term)
-  );
-};
-
-export const searchQuotes = (quotes: Quote[], searchTerm: string, customers: any[]): Quote[] => {
-  if (!searchTerm) return quotes;
-  const term = searchTerm.toLowerCase();
-  return quotes.filter(
-    (q) =>
-      q.id.toLowerCase().includes(term) ||
-      getCustomerName(q.customerId, customers).toLowerCase().includes(term) ||
-      q.notes?.toLowerCase().includes(term)
-  );
-};

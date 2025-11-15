@@ -11,7 +11,7 @@ import type {
   User,
   Notification,
   InventoryCategory,
-} from '../../../types';
+} from '../../types';
 import { useTransactions } from './useTransactions';
 import { useInventorySelection } from './useInventorySelection';
 import { useQuotes } from './useQuotes';

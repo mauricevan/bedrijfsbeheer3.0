@@ -1,4 +1,4 @@
-import type { Quote, QuoteItem, QuoteLabor, Invoice, Transaction } from "../../../types";
+import type { Quote, QuoteItem, QuoteLabor, Invoice, Transaction } from '../../types';
 
 export const calculateQuoteTotals = (
   items: QuoteItem[],

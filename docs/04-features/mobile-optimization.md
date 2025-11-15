@@ -1090,6 +1090,356 @@ button:active {
 
 ---
 
+## Visual Design voor Mobiel
+
+### Design Principes voor Touch Interfaces
+
+Mobile design gaat niet alleen om responsive layouts - het gaat ook om **visuele feedback** die gebruikers vertelt dat hun touch geregistreerd is.
+
+**📚 Volledige Design Docs:**
+- [Visual Design Guide](./visual-design-guide.md) - Complete design filosofie
+- [Brand Identity](./brand-identity.md) - Kleuren, typography, iconografie
+- [Component Visual Patterns](./component-visual-patterns.md) - Component styling
+- [Design Quick Wins](./design-quick-wins.md) - 5 snelle verbeteringen
+
+### Touch Feedback Patterns
+
+**Active States (KRITIEK voor mobiel):**
+
+```tsx
+// Visuele feedback bij touch
+<button className="
+  bg-primary-500
+  active:bg-primary-700
+  active:scale-95
+  transition-all duration-100
+">
+  Opslaan
+</button>
+
+// Card feedback
+<div className="
+  bg-white rounded-lg shadow-sm
+  active:shadow-none active:bg-gray-50
+  transition-all duration-100
+">
+  {/* Card content */}
+</div>
+
+// Lijst item feedback
+<div className="
+  p-4 border-b
+  active:bg-primary-50
+  transition-colors duration-100
+">
+  {/* List item */}
+</div>
+```
+
+### Mobile-Optimized Colors
+
+**Status kleuren met grotere contrast voor zichtbaarheid in fel licht:**
+
+```tsx
+// Heldere status badges
+<span className="
+  px-3 py-1.5 rounded-full text-sm font-semibold
+  bg-success-500 text-white  // Volledige saturatie, wit text
+">
+  Voltooid
+</span>
+
+<span className="
+  px-3 py-1.5 rounded-full text-sm font-semibold
+  bg-warning-500 text-white
+">
+  In behandeling
+</span>
+
+// In plaats van lichte achtergronden met donkere text op mobiel
+// Beter leesbaar in zonlicht!
+```
+
+### Glassmorphism voor Modals op Mobiel
+
+**Moderne, duidelijke focus:**
+
+```tsx
+// Full-screen modal met glassmorphism
+<div className="fixed inset-0 z-50 lg:inset-auto lg:top-1/2 lg:left-1/2 lg:-translate-x-1/2 lg:-translate-y-1/2">
+  <div className="
+    h-full w-full
+    lg:h-auto lg:w-[600px] lg:max-h-[90vh]
+    bg-white/95 backdrop-blur-lg
+    lg:rounded-2xl lg:shadow-2xl
+    border-0 lg:border lg:border-white/20
+  ">
+    {/* Modal content */}
+  </div>
+</div>
+
+// Overlay met blur
+<div className="
+  fixed inset-0 z-40
+  bg-black/40 backdrop-blur-sm
+" />
+```
+
+### Subtle Animations voor Feedback
+
+**Gebruik animations om status te communiceren:**
+
+```tsx
+// Loading state met pulse
+<button disabled className="
+  bg-gray-300 text-gray-500
+  animate-pulse cursor-not-allowed
+">
+  Bezig met laden...
+</button>
+
+// Success feedback met scale
+<button
+  onClick={() => {
+    // Na succesvolle actie
+    button.classList.add('animate-scaleUp');
+    setTimeout(() => button.classList.remove('animate-scaleUp'), 300);
+  }}
+  className="bg-success-500"
+>
+  Opgeslagen!
+</button>
+
+// Shake op error
+<input
+  className={`
+    border rounded-lg
+    ${error ? 'animate-shake border-error-500' : 'border-gray-300'}
+  `}
+/>
+```
+
+### Enhanced Touch Targets met Visual Padding
+
+**Maak touch areas groter zonder visuele rommel:**
+
+```tsx
+// Visueel compact, maar grote touch area
+<button className="
+  relative
+  px-3 py-1.5
+  text-sm font-medium
+  before:absolute before:inset-0
+  before:-m-2  /* 8px extra touch padding rondom */
+  before:rounded-lg
+">
+  <TrashIcon className="w-5 h-5" />
+</button>
+
+// List items met grote touch area
+<div className="
+  py-4 px-4  /* 44px+ hoogte automatisch */
+  active:bg-gray-50
+  cursor-pointer
+">
+  <h3 className="font-medium">Item naam</h3>
+  <p className="text-sm text-gray-500">Beschrijving</p>
+</div>
+```
+
+### Gradient Backgrounds voor Visuele Hiërarchie
+
+**Subtiele gradients die schermen levendiger maken:**
+
+```tsx
+// Page background gradient
+<div className="
+  min-h-screen
+  bg-gradient-to-br from-gray-50 via-white to-primary-50/20
+">
+  {/* Page content */}
+</div>
+
+// Card met gradient accent
+<div className="
+  bg-white rounded-xl shadow-lg
+  border-t-4 border-primary-500
+  relative overflow-hidden
+">
+  {/* Subtle gradient overlay */}
+  <div className="absolute inset-0 bg-gradient-to-br from-primary-500/5 to-transparent pointer-events-none" />
+
+  <div className="relative p-6">
+    {/* Card content */}
+  </div>
+</div>
+```
+
+### Empty States op Mobiel
+
+**Delightful empty states nemen meer schermruimte op mobile - maak ze mooi:**
+
+```tsx
+<div className="
+  flex flex-col items-center justify-center
+  min-h-[60vh] px-6 text-center
+">
+  {/* Icon met gradient achtergrond */}
+  <div className="
+    w-20 h-20 rounded-full
+    bg-gradient-to-br from-primary-500 to-primary-600
+    flex items-center justify-center
+    mb-6
+    shadow-lg shadow-primary-500/30
+  ">
+    <InboxIcon className="w-10 h-10 text-white" />
+  </div>
+
+  <h3 className="text-xl font-semibold text-gray-900 mb-3">
+    Nog geen werkorders
+  </h3>
+
+  <p className="text-base text-gray-600 mb-8 max-w-sm leading-relaxed">
+    Maak je eerste werkorder aan om aan de slag te gaan met je taken
+  </p>
+
+  {currentUser?.isAdmin && (
+    <button className="
+      w-full max-w-xs
+      px-6 py-3.5
+      bg-gradient-to-r from-primary-500 to-primary-600
+      hover:from-primary-600 hover:to-primary-700
+      text-white font-medium rounded-xl
+      shadow-lg shadow-primary-500/30
+      transform active:scale-95
+      transition-all duration-200
+    ">
+      Werkorder Toevoegen
+    </button>
+  )}
+</div>
+```
+
+### Loading Skeletons met Shimmer Effect
+
+**Moderne skeleton screens:**
+
+```tsx
+// Card skeleton met shimmer
+<div className="
+  bg-white rounded-lg shadow-sm border border-gray-200 p-6
+  relative overflow-hidden
+">
+  {/* Shimmer overlay */}
+  <div className="
+    absolute inset-0
+    bg-gradient-to-r from-transparent via-white/60 to-transparent
+    animate-shimmer
+  " />
+
+  <div className="relative space-y-4">
+    <div className="h-4 bg-gray-200 rounded w-3/4" />
+    <div className="h-4 bg-gray-200 rounded w-1/2" />
+    <div className="h-4 bg-gray-200 rounded w-5/6" />
+  </div>
+</div>
+
+// Tailwind config voor shimmer animation
+// animation: {
+//   shimmer: 'shimmer 2s infinite'
+// },
+// keyframes: {
+//   shimmer: {
+//     '0%': { transform: 'translateX(-100%)' },
+//     '100%': { transform: 'translateX(100%)' }
+//   }
+// }
+```
+
+### Micro-Interactions voor Touch Feedback
+
+**Kleine details die groot verschil maken:**
+
+```tsx
+// Checkbox met bounce effect
+<input
+  type="checkbox"
+  className="
+    w-6 h-6
+    checked:animate-bounceIn
+    transition-all
+  "
+/>
+
+// Toggle switch met smooth transition
+<button
+  role="switch"
+  className={`
+    relative inline-flex h-8 w-14 items-center rounded-full
+    transition-colors duration-300
+    ${enabled ? 'bg-primary-500' : 'bg-gray-300'}
+  `}
+>
+  <span className={`
+    inline-block h-6 w-6 rounded-full bg-white
+    transition-transform duration-300 ease-in-out
+    shadow-lg
+    ${enabled ? 'translate-x-7' : 'translate-x-1'}
+  `} />
+</button>
+
+// FAB (Floating Action Button) met ripple effect
+<button className="
+  fixed bottom-6 right-6 z-50
+  w-14 h-14 rounded-full
+  bg-gradient-to-br from-primary-500 to-primary-600
+  shadow-lg shadow-primary-500/40
+  text-white
+  transform active:scale-90
+  transition-all duration-200
+  hover:shadow-xl hover:shadow-primary-500/50
+">
+  <PlusIcon className="w-6 h-6 mx-auto" />
+</button>
+```
+
+### Dark Text op Light Backgrounds
+
+**WCAG contrast compliance op mobiel is kritiek:**
+
+```tsx
+// Goede contrast ratios
+<h1 className="text-gray-900">  {/* #111827 - 15.6:1 ratio */}
+<p className="text-gray-700">   {/* #374151 - 9.4:1 ratio */}
+<small className="text-gray-600">{/* #4b5563 - 7.1:1 ratio (WCAG AA) */}
+
+// Status text met voldoende contrast
+<span className="text-success-700 bg-success-50">  {/* 4.5:1+ */}
+<span className="text-warning-700 bg-warning-50">  {/* 4.5:1+ */}
+<span className="text-error-700 bg-error-50">    {/* 4.5:1+ */}
+```
+
+### Mobile Visual Checklist
+
+**Bij elke nieuwe mobile feature:**
+
+- [ ] Active states aanwezig op alle tappable elementen
+- [ ] Feedback binnen 100ms na touch
+- [ ] Kleuren hebben voldoende contrast (WCAG AA minimum)
+- [ ] Loading states zijn visueel duidelijk (skeletons of spinners)
+- [ ] Empty states zijn mooi en uitnodigend
+- [ ] Errors zijn duidelijk zichtbaar met iconen + kleur
+- [ ] Success states geven positieve feedback (groen, checkmark, animatie)
+- [ ] Gradients zijn subtiel en niet afleidend
+- [ ] Shadows zijn niet te zwaar (performance)
+- [ ] Animations respecteren `prefers-reduced-motion`
+- [ ] Touch targets hebben visuele padding (niet te krap)
+- [ ] Focus states zijn zichtbaar voor keyboard users
+
+**→ Zie [Design Implementation Checklist](./design-implementation-checklist.md) voor complete checklist**
+
+---
+
 ## Toekomstige Optimalisaties
 
 ### Geplande Features
