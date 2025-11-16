@@ -355,6 +355,7 @@ npx prisma migrate dev --create-only --name fix-types
 - `inventory_items` - Voorraad
 - `employees` - Medewerkers (HRM)
 - `transactions` - Transacties (boekhouding)
+- `audit_logs` - **NIEUW (V5.9.0)** - Audit trail voor compliance en security
 
 ### **Belangrijke Relaties**
 - Quote → WorkOrder (1:1)
@@ -363,6 +364,37 @@ npx prisma migrate dev --create-only --name fix-types
 - Customer → Quotes/Invoices/WorkOrders (1:N)
 - User → Quotes/Invoices/WorkOrders (1:N)
 - InventoryItem → QuoteItems/WorkOrderMaterials (1:N)
+
+### **AuditLog Model Details (V5.9.0)**
+
+Het nieuwe AuditLog model tracked alle belangrijke gebruikersacties voor compliance en security:
+
+```prisma
+model AuditLog {
+  id          String   @id @default(uuid())
+  userId      String?  @map("user_id")      // Gebruiker die actie uitvoerde
+  userName    String?  @map("user_name")    // Naam voor snelle referentie
+  action      String                        // create, update, delete, login, logout
+  resource    String                        // users, quotes, invoices, customers, etc.
+  resourceId  String   @map("resource_id")  // ID van beïnvloed record
+  changes     String?  @db.Text             // JSON string: { old: {...}, new: {...} }
+  ipAddress   String?  @map("ip_address")   // IP adres van gebruiker
+  userAgent   String?  @map("user_agent")   // Browser/client info
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@index([userId])      // Query logs per gebruiker
+  @@index([resource])    // Query logs per resource type
+  @@index([action])      // Query logs per actie type
+  @@index([createdAt])   // Query logs op datum
+  @@map("audit_logs")
+}
+```
+
+**Gebruik:**
+- **Compliance**: AVG/GDPR vereisten voor audit trail
+- **Security**: Track verdachte activiteiten
+- **Debugging**: Wat is er veranderd en door wie?
+- **Forensics**: Onderzoek na security incident
 
 ---
 
