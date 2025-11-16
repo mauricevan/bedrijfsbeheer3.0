@@ -50,6 +50,7 @@ export interface InventoryCategory {
 export interface InventoryItem {
   id: string;
   name: string;
+  description?: string; // Product beschrijving
   sku: string; // Legacy - wordt gemigreerd naar autoSku
   quantity: number;
   reorderLevel: number;
@@ -413,7 +414,7 @@ export interface Transaction {
   relatedTo?: string;
 }
 
-export type WorkOrderStatus = "To Do" | "Pending" | "In Progress" | "Completed";
+export type WorkOrderStatus = "To Do" | "Pending" | "In Uitvoering" | "Voltooid";
 
 // Audit trail entry voor werkorder wijzigingen
 export interface WorkOrderHistoryEntry {
@@ -513,7 +514,7 @@ export interface Lead {
   nextFollowUpDate?: string;
 }
 
-export type InteractionType = "call" | "email" | "meeting" | "note" | "sms";
+export type InteractionType = "call" | "email" | "email_received" | "meeting" | "note" | "sms";
 
 export interface Interaction {
   id: string;
@@ -650,9 +651,11 @@ export type QuoteStatus =
 
 export interface QuoteItem {
   inventoryItemId?: string; // Koppeling naar voorraad item
+  productName?: string; // Product naam (alias voor description voor backwards compatibility)
   description: string;
   quantity: number;
   pricePerUnit: number;
+  price?: number; // Alias voor pricePerUnit (backwards compatibility)
   total: number;
 }
 
@@ -660,6 +663,7 @@ export interface QuoteLabor {
   description: string;
   hours: number;
   hourlyRate: number;
+  rate?: number; // Alias voor hourlyRate (backwards compatibility)
   total: number;
 }
 
@@ -683,6 +687,7 @@ export interface QuoteHistoryEntry {
 
 export interface Quote {
   id: string;
+  quoteNumber?: string; // Offerte nummer (bijv. Q001)
   customerId: string;
   items: QuoteItem[];
   labor?: QuoteLabor[]; // Optionele werkuren
@@ -692,11 +697,13 @@ export interface Quote {
   total: number; // Totaal incl. BTW
   status: QuoteStatus;
   createdDate: string;
+  issueDate?: string; // Uitgifte datum
   validUntil: string;
   notes?: string;
   location?: string; // Locatie voor de werkzaamheden
   scheduledDate?: string; // Geplande uitvoerdatum
   workOrderId?: string; // Link naar werkorder indien omgezet
+  invoiceId?: string; // Link naar factuur indien omgezet
 
   // Audit trail
   createdBy?: string; // Employee ID van wie de offerte heeft aangemaakt
@@ -776,7 +783,7 @@ export interface Invoice {
 }
 
 export type TaskPriority = "low" | "medium" | "high";
-export type TaskStatus = "todo" | "in_progress" | "done";
+export type TaskStatus = "todo" | "pending" | "in_progress" | "done";
 
 export interface Task {
   id: string;
@@ -810,7 +817,8 @@ export interface NotificationAction {
 
 export interface Notification {
   id: string;
-  type: "info" | "warning" | "error" | "success";
+  title?: string; // Titel van de notificatie
+  type: "info" | "warning" | "error" | "success" | "email";
   message: string;
   date: string;
   read: boolean;

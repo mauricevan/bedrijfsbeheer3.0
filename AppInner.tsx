@@ -309,10 +309,9 @@ export const AppInner: React.FC<AppInnerProps> = ({
             <Route path="/" element={<Navigate to={`/${ModuleKey.DASHBOARD}`} replace />} />
             
             {visibleModules.map(module => (
-              <Route 
-                key={module.id}
-                path={`/${module.id}`} 
-                element={moduleRoutes[module.id as keyof typeof moduleRoutes]} 
+              <Route
+                path={`/${module.id}`}
+                element={moduleRoutes[module.id as keyof typeof moduleRoutes]}
               />
             ))}
 
