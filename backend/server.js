@@ -5,6 +5,8 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
 import cookieParser from 'cookie-parser';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import apiRoutes from './routes/api/index.js';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
 import { apiRateLimiter } from './middleware/rateLimiter.js';
@@ -12,6 +14,10 @@ import { validateEnv, getEnvInfo } from './utils/validateEnv.js';
 import { sanitizeInput } from './utils/sanitize.js';
 import { auditMiddleware } from './utils/audit.js';
 import logger from './utils/logger.js';
+
+// Get __dirname in ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Load environment variables
 dotenv.config();
@@ -96,8 +102,8 @@ app.use('/api', apiRateLimiter);
 // API routes
 app.use('/api', apiRoutes);
 
-// Root endpoint
-app.get('/', (req, res) => {
+// Root endpoint (API info - only in development or when explicitly requested)
+app.get('/api-info', (req, res) => {
   res.json({
     name: 'Bedrijfsbeheer 3.0 API',
     version: '1.0.0',
@@ -124,6 +130,23 @@ app.get('/', (req, res) => {
     },
   });
 });
+
+// ============================================
+// Frontend Static Files (Production only)
+// ============================================
+if (process.env.NODE_ENV === 'production') {
+  // Serve static files from dist/ folder
+  const distPath = path.join(__dirname, '../dist');
+  app.use(express.static(distPath));
+
+  // SPA fallback - serve index.html for all non-API routes
+  // This must be after all API routes but before error handlers
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(distPath, 'index.html'));
+  });
+
+  logger.info(`📁 Serving static files from: ${distPath}`);
+}
 
 // ============================================
 // Error Handling
