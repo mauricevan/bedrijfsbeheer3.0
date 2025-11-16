@@ -1,8 +1,8 @@
 # Bedrijfsbeheer Dashboard
 
-**Versie:** 5.8.0 - Email Integratie & Automatische Offerte Creatie
+**Versie:** 5.9.0 - Production Security & Infrastructure Update
 **Status:** Productie-ready
-**Laatst bijgewerkt:** December 2024
+**Laatst bijgewerkt:** November 2025
 
 ---
 
@@ -81,6 +81,21 @@ Een volledig geïntegreerd dashboard/backend-systeem waarmee de eigenaar alle be
 
 ### Installatie
 
+#### Optie 1: Docker (Aanbevolen voor Productie)
+
+```bash
+# Clone repository
+git clone <repository-url>
+cd bedrijfsbeheer
+
+# Start met Docker Compose
+docker-compose up --build
+```
+
+Applicatie draait op `http://localhost:3001`
+
+#### Optie 2: Lokaal Development
+
 ```bash
 # Clone repository
 git clone <repository-url>
@@ -94,6 +109,8 @@ npm run dev
 ```
 
 Applicatie draait op `http://localhost:5173`
+
+Voor gedetailleerde deployment instructies, zie [DEPLOYMENT.md](./DEPLOYMENT.md)
 
 ### Demo Login
 
@@ -283,21 +300,42 @@ Factuur (Draft → Verzenden → Betaald)
 
 ---
 
-## 🆕 Laatste Updates (V5.8.0)
+## 🆕 Laatste Updates
 
-### Email Integratie
+### V5.9.0 - Production Security & Infrastructure (NIEUW)
+
+#### 🔒 Security Enhancements
+- 🍪 **JWT HttpOnly Cookies** - Migrated from localStorage (XSS protection)
+- 🛡️ **Enhanced Rate Limiting** - Strict auth rate limiting (5 attempts/15min)
+- 🧹 **Input Sanitization** - DOMPurify XSS protection
+- 🔐 **HTTPS Enforcement** - Automatic HTTPS redirect in production
+- 📋 **Security Headers** - Helmet with CSP, HSTS, X-Frame-Options
+
+#### 🐳 Infrastructure & DevOps
+- 📦 **Docker Containerization** - Production-ready Dockerfile & docker-compose
+- 📝 **Winston Logging** - Structured JSON logs for production
+- 🔍 **Audit Trail** - Compliance-ready audit logging system
+- 📖 **Deployment Guide** - Comprehensive DEPLOYMENT.md (350+ lines)
+
+#### 🧪 Testing
+- ✅ **Authentication Tests** - Jest + Supertest test suite
+- 🔐 **Security Tests** - HttpOnly cookie & rate limiting verification
+
+[Bekijk volledige security features →](./docs/02-architecture/security.md) | [Deployment Guide →](./DEPLOYMENT.md)
+
+### V5.8.0 - Email Integratie
 - 📧 Drag-and-drop .eml bestanden naar dashboard
 - 🤖 Automatische email parsing (items, prijzen, uren)
 - 👤 Klant/lead matching op basis van email adres
 - ⚡ Creëer offertes, taken of notificaties vanuit emails
 
-### Voorraadbeheer (V5.7.0)
+### V5.7.0 - Voorraadbeheer
 - 📦 3 SKU types: Leverancier, Automatisch, Aangepast
 - 🏷️ Categorieën systeem met kleur badges
 - 🔍 Uitgebreide zoeken in alle velden
 - 🖱️ Dubbelklik om items te bewerken
 
-### Boekhouding (V5.2.0)
+### V5.2.0 - Boekhouding
 - 💰 MKB-ready grootboek met NL-compliant BTW
 - 📊 Financieel overzicht met Excel-achtige tabellen
 - 📑 Klant/leverancier dossiers
