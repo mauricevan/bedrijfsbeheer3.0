@@ -21,6 +21,16 @@ RUN npm ci
 # Copy frontend source files
 COPY . .
 
+# Build arguments for frontend configuration
+# VITE_API_URL: API endpoint (default: /api for same-origin requests)
+# DEPLOY_TARGET: Deployment platform (empty for Render, 'github' for GitHub Pages)
+ARG VITE_API_URL=/api
+ARG DEPLOY_TARGET=
+
+# Set environment variables for Vite build
+ENV VITE_API_URL=${VITE_API_URL}
+ENV DEPLOY_TARGET=${DEPLOY_TARGET}
+
 # Build frontend (Vite)
 RUN npm run build
 
@@ -66,6 +76,13 @@ COPY --chown=nodejs:nodejs prisma ./prisma
 # Copy frontend build from frontend-builder
 COPY --from=frontend-builder --chown=nodejs:nodejs /app/dist ./dist
 
+# Copy entrypoint script
+COPY --chown=nodejs:nodejs docker-entrypoint.sh ./
+
+# Make entrypoint script executable
+USER root
+RUN chmod +x docker-entrypoint.sh
+
 # Create logs directory
 RUN mkdir -p logs && chown nodejs:nodejs logs
 
@@ -79,8 +96,8 @@ EXPOSE 3001
 HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
   CMD node -e "require('http').get('http://localhost:3001/api/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
 
-# Use dumb-init to handle signals properly
-ENTRYPOINT ["dumb-init", "--"]
+# Use dumb-init and custom entrypoint for proper signal handling and migrations
+ENTRYPOINT ["dumb-init", "--", "./docker-entrypoint.sh"]
 
-# Start backend server
+# Start backend server (passed as argument to entrypoint script)
 CMD ["node", "backend/server.js"]

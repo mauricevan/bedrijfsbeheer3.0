@@ -1,0 +1,165 @@
+# ==============================================
+# BEDRIJFSBEHEER 3.0 - RENDER.COM CONFIGURATION
+# ==============================================
+# Infrastructure as Code for Render.com deployment
+# Automatically provisions web service and PostgreSQL database
+
+services:
+  # ==============================================
+  # Web Service (Backend + Frontend)
+  # ==============================================
+  - type: web
+    name: bedrijfsbeheer
+    runtime: docker
+    plan: starter  # Change to 'standard' or 'pro' for production
+    region: frankfurt  # EU region for GDPR compliance
+
+    # Docker configuration
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+
+    # Build arguments
+    dockerCommand: node backend/server.js
+
+    # Health check
+    healthCheckPath: /api/health
+
+    # Auto-deploy configuration
+    branch: main  # Change to your production branch
+    autoDeploy: true
+
+    # Environment variables
+    envVars:
+      # Node environment
+      - key: NODE_ENV
+        value: production
+
+      # Database (automatically populated by Render)
+      - key: DATABASE_URL
+        fromDatabase:
+          name: bedrijfsbeheer-db
+          property: connectionString
+
+      # JWT Secret (auto-generated secure random string)
+      - key: JWT_SECRET
+        generateValue: true
+
+      # JWT Expiry
+      - key: JWT_EXPIRY
+        value: 24h
+
+      # CORS Origin (IMPORTANT: Set this to your Render.com URL after first deploy)
+      # Format: https://bedrijfsbeheer.onrender.com
+      - key: CORS_ORIGIN
+        sync: false  # Must be set manually in Render dashboard
+
+      # HTTPS enforcement (always enabled in production)
+      - key: HTTPS_ONLY
+        value: true
+
+      # Frontend API URL (relative path for same-origin requests)
+      - key: VITE_API_URL
+        value: /api
+
+      # Deployment target (empty for Render, 'github' for GitHub Pages)
+      - key: DEPLOY_TARGET
+        value: ''
+
+      # Logging
+      - key: LOG_LEVEL
+        value: info
+
+      # Optional: Redis for distributed rate limiting
+      # Uncomment and add Redis service below if needed
+      # - key: REDIS_URL
+      #   fromService:
+      #     type: redis
+      #     name: bedrijfsbeheer-redis
+      #     property: connectionString
+
+# ==============================================
+# Databases
+# ==============================================
+databases:
+  # PostgreSQL database
+  - name: bedrijfsbeheer-db
+    plan: starter  # Change to 'standard' for production
+    databaseName: bedrijfsbeheer
+    user: bedrijfsbeheer
+    region: frankfurt  # Same region as web service
+    ipAllowList: []  # Empty = allow all (Render services only)
+
+# ==============================================
+# Optional: Redis for Rate Limiting
+# ==============================================
+# Uncomment this section if you need distributed rate limiting
+# across multiple web service instances
+#
+# - type: redis
+#   name: bedrijfsbeheer-redis
+#   plan: starter
+#   region: frankfurt
+#   maxmemoryPolicy: allkeys-lru
+#   ipAllowList: []
+
+# ==============================================
+# DEPLOYMENT INSTRUCTIONS
+# ==============================================
+#
+# 1. Push this file to your GitHub repository
+#
+# 2. Connect repository to Render.com:
+#    - Go to https://dashboard.render.com
+#    - Click "New" → "Blueprint"
+#    - Connect your GitHub repository
+#    - Select branch (default: main)
+#
+# 3. Render will automatically:
+#    ✅ Create PostgreSQL database
+#    ✅ Build Docker image with frontend and backend
+#    ✅ Run database migrations (via docker-entrypoint.sh)
+#    ✅ Deploy web service
+#    ✅ Generate JWT_SECRET
+#
+# 4. IMPORTANT - Manual configuration required:
+#    After first deployment, set CORS_ORIGIN:
+#    - Go to your web service in Render dashboard
+#    - Navigate to "Environment"
+#    - Set CORS_ORIGIN to: https://your-app-name.onrender.com
+#    - Click "Save Changes" (triggers redeploy)
+#
+# 5. Optional - Custom domain:
+#    - Go to web service → Settings → Custom Domain
+#    - Add your domain (e.g., app.yourdomain.com)
+#    - Update CORS_ORIGIN to match custom domain
+#    - Configure DNS CNAME record
+#
+# 6. Monitoring:
+#    - Logs: Dashboard → Web Service → Logs
+#    - Metrics: Dashboard → Web Service → Metrics
+#    - Health: https://your-app.onrender.com/api/health
+#
+# ==============================================
+# COST ESTIMATION (as of 2025)
+# ==============================================
+# Starter plan (for testing):
+#   - Web Service: Free (750 hours/month, spins down after 15min inactivity)
+#   - PostgreSQL: Free (90 days, then $7/month)
+#   Total: $0/month (first 90 days), then $7/month
+#
+# Production plan (recommended):
+#   - Web Service: $7/month (always on, no spin down)
+#   - PostgreSQL: $7/month
+#   - Redis (optional): $10/month
+#   Total: $14-24/month
+#
+# ==============================================
+# SECURITY NOTES
+# ==============================================
+# ✅ All secrets stored encrypted in Render vault
+# ✅ DATABASE_URL auto-populated with secure credentials
+# ✅ JWT_SECRET auto-generated (256-bit random)
+# ✅ HTTPS enforced (free SSL certificates)
+# ✅ EU region (GDPR compliant)
+# ⚠️  Remember to set CORS_ORIGIN after first deploy!
+#

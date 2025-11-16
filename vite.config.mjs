@@ -7,9 +7,15 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig(({ mode }) => {
     const env = loadEnv(mode, '.', '');
+
+    // Determine base path based on deployment target
+    // GitHub Pages needs /bedrijfsbeheer/, Render.com and other platforms need /
+    const isGitHubPages = env.DEPLOY_TARGET === 'github';
+    const basePath = isGitHubPages ? '/bedrijfsbeheer/' : '/';
+
     return {
-      // Set base path for GitHub Pages (repository name)
-      base: '/bedrijfsbeheer/',
+      // Dynamic base path for different deployment targets
+      base: basePath,
       plugins: [react()],
       build: {
         sourcemap: true,
