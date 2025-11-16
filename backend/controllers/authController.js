@@ -51,6 +51,14 @@ export const register = async (req, res, next) => {
     // Generate token
     const token = generateToken(user);
 
+    // Set HttpOnly cookie
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production', // HTTPS only in production
+      sameSite: 'strict',
+      maxAge: 24 * 60 * 60 * 1000, // 24 hours
+    });
+
     res.status(201).json({
       user: {
         id: user.id,
@@ -58,7 +66,6 @@ export const register = async (req, res, next) => {
         name: user.name,
         isAdmin: user.isAdmin,
       },
-      token,
     });
   } catch (error) {
     next(error);
@@ -103,6 +110,14 @@ export const login = async (req, res, next) => {
     // Generate token
     const token = generateToken(user);
 
+    // Set HttpOnly cookie
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production', // HTTPS only in production
+      sameSite: 'strict',
+      maxAge: 24 * 60 * 60 * 1000, // 24 hours
+    });
+
     res.json({
       user: {
         id: user.id,
@@ -110,7 +125,6 @@ export const login = async (req, res, next) => {
         name: user.name,
         isAdmin: user.isAdmin,
       },
-      token,
     });
   } catch (error) {
     next(error);
@@ -147,12 +161,17 @@ export const getProfile = async (req, res, next) => {
 };
 
 /**
- * Logout (client-side token removal, just returns success)
+ * Logout (clear cookie)
  * POST /api/auth/logout
  */
 export const logout = async (req, res) => {
-  // JWT is stateless, so logout is handled client-side
-  // This endpoint exists for consistency
+  // Clear the token cookie
+  res.clearCookie('token', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'strict',
+  });
+
   res.json({
     message: 'Succesvol uitgelogd',
   });

@@ -3,20 +3,30 @@ import { verifyToken } from '../utils/jwt.js';
 
 /**
  * Authenticate user via JWT token
+ * Supports both HttpOnly cookies (preferred) and Authorization header (backward compatibility)
  * Adds user object to req.user if valid
  */
 export const authenticate = (req, res, next) => {
   try {
-    // Extract token from Authorization header
-    const authHeader = req.headers.authorization;
+    let token = null;
 
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    // Try to get token from cookie first (preferred method)
+    if (req.cookies && req.cookies.token) {
+      token = req.cookies.token;
+    }
+    // Fall back to Authorization header for backward compatibility
+    else {
+      const authHeader = req.headers.authorization;
+      if (authHeader && authHeader.startsWith('Bearer ')) {
+        token = authHeader.split(' ')[1];
+      }
+    }
+
+    if (!token) {
       return res.status(401).json({
         error: 'Geen toegang - login vereist',
       });
     }
-
-    const token = authHeader.split(' ')[1];
 
     // Verify and decode token
     const decoded = verifyToken(token);
@@ -40,13 +50,25 @@ export const authenticate = (req, res, next) => {
 /**
  * Optional authentication - doesn't fail if no token
  * Useful for routes that work both with/without auth
+ * Supports both HttpOnly cookies and Authorization header
  */
 export const optionalAuth = (req, res, next) => {
   try {
-    const authHeader = req.headers.authorization;
+    let token = null;
 
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-      const token = authHeader.split(' ')[1];
+    // Try cookie first
+    if (req.cookies && req.cookies.token) {
+      token = req.cookies.token;
+    }
+    // Fall back to Authorization header
+    else {
+      const authHeader = req.headers.authorization;
+      if (authHeader && authHeader.startsWith('Bearer ')) {
+        token = authHeader.split(' ')[1];
+      }
+    }
+
+    if (token) {
       const decoded = verifyToken(token);
       req.user = decoded;
     }
