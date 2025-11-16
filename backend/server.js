@@ -7,9 +7,13 @@ import dotenv from 'dotenv';
 import apiRoutes from './routes/api/index.js';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
 import { apiRateLimiter } from './middleware/rateLimiter.js';
+import { validateEnv, getEnvInfo } from './utils/validateEnv.js';
 
 // Load environment variables
 dotenv.config();
+
+// Validate environment variables (will throw error if missing required vars)
+validateEnv();
 
 // Initialize Express
 const app = express();
@@ -96,15 +100,18 @@ app.use(errorHandler);
 // ============================================
 
 app.listen(PORT, () => {
+  const envInfo = getEnvInfo();
+
   console.log('========================================');
   console.log(`🚀 Bedrijfsbeheer 3.0 Backend Running`);
-  console.log(`📍 Port: ${PORT}`);
-  console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`📍 Port: ${envInfo.port}`);
+  console.log(`🌍 Environment: ${envInfo.nodeEnv}`);
   console.log(`🔗 API: http://localhost:${PORT}/api`);
   console.log(`❤️  Health: http://localhost:${PORT}/api/health`);
-  console.log(`📝 CORS: ${CORS_ORIGIN}`);
+  console.log(`📝 CORS: ${envInfo.corsOrigin}`);
   console.log(`🔒 Rate Limit: 100 req/15min`);
-  console.log(`📊 Database: ${process.env.DATABASE_URL.includes('postgresql') ? 'PostgreSQL' : 'SQLite'}`);
+  console.log(`📊 Database: ${envInfo.database}`);
+  console.log(`🔑 JWT: ${envInfo.jwtConfigured ? 'Configured' : 'Using default (dev only)'}`);
   console.log('========================================');
   console.log(`📚 Endpoints:`);
   console.log(`   /api/auth          - Authentication`);
