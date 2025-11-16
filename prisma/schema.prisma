@@ -294,3 +294,26 @@ model Transaction {
   @@index([date])
   @@map("transactions")
 }
+
+// ============================================
+// Audit Logging
+// ============================================
+
+model AuditLog {
+  id          String   @id @default(uuid())
+  userId      String?  @map("user_id")
+  userName    String?  @map("user_name")
+  action      String   // create, update, delete
+  resource    String   // users, quotes, invoices, etc.
+  resourceId  String   @map("resource_id")
+  changes     String?  @db.Text // JSON string of changes
+  ipAddress   String?  @map("ip_address")
+  userAgent   String?  @map("user_agent")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@index([userId])
+  @@index([resource])
+  @@index([action])
+  @@index([createdAt])
+  @@map("audit_logs")
+}

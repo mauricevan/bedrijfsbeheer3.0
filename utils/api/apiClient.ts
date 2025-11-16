@@ -23,12 +23,15 @@ class ApiClient {
 
   constructor(baseURL: string) {
     this.baseURL = baseURL;
-    // Load token from localStorage on init
+    // Note: Authentication now uses HttpOnly cookies (preferred)
+    // localStorage token support kept for backward compatibility only
     this.token = localStorage.getItem('authToken');
   }
 
   /**
    * Set authentication token
+   * NOTE: This is kept for backward compatibility only.
+   * New implementation uses HttpOnly cookies set by the server.
    */
   setToken(token: string | null) {
     this.token = token;
@@ -41,6 +44,7 @@ class ApiClient {
 
   /**
    * Get authentication token
+   * NOTE: With HttpOnly cookies, tokens are automatically sent by the browser
    */
   getToken(): string | null {
     return this.token;
@@ -54,6 +58,8 @@ class ApiClient {
       'Content-Type': 'application/json',
     };
 
+    // Keep Authorization header support for backward compatibility
+    // But cookies are now the preferred method
     if (this.token) {
       headers['Authorization'] = `Bearer ${this.token}`;
     }
@@ -83,7 +89,9 @@ class ApiClient {
 
       // Handle 401 - unauthorized
       if (response.status === 401) {
+        // Clear localStorage token (backward compatibility)
         this.setToken(null);
+        // Cookie will be cleared by server on logout
         window.location.href = '/login';
       }
 
@@ -119,6 +127,7 @@ class ApiClient {
     const response = await fetch(url.toString(), {
       method: 'GET',
       headers: this.getHeaders(),
+      credentials: 'include', // Send cookies with request
     });
 
     return this.handleResponse<T>(response);
@@ -131,6 +140,7 @@ class ApiClient {
     const response = await fetch(`${this.baseURL}${endpoint}`, {
       method: 'POST',
       headers: this.getHeaders(),
+      credentials: 'include', // Send cookies with request
       body: data ? JSON.stringify(data) : undefined,
     });
 
@@ -144,6 +154,7 @@ class ApiClient {
     const response = await fetch(`${this.baseURL}${endpoint}`, {
       method: 'PUT',
       headers: this.getHeaders(),
+      credentials: 'include', // Send cookies with request
       body: data ? JSON.stringify(data) : undefined,
     });
 
@@ -157,6 +168,7 @@ class ApiClient {
     const response = await fetch(`${this.baseURL}${endpoint}`, {
       method: 'DELETE',
       headers: this.getHeaders(),
+      credentials: 'include', // Send cookies with request
     });
 
     return this.handleResponse<T>(response);
