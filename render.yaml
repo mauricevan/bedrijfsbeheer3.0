@@ -25,7 +25,7 @@ services:
     healthCheckPath: /api/health
 
     # Auto-deploy configuration
-    branch: main  # Change to your production branch
+    branch: refactor/accounting-module  # Production branch
     autoDeploy: true
 
     # Environment variables
