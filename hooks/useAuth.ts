@@ -8,9 +8,24 @@ export function useAuth() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Load user on mount if token exists
+  // Load user on mount - Check localStorage FIRST for mockUser (LOCAL MODE)
   useEffect(() => {
     const loadUser = async () => {
+      // Check localStorage FIRST for mockUser
+      const mockUserStr = localStorage.getItem('mockUser');
+      if (mockUserStr) {
+        try {
+          const mockUser = JSON.parse(mockUserStr);
+          setCurrentUser(mockUser);
+          setIsLoading(false);
+          return;
+        } catch (err) {
+          console.error('Invalid mockUser in localStorage:', err);
+          localStorage.removeItem('mockUser');
+        }
+      }
+
+      // Otherwise try backend authentication
       if (authService.isAuthenticated()) {
         try {
           const user = await authService.getProfile();
@@ -62,6 +77,10 @@ export function useAuth() {
   const logout = useCallback(async () => {
     setIsLoading(true);
     try {
+      // Remove mockUser from localStorage (LOCAL MODE)
+      localStorage.removeItem('mockUser');
+
+      // Also try backend logout
       await authService.logout();
       setCurrentUser(null);
     } catch (err) {
