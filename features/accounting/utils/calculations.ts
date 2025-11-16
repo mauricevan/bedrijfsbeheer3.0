@@ -28,16 +28,30 @@ export const calculateInvoiceTotals = (
   return { subtotal, vatAmount, total };
 };
 
+/**
+ * Generate sequential invoice number in format INV-0001, INV-0002, etc.
+ * Sequential without gaps - Critical P0 feature
+ *
+ * Compliant with: ACCOUNTING_COMPLETE.md Feature 43-44 (P0)
+ *
+ * @param invoices - Array of existing invoices
+ * @returns Next invoice number
+ */
 export const generateInvoiceNumber = (invoices: Invoice[]): string => {
-  const year = new Date().getFullYear();
+  // Extract all existing invoice numbers in INV-XXXX format
   const existingNumbers = invoices
-    .filter((inv) => inv.invoiceNumber.startsWith(`${year}-`))
-    .map((inv) => parseInt(inv.invoiceNumber.split("-")[1]))
-    .filter((num) => !isNaN(num));
+    .map((inv) => {
+      const match = inv.invoiceNumber.match(/^INV-(\d+)$/);
+      return match ? parseInt(match[1], 10) : 0;
+    })
+    .filter((num) => !isNaN(num) && num > 0);
 
+  // Get next sequential number (no gaps)
   const nextNumber =
     existingNumbers.length > 0 ? Math.max(...existingNumbers) + 1 : 1;
-  return `${year}-${String(nextNumber).padStart(3, "0")}`;
+
+  // Format as INV-0001, INV-0002, etc. (4 digits)
+  return `INV-${String(nextNumber).padStart(4, "0")}`;
 };
 
 export const calculateTransactionStats = (
