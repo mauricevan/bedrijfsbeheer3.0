@@ -5,9 +5,10 @@
 import type { WorkOrder } from '../types';
 
 /**
- * Get next available sort index for work orders
+ * Get next available sort index for work orders (simple version)
+ * @deprecated Use getNextSortIndex from dragDropHelpers for full functionality
  */
-export const getNextSortIndex = (workOrders: WorkOrder[]): number => {
+export const getSimpleNextSortIndex = (workOrders: WorkOrder[]): number => {
   if (workOrders.length === 0) return 1;
   const maxIndex = Math.max(...workOrders.map((wo) => wo.sortIndex || 0));
   return maxIndex + 1;
