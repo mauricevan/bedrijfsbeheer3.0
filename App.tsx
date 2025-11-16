@@ -45,6 +45,7 @@ import {
   MOCK_INTERACTIONS,
   MOCK_EMAILS,
   MOCK_EMAIL_TEMPLATES,
+  MOCK_EMPLOYEES,
 } from "./data/mockData";
 
 // Import functional pages
@@ -89,7 +90,7 @@ function App() {
   // API-backed state (fetched from backend)
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
-  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [employees, setEmployees] = useState<Employee[]>(MOCK_EMPLOYEES);
   const [quotes, setQuotes] = useState<Quote[]>([]);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [workOrders, setWorkOrders] = useState<WorkOrder[]>([]);
@@ -151,7 +152,11 @@ function App() {
       setInvoices(invoicesRes.data || []);
       setWorkOrders(workOrdersRes.data || []);
       setEmployees(employeesRes.data || []);
-      setTransactions(transactionsRes.data?.data || transactionsRes.data || []);
+      // Handle transactions - check if it's nested in data property
+      const transactionsData = Array.isArray(transactionsRes.data)
+        ? transactionsRes.data
+        : (transactionsRes.data as any)?.data || [];
+      setTransactions(transactionsData);
 
       console.log('✅ Data geladen van backend:', {
         quotes: quotesRes.data?.length,
@@ -175,13 +180,23 @@ function App() {
     return ALL_MODULES.filter((module) => activeModules[module.id]);
   }, [activeModules]);
 
-  // Handle login
-  const handleLogin = async (credentials: { email: string; password: string }) => {
-    try {
-      await login(credentials.email, credentials.password);
-    } catch (error: any) {
-      throw error; // Login component will handle the error
-    }
+  // Handle login - LOCAL MODE implementation
+  const handleLogin = async (employee: Employee) => {
+    // Bypass backend - create mock user object
+    const mockUser: User = {
+      id: `user_${employee.id}`,
+      employeeId: employee.id,
+      email: employee.email,
+      name: employee.name,
+      role: employee.role,
+      isAdmin: employee.role === 'Manager Productie',
+    };
+
+    // Save to localStorage
+    localStorage.setItem('mockUser', JSON.stringify(mockUser));
+
+    // Reload page to trigger useAuth to load the user
+    window.location.reload();
   };
 
   // Handle logout
@@ -199,7 +214,7 @@ function App() {
 
   // If not logged in, show login screen
   if (!currentUser) {
-    return <Login onLogin={handleLogin} isLoading={authLoading} />;
+    return <Login employees={employees} onLogin={handleLogin} />;
   }
 
   // Show loading screen while fetching initial data
@@ -406,8 +421,10 @@ function App() {
 
       {/* Sidebar */}
       <Sidebar
-        modules={visibleModules}
-        currentUser={currentUser}
+        activeModules={activeModules}
+        isAdmin={currentUser.isAdmin}
+        setIsAdmin={() => {}} // Dummy function for demo
+        notifications={notifications}
         isMobileOpen={isMobileSidebarOpen}
         onMobileClose={() => setIsMobileSidebarOpen(false)}
       />
@@ -415,17 +432,16 @@ function App() {
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col overflow-hidden">
         <Header
+          isAdmin={currentUser.isAdmin}
+          notifications={notifications}
+          setNotifications={setNotifications}
           currentUser={currentUser}
           onLogout={handleLogout}
-          onMobileMenuClick={() => setIsMobileSidebarOpen(true)}
-          searchData={{
-            inventory,
-            customers,
-            workOrders,
-            quotes,
-            invoices,
-            employees,
-          }}
+          onMobileMenuToggle={() => setIsMobileSidebarOpen(true)}
+          quotes={quotes}
+          invoices={invoices}
+          workOrders={workOrders}
+          customers={customers}
           onNavigate={handleNavigate}
         />
 
