@@ -451,7 +451,6 @@ function App() {
 
             {visibleModules.map((module) => (
               <Route
-                key={module.id}
                 path={`/${module.id}`}
                 element={moduleRoutes[module.id]}
               />

@@ -121,8 +121,8 @@ export const MOCK_SALES: Sale[] = [
   {
     id: 's1',
     items: [
-      { id: 'p1', name: 'Metalen Frame', price: 125.00, inventoryItemId: '1', quantity: 2 },
-      { id: 'p3', name: 'Schroefset (100st)', price: 15.00, inventoryItemId: '3', quantity: 5 },
+      { id: 'p1', name: 'Metalen Frame', price: 125.00, inventoryItemId: '1', quantity: 2, vatRate: "21" },
+      { id: 'p3', name: 'Schroefset (100st)', price: 15.00, inventoryItemId: '3', quantity: 5, vatRate: "21" },
     ],
     total: 325.00,
     customerId: 'c1',
@@ -131,7 +131,7 @@ export const MOCK_SALES: Sale[] = [
   {
     id: 's2',
     items: [
-      { id: 'p2', name: 'Aluminium Behuizing', price: 89.50, inventoryItemId: '2', quantity: 3 },
+      { id: 'p2', name: 'Aluminium Behuizing', price: 89.50, inventoryItemId: '2', quantity: 3, vatRate: "21" },
     ],
     total: 268.50,
     customerId: 'c2',
@@ -140,7 +140,7 @@ export const MOCK_SALES: Sale[] = [
   {
     id: 's3',
     items: [
-      { id: 'p4', name: 'Verfspuit Professioneel', price: 245.00, inventoryItemId: '4', quantity: 1 },
+      { id: 'p4', name: 'Verfspuit Professioneel', price: 245.00, inventoryItemId: '4', quantity: 1, vatRate: "21" },
     ],
     total: 245.00,
     customerId: null,
