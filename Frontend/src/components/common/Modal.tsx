@@ -1,0 +1,74 @@
+import React, { useEffect, useRef } from 'react';
+import { X } from 'lucide-react';
+import { createPortal } from 'react-dom';
+import { cn } from '@/utils/cn';
+import { Button } from './Button';
+
+type ModalProps = {
+  isOpen: boolean;
+  onClose: () => void;
+  title: string;
+  children: React.ReactNode;
+  className?: string;
+};
+
+export const Modal: React.FC<ModalProps> = ({
+  isOpen,
+  onClose,
+  title,
+  children,
+  className,
+}) => {
+  const overlayRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+
+    if (isOpen) {
+      document.addEventListener('keydown', handleEscape);
+      document.body.style.overflow = 'hidden';
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleEscape);
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen, onClose]);
+
+  if (!isOpen) return null;
+
+  return createPortal(
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
+      <div
+        ref={overlayRef}
+        className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm transition-opacity"
+        onClick={onClose}
+        aria-hidden="true"
+      />
+      <div
+        className={cn(
+          'relative w-full max-w-lg transform rounded-xl bg-white dark:bg-slate-900 p-6 text-left shadow-xl transition-all border border-slate-200 dark:border-slate-700',
+          className
+        )}
+      >
+        <div className="flex items-center justify-between mb-5">
+          <h3 className="text-lg font-semibold leading-6 text-slate-900 dark:text-white">
+            {title}
+          </h3>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onClose}
+            className="h-8 w-8 p-0 rounded-full"
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
+        {children}
+      </div>
+    </div>,
+    document.body
+  );
+};

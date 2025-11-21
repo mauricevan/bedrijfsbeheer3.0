@@ -1,0 +1,31 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: var(--color-indigo-600);
+  --color-primary-hover: var(--color-indigo-700);
+  --color-secondary: var(--color-violet-600);
+  --color-accent: var(--color-emerald-500);
+  
+  /* Dark mode overrides */
+  --color-bg-dark: var(--color-slate-900);
+  --color-surface-dark: var(--color-slate-800);
+}
+
+/* Custom Utilities */
+@layer utilities {
+  .glass {
+    @apply bg-white/10 backdrop-blur-lg border border-white/20;
+  }
+  
+  .glass-dark {
+    @apply bg-slate-900/70 backdrop-blur-lg border border-slate-700/50;
+  }
+}
+
+:root {
+  color-scheme: light dark;
+}
+
+body {
+  @apply bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 antialiased;
+}
