@@ -4,6 +4,7 @@ import { useInventory } from '@/features/inventory';
 import { Input } from '@/components/common/Input';
 import { Button } from '@/components/common/Button';
 import { Card } from '@/components/common/Card';
+import { ExtendedSearchFilters } from '@/components/ExtendedSearchFilters';
 import type { CartItem } from '../types';
 
 type ProductSelectorProps = {
@@ -14,11 +15,30 @@ export const ProductSelector: React.FC<ProductSelectorProps> = ({ onAddToCart })
   const { items, categories, isLoading } = useInventory();
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
+  const [showExtendedFilters, setShowExtendedFilters] = useState(false);
 
   const filteredItems = items.filter(item => {
-    const matchesSearch = !search || 
-      item.name.toLowerCase().includes(search.toLowerCase()) ||
-      item.sku.toLowerCase().includes(search.toLowerCase());
+    // Search filtering (comprehensive like inventory)
+    const matchesSearch = !search || (() => {
+      const query = search.toLowerCase();
+      // Search in name
+      if (item.name.toLowerCase().includes(query)) return true;
+      // Search in SKU types
+      if (item.sku?.toLowerCase().includes(query)) return true;
+      if (item.supplierSku?.toLowerCase().includes(query)) return true;
+      if (item.customSku?.toLowerCase().includes(query)) return true;
+      // Search in description
+      if (item.description?.toLowerCase().includes(query)) return true;
+      // Search in location
+      if (item.location?.toLowerCase().includes(query)) return true;
+      // Search in prices (as string)
+      if (item.purchasePrice?.toString().includes(query)) return true;
+      if (item.salePrice?.toString().includes(query)) return true;
+      // Search in POS alert note
+      if (item.posAlert?.toLowerCase().includes(query)) return true;
+      return false;
+    })();
+    
     const matchesCategory = !selectedCategory || item.categoryId === selectedCategory;
     return matchesSearch && matchesCategory && item.quantity > 0;
   });
@@ -46,7 +66,7 @@ export const ProductSelector: React.FC<ProductSelectorProps> = ({ onAddToCart })
     <div className="space-y-4">
       <div className="flex gap-2">
         <Input
-          placeholder="Search products..."
+          placeholder="Zoek producten..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           leftIcon={<Search className="h-4 w-4" />}
@@ -57,11 +77,19 @@ export const ProductSelector: React.FC<ProductSelectorProps> = ({ onAddToCart })
           onChange={(e) => setSelectedCategory(e.target.value)}
           className="h-10 rounded-lg border border-slate-300 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
         >
-          <option value="">All Categories</option>
+          <option value="">Alle Categorieën</option>
           {categories.map(cat => (
             <option key={cat.id} value={cat.id}>{cat.name}</option>
           ))}
         </select>
+        <Button
+          variant="outline"
+          onClick={() => setShowExtendedFilters(true)}
+          leftIcon={<Search className="h-4 w-4" />}
+          className="whitespace-nowrap bg-indigo-600 text-white hover:bg-indigo-700 border-indigo-600"
+        >
+          🔍 Uitgebreid zoeken
+        </Button>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 max-h-[600px] overflow-y-auto">
@@ -94,9 +122,20 @@ export const ProductSelector: React.FC<ProductSelectorProps> = ({ onAddToCart })
 
       {filteredItems.length === 0 && (
         <div className="text-center py-12 text-slate-500">
-          No products found
+          Geen producten gevonden
         </div>
       )}
+
+      {/* Extended Search Filters */}
+      <ExtendedSearchFilters
+        isOpen={showExtendedFilters}
+        onClose={() => setShowExtendedFilters(false)}
+        onApplyFilters={(filters) => {
+          // Apply filters to search - can be extended based on filter values
+          console.log('Applied filters:', filters);
+          // For now, we'll use the basic search, but this can be extended
+        }}
+      />
     </div>
   );
 };

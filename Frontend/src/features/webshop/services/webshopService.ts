@@ -50,10 +50,36 @@ export const webshopService = {
     return [...PRODUCTS];
   },
 
-  createProduct: async (data: Omit<WebshopProduct, 'id' | 'createdAt' | 'updatedAt'>): Promise<WebshopProduct> => {
+  createProduct: async (data: Omit<WebshopProduct, 'id' | 'createdAt' | 'updatedAt'> & { createInInventory?: boolean; inventoryCategoryId?: string }): Promise<WebshopProduct> => {
     await delay(500);
+    
+    // If createInInventory is true, create inventory item first
+    let inventoryItemId: string | undefined = data.inventoryItemId;
+    if (data.createInInventory && data.inventoryCategoryId) {
+      try {
+        const inventoryItem = await inventoryService.createItem({
+          name: data.name,
+          sku: data.sku,
+          description: data.description,
+          categoryId: data.inventoryCategoryId,
+          quantity: data.stock || 0,
+          reorderLevel: 10, // Default reorder level
+          unit: 'stuks', // Default unit
+          purchasePrice: data.cost || 0,
+          salePrice: data.price || 0,
+          vatRate: 21, // Default VAT rate, can be made configurable
+          webshopSync: true, // Mark as synced with webshop
+        });
+        inventoryItemId = inventoryItem.id;
+      } catch (error) {
+        console.error('Failed to create inventory item:', error);
+        // Continue with product creation even if inventory creation fails
+      }
+    }
+    
     const newProduct: WebshopProduct = {
       ...data,
+      inventoryItemId,
       id: `prod-${Date.now()}`,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),

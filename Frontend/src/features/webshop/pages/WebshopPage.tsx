@@ -38,11 +38,23 @@ export const WebshopPage: React.FC = () => {
   const filteredProducts = useMemo(() => {
     if (!searchQuery) return products;
     const query = searchQuery.toLowerCase();
-    return products.filter(p =>
-      p.name.toLowerCase().includes(query) ||
-      p.sku.toLowerCase().includes(query) ||
-      p.description?.toLowerCase().includes(query)
-    );
+    return products.filter(p => {
+      // Search in name
+      if (p.name.toLowerCase().includes(query)) return true;
+      // Search in SKU
+      if (p.sku.toLowerCase().includes(query)) return true;
+      // Search in description
+      if (p.description?.toLowerCase().includes(query)) return true;
+      // Search in category name
+      if (p.categoryName?.toLowerCase().includes(query)) return true;
+      // Search in price (as string)
+      if (p.price.toString().includes(query)) return true;
+      // Search in stock (as string)
+      if (p.stock.toString().includes(query)) return true;
+      // Search in tags
+      if (p.tags?.some(tag => tag.toLowerCase().includes(query))) return true;
+      return false;
+    });
   }, [products, searchQuery]);
 
   const filteredCategories = useMemo(() => {

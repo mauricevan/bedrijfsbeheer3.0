@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Plus, Search, FileDown } from 'lucide-react';
 import { useInventory } from '../hooks/useInventory';
 import { InventoryList, BTWOverview, CategoryFilter } from '../components';
@@ -7,6 +7,8 @@ import { Button } from '@/components/common/Button';
 import { Input } from '@/components/common/Input';
 import { Modal } from '@/components/common/Modal';
 import { CSVUpload } from '@/components/common/CSVUpload';
+import { ExtendedSearchFilters, defaultCategories as webshopCategories } from '@/components/ExtendedSearchFilters';
+import { filterBySearchTerm, filterByCategory } from '../utils/filters';
 import type { InventoryItem } from '../types';
 
 export const InventoryPage: React.FC = () => {
@@ -27,8 +29,24 @@ export const InventoryPage: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<InventoryItem | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showExtendedFilters, setShowExtendedFilters] = useState(false);
   
-  const filteredItems = getFilteredItems({ search, categoryId: selectedCategoryId });
+  // Use comprehensive filtering like webshop and POS
+  const filteredItems = useMemo(() => {
+    let result = items;
+    
+    // Apply search filter (comprehensive)
+    if (search) {
+      result = filterBySearchTerm(result, search, suppliers, categories);
+    }
+    
+    // Apply category filter
+    if (selectedCategoryId) {
+      result = filterByCategory(result, selectedCategoryId);
+    }
+    
+    return result;
+  }, [items, search, selectedCategoryId, suppliers, categories]);
 
   const handleAdd = () => {
     setEditingItem(null);
@@ -82,6 +100,13 @@ export const InventoryPage: React.FC = () => {
           </p>
         </div>
         <div className="flex gap-2">
+          <Button 
+            variant="outline"
+            onClick={() => setShowExtendedFilters(true)}
+            leftIcon={<Search className="h-4 w-4" />}
+          >
+            🔍 Uitgebreid zoeken
+          </Button>
           <Button variant="outline" leftIcon={<FileDown className="h-4 w-4" />}>
             📄 CSV Import
           </Button>
@@ -113,17 +138,26 @@ export const InventoryPage: React.FC = () => {
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-4">
         <CategoryFilter
-          categories={categories}
+          categories={webshopCategories.map(cat => ({ id: cat.id, name: cat.name }))}
           selectedCategoryId={selectedCategoryId}
           onSelect={setSelectedCategoryId}
         />
-        <div className="flex-1">
+        <div className="flex-1 flex gap-2">
           <Input
             placeholder="Zoek op naam, SKU, locatie, leverancier, categorie, prijs, etc..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             leftIcon={<Search className="h-4 w-4" />}
+            className="flex-1"
           />
+          <Button
+            variant="outline"
+            onClick={() => setShowExtendedFilters(true)}
+            leftIcon={<Search className="h-4 w-4" />}
+            className="whitespace-nowrap bg-indigo-600 text-white hover:bg-indigo-700 border-indigo-600"
+          >
+            🔍 Uitgebreid zoeken
+          </Button>
         </div>
       </div>
 
@@ -144,13 +178,24 @@ export const InventoryPage: React.FC = () => {
       >
         <InventoryForm
           initialData={editingItem || {}}
-          categories={categories}
+          categories={webshopCategories.map(cat => ({ id: cat.id, name: cat.name }))}
           suppliers={suppliers}
           onSubmit={handleSubmit}
           onCancel={() => setIsModalOpen(false)}
           isLoading={isSubmitting}
         />
       </Modal>
+
+      {/* Extended Search Filters */}
+      <ExtendedSearchFilters
+        isOpen={showExtendedFilters}
+        onClose={() => setShowExtendedFilters(false)}
+        onApplyFilters={(filters) => {
+          // Apply filters to search - can be extended based on filter values
+          console.log('Applied filters:', filters);
+          // For now, we'll use the basic search, but this can be extended
+        }}
+      />
     </div>
   );
 };

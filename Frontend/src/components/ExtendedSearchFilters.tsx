@@ -2,45 +2,45 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { X, ArrowLeft } from 'lucide-react';
 
 // Type Definitions
-interface Category {
+export interface Category {
   id: string;
   name: string;
   categoryId: number;
 }
 
-interface FilterOption {
+export interface FilterOption {
   value: string;
   label: string;
 }
 
-interface ColorOption {
+export interface ColorOption {
   value: string;
   label: string;
   color: string;
 }
 
-type DropdownFilter = {
+export type DropdownFilter = {
   id: string;
   type: 'dropdown';
   label: string;
   options: FilterOption[];
 };
 
-type CheckboxFilter = {
+export type CheckboxFilter = {
   id: string;
   type: 'checkbox';
   label: string;
   options: FilterOption[];
 };
 
-type ColorFilter = {
+export type ColorFilter = {
   id: string;
   type: 'color';
   label: string;
   options: ColorOption[];
 };
 
-type PriceRangeFilter = {
+export type PriceRangeFilter = {
   id: string;
   type: 'priceRange';
   label: string;
@@ -48,14 +48,18 @@ type PriceRangeFilter = {
   max: number;
 };
 
-type Filter = DropdownFilter | CheckboxFilter | ColorFilter | PriceRangeFilter;
+export type Filter = DropdownFilter | CheckboxFilter | ColorFilter | PriceRangeFilter;
 
 interface ExtendedSearchFiltersProps {
   isOpen: boolean;
   onClose: () => void;
+  categories?: Category[];
+  categoryFilters?: Record<string, Filter[]>;
+  onApplyFilters?: (filters: Record<string, any>) => void;
 }
 
-const categories: Category[] = [
+// Default webshop categories (for backward compatibility)
+export const defaultCategories: Category[] = [
   { id: 'cilinders', name: 'Cilinders', categoryId: 2 },
   { id: 'eenpuntsloten', name: 'Eenpuntsloten', categoryId: 29 },
   { id: 'meerpuntsloten', name: 'Meerpuntsloten', categoryId: 28 },
@@ -63,7 +67,7 @@ const categories: Category[] = [
   { id: 'veiligheidsbeslag', name: 'Veiligheidsbeslag', categoryId: 4 },
 ];
 
-const categoryFilters: Record<string, Filter[]> = {
+export const defaultCategoryFilters: Record<string, Filter[]> = {
   cilinders: [
     {
       id: 'outside-dimensions-a',
@@ -350,15 +354,32 @@ const categoryFilters: Record<string, Filter[]> = {
   ],
 };
 
-export const ExtendedSearchFilters: React.FC<ExtendedSearchFiltersProps> = ({ isOpen, onClose }) => {
+export const ExtendedSearchFilters: React.FC<ExtendedSearchFiltersProps> = ({ 
+  isOpen, 
+  onClose,
+  categories: providedCategories,
+  categoryFilters: providedCategoryFilters,
+  onApplyFilters
+}) => {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [filterValues, setFilterValues] = useState<Record<string, any>>({});
+  
+  // Use provided categories/filters or defaults
+  const categories = providedCategories || defaultCategories;
+  const categoryFilters = providedCategoryFilters || defaultCategoryFilters;
 
   const handleClose = useCallback(() => {
     setSelectedCategory(null);
     setFilterValues({});
     onClose();
   }, [onClose]);
+
+  const handleApplyFilters = useCallback(() => {
+    if (onApplyFilters) {
+      onApplyFilters(filterValues);
+    }
+    handleClose();
+  }, [filterValues, onApplyFilters, handleClose]);
 
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -592,7 +613,7 @@ export const ExtendedSearchFilters: React.FC<ExtendedSearchFiltersProps> = ({ is
             </div>
 
             {/* Content */}
-            <div className="overflow-y-auto h-[calc(100vh-4rem)] p-4">
+            <div className="overflow-y-auto h-[calc(100vh-8rem)] p-4">
               {!selectedCategory ? (
                 // Category Selection
                 <div className="space-y-3">
@@ -613,6 +634,26 @@ export const ExtendedSearchFilters: React.FC<ExtendedSearchFiltersProps> = ({ is
                 </div>
               )}
             </div>
+
+            {/* Footer with Apply Button */}
+            {selectedCategory && (
+              <div className="sticky bottom-0 p-4 bg-white dark:bg-slate-900 border-t border-gray-200 dark:border-gray-700">
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setSelectedCategory(null)}
+                    className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors"
+                  >
+                    Terug
+                  </button>
+                  <button
+                    onClick={handleApplyFilters}
+                    className="flex-1 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+                  >
+                    Filters Toepassen
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}

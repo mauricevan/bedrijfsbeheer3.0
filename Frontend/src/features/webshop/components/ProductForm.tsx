@@ -13,7 +13,7 @@ interface ProductFormProps {
 }
 
 export const ProductForm: React.FC<ProductFormProps> = ({ product, categories, onSubmit, onCancel, isLoading }) => {
-  const { items: inventoryItems } = useInventory();
+  const { items: inventoryItems, categories: inventoryCategories } = useInventory();
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -29,6 +29,8 @@ export const ProductForm: React.FC<ProductFormProps> = ({ product, categories, o
     seoTitle: '',
     seoDescription: '',
     tags: '',
+    createInInventory: false, // New option to create in inventory
+    inventoryCategoryId: '', // Category for inventory item
   });
 
   useEffect(() => {
@@ -64,6 +66,8 @@ export const ProductForm: React.FC<ProductFormProps> = ({ product, categories, o
       inventoryItemId: formData.inventoryItemId || undefined,
       weight: formData.weight ? parseFloat(formData.weight) : undefined,
       tags: formData.tags ? formData.tags.split(',').map(t => t.trim()).filter(Boolean) : undefined,
+      createInInventory: formData.createInInventory,
+      inventoryCategoryId: formData.inventoryCategoryId || undefined,
     });
   };
 
@@ -154,20 +158,59 @@ export const ProductForm: React.FC<ProductFormProps> = ({ product, categories, o
             ))}
           </select>
         </div>
+        {!product && (
+          <div className="md:col-span-2">
+            <label className="flex items-center space-x-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={formData.createInInventory}
+                onChange={(e) => setFormData({ ...formData, createInInventory: e.target.checked })}
+                className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+              />
+              <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                Ook aanmaken in voorraadbeheer
+              </span>
+            </label>
+            {formData.createInInventory && (
+              <div className="mt-2 ml-6">
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  Voorraad Categorie *
+                </label>
+                <select
+                  value={formData.inventoryCategoryId}
+                  onChange={(e) => setFormData({ ...formData, inventoryCategoryId: e.target.value })}
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                  required={formData.createInInventory}
+                >
+                  <option value="">Selecteer categorie</option>
+                  {inventoryCategories.map(cat => (
+                    <option key={cat.id} value={cat.id}>{cat.name}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+          </div>
+        )}
         <div>
           <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-            Synchroniseren met Voorraad
+            Synchroniseren met Bestaande Voorraad
           </label>
           <select
             value={formData.inventoryItemId}
             onChange={(e) => setFormData({ ...formData, inventoryItemId: e.target.value })}
             className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+            disabled={formData.createInInventory}
           >
             <option value="">Geen synchronisatie</option>
             {inventoryItems.map(item => (
               <option key={item.id} value={item.id}>{item.name} ({item.sku})</option>
             ))}
           </select>
+          {formData.createInInventory && (
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+              Uitgeschakeld omdat u een nieuw item aanmaakt in voorraadbeheer
+            </p>
+          )}
         </div>
         <Input
           label="Gewicht (kg)"

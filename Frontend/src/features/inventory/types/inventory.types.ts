@@ -44,6 +44,9 @@ export interface InventoryItem {
   webshopSync: boolean;
   posAlert?: string;
   
+  // Filter Data (category-specific attributes for extended search)
+  filterData?: Record<string, any>;
+  
   // Metadata
   createdAt: string;
   updatedAt: string;
