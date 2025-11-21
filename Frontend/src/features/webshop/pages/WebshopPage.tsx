@@ -4,6 +4,7 @@ import { Card } from '@/components/common/Card';
 import { Button } from '@/components/common/Button';
 import { Input } from '@/components/common/Input';
 import { Modal } from '@/components/common/Modal';
+import { ExtendedSearchFilters } from '@/components/ExtendedSearchFilters';
 import { useWebshop } from '../hooks/useWebshop';
 import { ProductForm } from '../components/ProductForm';
 import { CategoryForm } from '../components/CategoryForm';
@@ -31,6 +32,7 @@ export const WebshopPage: React.FC = () => {
   const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState<WebshopProduct | null>(null);
   const [editingCategory, setEditingCategory] = useState<WebshopCategory | null>(null);
+  const [showExtendedFilters, setShowExtendedFilters] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   const filteredProducts = useMemo(() => {
@@ -125,13 +127,7 @@ export const WebshopPage: React.FC = () => {
   };
 
   const handleExtendedSearch = () => {
-    const searchInput = searchInputRef.current || document.querySelector('input[placeholder*="Zoek producten"]') as HTMLInputElement;
-    if (searchInput) {
-      searchInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      setTimeout(() => {
-        searchInput.focus();
-      }, 300);
-    }
+    setShowExtendedFilters(true);
   };
 
   if (isLoading) {
@@ -155,7 +151,7 @@ export const WebshopPage: React.FC = () => {
             onClick={handleExtendedSearch}
             leftIcon={<Search className="h-4 w-4" />}
           >
-            Uitgebreid zoeken
+            🔍 Uitgebreid zoeken
           </Button>
           {activeTab === 'products' && (
             <Button leftIcon={<Plus className="h-4 w-4" />} onClick={() => {
@@ -254,7 +250,7 @@ export const WebshopPage: React.FC = () => {
               leftIcon={<Search className="h-4 w-4" />}
               className="whitespace-nowrap bg-indigo-600 text-white hover:bg-indigo-700 border-indigo-600"
             >
-              Uitgebreid zoeken
+              🔍 Uitgebreid zoeken
             </Button>
             <select className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
               <option value="all">Alle Statussen</option>
@@ -476,6 +472,12 @@ export const WebshopPage: React.FC = () => {
           }}
         />
       </Modal>
+
+      {/* Extended Search Filters */}
+      <ExtendedSearchFilters
+        isOpen={showExtendedFilters}
+        onClose={() => setShowExtendedFilters(false)}
+      />
     </div>
   );
 };
