@@ -1,18 +1,26 @@
 import React, { useState, useEffect } from 'react';
 import { Input } from '@/components/common/Input';
 import { Button } from '@/components/common/Button';
-import type { Task } from '../types/crm.types';
+import type { Task, Customer } from '../types/crm.types';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 
 interface TaskFormProps {
   task?: Task | null;
   customerId?: string;
+  customers?: Customer[];
   onSubmit: (data: any) => void;
   onCancel: () => void;
   isLoading?: boolean;
 }
 
-export const TaskForm: React.FC<TaskFormProps> = ({ task, customerId, onSubmit, onCancel, isLoading }) => {
+export const TaskForm: React.FC<TaskFormProps> = ({ 
+  task, 
+  customerId, 
+  customers = [], 
+  onSubmit, 
+  onCancel, 
+  isLoading 
+}) => {
   const { user } = useAuth();
   const [formData, setFormData] = useState({
     title: '',
@@ -20,6 +28,7 @@ export const TaskForm: React.FC<TaskFormProps> = ({ task, customerId, onSubmit, 
     priority: 'medium' as Task['priority'],
     status: 'todo' as Task['status'],
     dueDate: '',
+    customerId: '',
   });
 
   useEffect(() => {
@@ -30,16 +39,19 @@ export const TaskForm: React.FC<TaskFormProps> = ({ task, customerId, onSubmit, 
         priority: task.priority || 'medium',
         status: task.status || 'todo',
         dueDate: task.dueDate ? new Date(task.dueDate).toISOString().split('T')[0] : '',
+        customerId: task.customerId || '',
       });
+    } else if (customerId) {
+      setFormData(prev => ({ ...prev, customerId }));
     }
-  }, [task]);
+  }, [task, customerId]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSubmit({
       ...formData,
       employeeId: user?.id || '',
-      customerId: customerId || task?.customerId,
+      customerId: formData.customerId || undefined,
       dueDate: formData.dueDate || undefined,
     });
   };
@@ -57,6 +69,26 @@ export const TaskForm: React.FC<TaskFormProps> = ({ task, customerId, onSubmit, 
             required
           />
         </div>
+        
+        {/* Customer Selection */}
+        <div className="md:col-span-2">
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+            Koppel aan Klant
+          </label>
+          <select
+            value={formData.customerId}
+            onChange={(e) => setFormData({ ...formData, customerId: e.target.value })}
+            className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+          >
+            <option value="">-- Selecteer Klant --</option>
+            {customers.map(customer => (
+              <option key={customer.id} value={customer.id}>
+                {customer.name} {customer.company ? `(${customer.company})` : ''}
+              </option>
+            ))}
+          </select>
+        </div>
+
         <div>
           <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
             Prioriteit

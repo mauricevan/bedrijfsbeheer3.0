@@ -5,7 +5,7 @@ import { Button } from '@/components/common/Button';
 import { Modal } from '@/components/common/Modal';
 import { Input } from '@/components/common/Input';
 import { useHRM } from '../hooks/useHRM';
-import { EmployeeList, EmployeeForm } from '../components';
+import { EmployeeList, EmployeeForm, EmployeeDossier } from '../components';
 import type { Employee } from '../types/hrm.types';
 
 export const HRMPage: React.FC = () => {
@@ -20,6 +20,9 @@ export const HRMPage: React.FC = () => {
   const [showEmployeeModal, setShowEmployeeModal] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+
+  const [showDossierModal, setShowDossierModal] = useState(false);
+  const [viewingEmployee, setViewingEmployee] = useState<Employee | null>(null);
 
   const activeEmployees = employees.filter(e => e.availability === 'available').length;
   const onLeave = employees.filter(e => e.availability === 'vacation').length;
@@ -56,8 +59,11 @@ export const HRMPage: React.FC = () => {
   };
 
   const handleViewDossier = (id: string) => {
-    // TODO: Implement dossier view
-    alert(`Dossier voor medewerker ${id} - nog te implementeren`);
+    const employee = employees.find(e => e.id === id);
+    if (employee) {
+      setViewingEmployee(employee);
+      setShowDossierModal(true);
+    }
   };
 
   if (isLoading) {
@@ -147,6 +153,18 @@ export const HRMPage: React.FC = () => {
             setEditingEmployee(null);
           }}
         />
+      </Modal>
+
+      <Modal
+        isOpen={showDossierModal}
+        onClose={() => {
+          setShowDossierModal(false);
+          setViewingEmployee(null);
+        }}
+        title="Personeelsdossier"
+        className="max-w-4xl"
+      >
+        {viewingEmployee && <EmployeeDossier employee={viewingEmployee} />}
       </Modal>
     </div>
   );

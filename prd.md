@@ -641,76 +641,126 @@ The system consists of 12 core modules:
 ---
 
 ### 3.8 HRM Module (Human Resource Management)
-**Purpose**: Employee management, permissions, and employee notes/dossiers.
+**Purpose**: Comprehensive human resource management covering the entire employee lifecycle, from recruitment to offboarding, including payroll integration, leave management, and development.
 
 **Key Features**:
 
-#### 3.8.1 Employee Management
+#### 3.8.1 Organizational Structure & Basic Data
+- **Organogram**: Hierarchy, departments, teams, and reporting lines
+- **Locations**: Management of branches and office locations
+- **Job Profiles**: Job titles, descriptions, responsibilities, competencies, and KPIs
+- **Job Grading**: Salary scales, job levels, and CLA (CAO) classifications
+- **Cost Centers**: Cost center allocation and distribution
 
-**Employee Properties**:
-- **Basic Info**: Name, role, email, phone
-- **Employment**: Hire date, vacation days, used vacation days
-- **Availability**: available, unavailable, vacation
-- **Authentication**: Password (simple)
-- **Permissions**: Granular permissions array
-- **Admin Flag**: Full admin access flag
+#### 3.8.2 Employee Basic Dossier (Personal Data)
+- **Personal Data**: Name, address, BSN/SSN, nationality, date of birth, gender, marital status
+- **Contact Info**: Contact details and emergency contacts
+- **Identity Documents**: Copies of ID/passport, work permits, residence permits
+- **Financial Data**: Bank account numbers (IBAN)
+- **Profile Photo**: Employee photo
+- **Employment Details**: Start/end dates, probation period, contract type (permanent, temp, on-call, freelance)
+- **Work Schedule**: FTE percentage and hours per week
+- **Regulations**: Applicable CLA or company regulations
+- **Pension**: Pension scheme details
+- **Employee ID**: Unique employee identification number
 
-**Employee Operations**:
-- **Create**: Add new employee
-- **Edit**: Update employee details
-- **Delete**: Remove employee
-- **Search**: Search by name, email, role
-- **Filter**: Filter by role, availability
+#### 3.8.3 Contracts & Employment Conditions
+- **Contract History**: Management of multiple contracts over time
+- **Digital Signing**: Integrated digital signing for contracts and conditions
+- **Attachments**: Storage for contracts, addendums, and correspondence
+- **Mutation History**: Track changes in salary, role, or hours
 
-#### 3.8.2 Permission Management
+#### 3.8.4 Salary & Compensation (Payroll Integration)
+- **Salary Administration**: Gross/net calculations, scales, steps, periodic increases
+- **Wage Components**: Fixed and variable components (bonus, commission, 13th month)
+- **Reimbursements**: Expense management (travel, WFH, phone)
+- **Allowances**: Irregular hours, overtime, shift allowances
+- **Financial Obligations**: Garnishments and employee loans
+- **Payroll Tax Link**: Integration with tax authorities (Belastingdienst, UWV, Pension Fund)
 
-**Permission Types**:
-- **full_admin**: All admin rights
-- **manage_modules**: Module enable/disable
-- **manage_inventory**: Inventory CRUD
-- **manage_crm**: CRM CRUD
-- **manage_accounting**: Accounting CRUD
-- **manage_workorders**: Work order management
-- **manage_employees**: Employee management
-- **view_all_workorders**: View all work orders (not just own)
-- **view_reports**: Full reports access
-- **manage_planning**: Planning management
-- **manage_pos**: POS management
+#### 3.8.5 Leave & Absence
+- **Leave Administration**: Statutory, non-statutory, special, parental, and care leave
+- **Balance Management**: Accrual and settlement of leave balances
+- **Request Workflow**: Leave requests with approval workflow
+- **Absence Registration**: Sick reporting and recovery registration
+- **Health Service Link**: Integration with occupational health services (Arbodienst)
+- **Signalization**: Alerts for frequent absence
+- **Re-integration**: Dossier management for long-term illness (Wet Poortwachter)
 
-**Permission Assignment**:
-- **Granular Control**: Assign specific permissions
-- **Full Admin**: Single flag for all permissions
-- **Permission Validation**: Check permissions before actions
+#### 3.8.6 Competencies & Development
+- **Competency Profiles**: Defined competencies per job function
+- **Review Cycles**: Annual reviews, performance appraisals, and evaluation conversations
+- **360-Degree Feedback**: Multi-source feedback mechanisms
+- **Training**: History and planning of training/education
+- **Certifications**: Tracking of certificates and diplomas with expiry dates (e.g., BHV, VCA)
+- **Development Plans**: Personal Development Plans (POP)
+- **Skills Matrix**: Language skills and skill scoring
 
-#### 3.8.3 Employee Notes
+#### 3.8.7 Recruitment & Selection
+- **Vacancy Management**: Manage open positions
+- **Applicant Portal**: Link to website/portal
+- **Applicant Database**: CV parsing and candidate storage
+- **Recruitment Workflow**: Screening → Interviews → Rejection/Hiring
+- **Onboarding Checklist**: Preparation for new hires
 
-**Note Types**: attendance, milestone, performance, warning, compliment, general, late, absence
+#### 3.8.8 Onboarding & Offboarding
+- **Onboarding Workflow**: Digital checklist (laptop, account, intro day, etc.)
+- **Offboarding Checklist**: Asset return, account blocking, exit interview
 
-**Note Properties**:
-- **Type**: Note type
-- **Title**: Note title
-- **Description**: Detailed description
-- **Date**: Note date
-- **Created By**: Employee who created note
-- **Created At**: Creation timestamp
+#### 3.8.9 Time & Planning
+- **Time Tracking**: Hours registration and clocking
+- **Shift Planning**: Rostering (especially for shifts or flexible hours)
+- **Flexible Hours**: Plus/minus hours tracking
+- **Project Link**: Integration with project planning (PSA)
 
-**Note Operations**:
-- **Add Note**: Add note to employee
-- **Edit Note**: Update note
-- **Delete Note**: Remove note
-- **Filter**: Filter by type, date
+#### 3.8.10 Documents & Digital Signature
+- **Document Management**: Centralized document storage per employee
+- **Document Generation**: Standard templates (contracts, salary changes, leave confirmations)
+- **Digital Signature**: Integration with providers (DocuSign, CM Sign, SignRequest)
 
-**Employee Dossier**:
-- **Personal Info**: All employee information
-- **Notes Timeline**: Chronological notes
-- **Tenure Calculation**: Years/months of service
-- **Permission Summary**: Assigned permissions
+#### 3.8.11 Self-Service Portal (ESS/MSS)
+- **Employee Self Service (ESS)**:
+  - Request leave
+  - Download payslips and annual statements
+  - Update personal data (address, bank account)
+  - Enter hours
+  - Submit expense declarations
+- **Manager Self Service (MSS)**:
+  - Approve leave and declarations
+  - View team calendars
+
+#### 3.8.12 Reports & Dashboards
+- **Standard Reports**: Age structure, leave %, absence %, diversity, cost per FTE
+- **Flexible Reporting**: Custom report builder
+- **Exports**: Export to Excel/PDF
+- **Real-time Dashboards**: Visual insights into HR metrics
+
+#### 3.8.13 Integrations
+- **Payroll Software**: Nmbrs, Loket.nl, Exact Online, AFAS
+- **Occupational Health**: VerzuimXpert, ArboNed
+- **Pension Providers**: Data exchange
+- **Identity Management**: Active Directory / Azure AD (SSO)
+- **Time Tracking**: External time systems
+- **Assessments**: Assessment tools
+
+#### 3.8.14 Compliance & Privacy (GDPR/AVG)
+- **Consent Management**: GDPR consent tracking
+- **Retention Policy**: Management of document retention periods
+- **Audit Logs**: Log of who viewed/changed data and when
+- **Access Control**: Role-based access (HR, Manager, Employee, Finance)
+
+#### 3.8.15 Nice-to-Have Features
+- **Digital Personnel File**: Advanced versioning
+- **Surveys**: Employee satisfaction surveys
+- **Talent Management**: Succession planning / 9-grid matrix
+- **Benefits Portal**: Cafeteria model (bike plan, gym, etc.)
+- **Fleet Management**: Lease car administration
 
 **Technical Implementation**:
-- Permission utilities: `utils/permissions.ts`
-- Employee CRUD operations
-- Note management
-- Dossier generation
+- Feature module: `features/hrm/`
+- Hooks: `useEmployees`, `useLeave`, `useContracts`, `useRecruitment`, `usePayroll`
+- Services: `employeeService.ts`, `leaveService.ts`, `documentService.ts`, `integrationService.ts`
+- Utils: `permissions.ts`, `validators.ts`, `gdprUtils.ts`
 
 ---
 

@@ -30,8 +30,14 @@ const TYPE_LABELS = {
 export const InteractionList: React.FC<InteractionListProps> = ({ interactions, onEdit, onDelete }) => {
   if (interactions.length === 0) {
     return (
-      <Card>
-        <p className="text-slate-500 dark:text-slate-400 text-center py-8">Geen interacties gevonden</p>
+      <Card className="flex flex-col items-center justify-center py-12 text-center">
+        <div className="bg-slate-100 dark:bg-slate-800 p-4 rounded-full mb-4">
+          <MessageSquare className="h-8 w-8 text-slate-400" />
+        </div>
+        <h3 className="text-lg font-medium text-slate-900 dark:text-white mb-1">Geen interacties gevonden</h3>
+        <p className="text-slate-500 dark:text-slate-400 max-w-xs">
+          Begin met het loggen van gesprekken, e-mails of afspraken om de geschiedenis op te bouwen.
+        </p>
       </Card>
     );
   }

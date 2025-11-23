@@ -33,8 +33,14 @@ const STATUS_ICONS = {
 export const TaskList: React.FC<TaskListProps> = ({ tasks, onEdit, onDelete, onToggleStatus }) => {
   if (tasks.length === 0) {
     return (
-      <Card>
-        <p className="text-slate-500 dark:text-slate-400 text-center py-8">Geen taken gevonden</p>
+      <Card className="flex flex-col items-center justify-center py-12 text-center">
+        <div className="bg-slate-100 dark:bg-slate-800 p-4 rounded-full mb-4">
+          <CheckCircle2 className="h-8 w-8 text-slate-400" />
+        </div>
+        <h3 className="text-lg font-medium text-slate-900 dark:text-white mb-1">Geen taken gevonden</h3>
+        <p className="text-slate-500 dark:text-slate-400 max-w-xs">
+          Maak een nieuwe taak aan om je werkzaamheden te plannen en niets te vergeten.
+        </p>
       </Card>
     );
   }

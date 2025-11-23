@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { Input } from '@/components/common/Input';
 import { Button } from '@/components/common/Button';
-import type { Interaction } from '../types/crm.types';
+import type { Interaction, Customer, Lead } from '../types/crm.types';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 
 interface InteractionFormProps {
   interaction?: Interaction | null;
   customerId?: string;
   leadId?: string;
+  customers?: Customer[];
+  leads?: Lead[];
   onSubmit: (data: any) => void;
   onCancel: () => void;
   isLoading?: boolean;
@@ -17,6 +19,8 @@ export const InteractionForm: React.FC<InteractionFormProps> = ({
   interaction,
   customerId,
   leadId,
+  customers = [],
+  leads = [],
   onSubmit,
   onCancel,
   isLoading,
@@ -30,6 +34,8 @@ export const InteractionForm: React.FC<InteractionFormProps> = ({
     time: new Date().toTimeString().slice(0, 5),
     followUpRequired: false,
     followUpDate: '',
+    customerId: '',
+    leadId: '',
   });
 
   useEffect(() => {
@@ -43,9 +49,12 @@ export const InteractionForm: React.FC<InteractionFormProps> = ({
         time: date.toTimeString().slice(0, 5),
         followUpRequired: interaction.followUpRequired || false,
         followUpDate: interaction.followUpDate ? new Date(interaction.followUpDate).toISOString().split('T')[0] : '',
+        customerId: interaction.customerId || '',
+        leadId: interaction.leadId || '',
       });
-    } else if (customerId || leadId) {
-      setFormData(prev => ({ ...prev, customerId, leadId }));
+    } else {
+      if (customerId) setFormData(prev => ({ ...prev, customerId }));
+      if (leadId) setFormData(prev => ({ ...prev, leadId }));
     }
   }, [interaction, customerId, leadId]);
 
@@ -58,8 +67,8 @@ export const InteractionForm: React.FC<InteractionFormProps> = ({
       description: formData.description,
       date: dateTime.toISOString(),
       employeeId: user?.id || '',
-      customerId: customerId || interaction?.customerId,
-      leadId: leadId || interaction?.leadId,
+      customerId: formData.customerId || undefined,
+      leadId: formData.leadId || undefined,
       followUpRequired: formData.followUpRequired,
       followUpDate: formData.followUpDate || undefined,
     });
@@ -107,6 +116,47 @@ export const InteractionForm: React.FC<InteractionFormProps> = ({
             required
           />
         </div>
+
+        {/* Customer Selection */}
+        <div>
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+            Koppel aan Klant
+          </label>
+          <select
+            value={formData.customerId}
+            onChange={(e) => setFormData({ ...formData, customerId: e.target.value, leadId: '' })}
+            className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+            disabled={!!formData.leadId && !formData.customerId} // Disable if lead is selected (optional logic, but usually exclusive)
+          >
+            <option value="">-- Geen Klant --</option>
+            {customers.map(customer => (
+              <option key={customer.id} value={customer.id}>
+                {customer.name} {customer.company ? `(${customer.company})` : ''}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Lead Selection */}
+        <div>
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+            Koppel aan Lead
+          </label>
+          <select
+            value={formData.leadId}
+            onChange={(e) => setFormData({ ...formData, leadId: e.target.value, customerId: '' })}
+            className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+            disabled={!!formData.customerId && !formData.leadId}
+          >
+            <option value="">-- Geen Lead --</option>
+            {leads.map(lead => (
+              <option key={lead.id} value={lead.id}>
+                {lead.name} {lead.company ? `(${lead.company})` : ''}
+              </option>
+            ))}
+          </select>
+        </div>
+
         <div className="md:col-span-2">
           <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
             Onderwerp *

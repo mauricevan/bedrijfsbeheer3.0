@@ -5,6 +5,7 @@ import { Button } from '@/components/common/Button';
 import { Modal } from '@/components/common/Modal';
 import { Input } from '@/components/common/Input';
 import { useCRM } from '../hooks/useCRM';
+import { useToast } from '@/context/ToastContext';
 import {
   CustomerList,
   CustomerForm,
@@ -38,6 +39,7 @@ export const CRMPage: React.FC = () => {
     updateTask,
     deleteTask,
   } = useCRM();
+  const { showToast } = useToast();
 
   const [activeTab, setActiveTab] = useState<'customers' | 'leads' | 'interactions' | 'tasks'>('customers');
   const [showCustomerModal, setShowCustomerModal] = useState(false);
@@ -86,6 +88,7 @@ export const CRMPage: React.FC = () => {
   // Handlers
   const handleCreateCustomer = async (data: any) => {
     await createCustomer(data);
+    showToast('Klant succesvol aangemaakt', 'success');
     setShowCustomerModal(false);
     setEditingCustomer(null);
   };
@@ -98,6 +101,7 @@ export const CRMPage: React.FC = () => {
   const handleUpdateCustomer = async (data: any) => {
     if (editingCustomer) {
       await updateCustomer(editingCustomer.id, data);
+      showToast('Klant succesvol bijgewerkt', 'success');
       setShowCustomerModal(false);
       setEditingCustomer(null);
     }
@@ -106,11 +110,13 @@ export const CRMPage: React.FC = () => {
   const handleDeleteCustomer = async (id: string) => {
     if (window.confirm('Weet u zeker dat u deze klant wilt verwijderen?')) {
       await deleteCustomer(id);
+      showToast('Klant verwijderd', 'info');
     }
   };
 
   const handleCreateLead = async (data: any) => {
     await createLead(data);
+    showToast('Lead succesvol aangemaakt', 'success');
     setShowLeadModal(false);
     setEditingLead(null);
   };
@@ -123,6 +129,7 @@ export const CRMPage: React.FC = () => {
   const handleUpdateLead = async (data: any) => {
     if (editingLead) {
       await updateLead(editingLead.id, data);
+      showToast('Lead succesvol bijgewerkt', 'success');
       setShowLeadModal(false);
       setEditingLead(null);
     }
@@ -131,17 +138,20 @@ export const CRMPage: React.FC = () => {
   const handleDeleteLead = async (id: string) => {
     if (window.confirm('Weet u zeker dat u deze lead wilt verwijderen?')) {
       await deleteLead(id);
+      showToast('Lead verwijderd', 'info');
     }
   };
 
   const handleConvertLead = async (leadId: string) => {
     if (window.confirm('Weet u zeker dat u deze lead naar een klant wilt converteren?')) {
       await convertLeadToCustomer(leadId);
+      showToast('Lead succesvol geconverteerd naar klant! 🎉', 'success');
     }
   };
 
   const handleCreateInteraction = async (data: any) => {
     await createInteraction(data);
+    showToast('Interactie succesvol aangemaakt', 'success');
     setShowInteractionModal(false);
     setEditingInteraction(null);
   };
@@ -154,6 +164,7 @@ export const CRMPage: React.FC = () => {
   const handleUpdateInteraction = async (data: any) => {
     if (editingInteraction) {
       await updateInteraction(editingInteraction.id, data);
+      showToast('Interactie succesvol bijgewerkt', 'success');
       setShowInteractionModal(false);
       setEditingInteraction(null);
     }
@@ -162,11 +173,13 @@ export const CRMPage: React.FC = () => {
   const handleDeleteInteraction = async (id: string) => {
     if (window.confirm('Weet u zeker dat u deze interactie wilt verwijderen?')) {
       await deleteInteraction(id);
+      showToast('Interactie verwijderd', 'info');
     }
   };
 
   const handleCreateTask = async (data: any) => {
     await createTask(data);
+    showToast('Taak succesvol aangemaakt', 'success');
     setShowTaskModal(false);
     setEditingTask(null);
   };
@@ -179,6 +192,7 @@ export const CRMPage: React.FC = () => {
   const handleUpdateTask = async (data: any) => {
     if (editingTask) {
       await updateTask(editingTask.id, data);
+      showToast('Taak succesvol bijgewerkt', 'success');
       setShowTaskModal(false);
       setEditingTask(null);
     }
@@ -187,6 +201,7 @@ export const CRMPage: React.FC = () => {
   const handleDeleteTask = async (id: string) => {
     if (window.confirm('Weet u zeker dat u deze taak wilt verwijderen?')) {
       await deleteTask(id);
+      showToast('Taak verwijderd', 'info');
     }
   };
 
@@ -427,6 +442,8 @@ export const CRMPage: React.FC = () => {
       >
         <InteractionForm
           interaction={editingInteraction}
+          customers={customers}
+          leads={leads}
           onSubmit={editingInteraction ? handleUpdateInteraction : handleCreateInteraction}
           onCancel={() => {
             setShowInteractionModal(false);
@@ -446,6 +463,7 @@ export const CRMPage: React.FC = () => {
       >
         <TaskForm
           task={editingTask}
+          customers={customers}
           onSubmit={editingTask ? handleUpdateTask : handleCreateTask}
           onCancel={() => {
             setShowTaskModal(false);

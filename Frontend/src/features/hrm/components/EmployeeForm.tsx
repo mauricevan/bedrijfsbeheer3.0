@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Input } from '@/components/common/Input';
 import { Button } from '@/components/common/Button';
-import type { Employee, Permission } from '../types/hrm.types';
+import type { Employee, Permission, PersonalDetails, BankDetails } from '../types/hrm.types';
+import { EmployeeGeneralForm } from './EmployeeGeneralForm';
+import { EmployeePersonalForm } from './EmployeePersonalForm';
+import { EmployeeContractForm } from './EmployeeContractForm';
+import { EmployeeSalaryForm } from './EmployeeSalaryForm';
 
 interface EmployeeFormProps {
   employee?: Employee | null;
@@ -36,37 +39,41 @@ const PERMISSION_LABELS: Record<Permission, string> = {
   view_reports: 'Rapporten bekijken',
   manage_planning: 'Planning beheren',
   manage_pos: 'Kassa beheren',
+  manage_hrm: 'HRM beheren', // Added missing label if needed, though not in list above
 };
 
+type Tab = 'general' | 'personal' | 'contracts' | 'salary';
+
 export const EmployeeForm: React.FC<EmployeeFormProps> = ({ employee, onSubmit, onCancel, isLoading }) => {
-  const [formData, setFormData] = useState({
+  const [activeTab, setActiveTab] = useState<Tab>('general');
+  const [formData, setFormData] = useState<Partial<Employee>>({
     name: '',
     email: '',
     phone: '',
     role: '',
     hireDate: new Date().toISOString().split('T')[0],
-    vacationDays: '20',
-    usedVacationDays: '0',
-    availability: 'available' as Employee['availability'],
+    vacationDays: 20,
+    usedVacationDays: 0,
+    availability: 'available',
     password: '',
-    permissions: [] as Permission[],
+    permissions: [],
     isAdmin: false,
+    personalDetails: {} as PersonalDetails,
+    contracts: [],
+    salaryHistory: [],
+    bankDetails: {} as BankDetails,
   });
 
   useEffect(() => {
     if (employee) {
       setFormData({
-        name: employee.name || '',
-        email: employee.email || '',
-        phone: employee.phone || '',
-        role: employee.role || '',
+        ...employee,
         hireDate: employee.hireDate ? new Date(employee.hireDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
-        vacationDays: employee.vacationDays?.toString() || '20',
-        usedVacationDays: employee.usedVacationDays?.toString() || '0',
-        availability: employee.availability || 'available',
-        password: '',
-        permissions: employee.permissions || [],
-        isAdmin: employee.isAdmin || false,
+        personalDetails: employee.personalDetails || {} as PersonalDetails,
+        contracts: employee.contracts || [],
+        salaryHistory: employee.salaryHistory || [],
+        bankDetails: employee.bankDetails || {} as BankDetails,
+        password: '', // Don't populate password
       });
     }
   }, [employee]);
@@ -77,9 +84,9 @@ export const EmployeeForm: React.FC<EmployeeFormProps> = ({ employee, onSubmit, 
     } else {
       setFormData(prev => ({
         ...prev,
-        permissions: prev.permissions.includes(permission)
+        permissions: prev.permissions?.includes(permission)
           ? prev.permissions.filter(p => p !== permission)
-          : [...prev.permissions, permission],
+          : [...(prev.permissions || []), permission],
       }));
     }
   };
@@ -88,165 +95,86 @@ export const EmployeeForm: React.FC<EmployeeFormProps> = ({ employee, onSubmit, 
     e.preventDefault();
     const submitData: any = {
       ...formData,
-      vacationDays: parseInt(formData.vacationDays),
-      usedVacationDays: parseInt(formData.usedVacationDays),
+      vacationDays: Number(formData.vacationDays),
+      usedVacationDays: Number(formData.usedVacationDays),
     };
+    
     if (formData.password) {
       submitData.password = formData.password;
     } else if (!employee) {
       submitData.password = 'password123'; // Default password
     }
+    
     if (formData.isAdmin) {
       submitData.permissions = PERMISSIONS;
     }
+    
     onSubmit(submitData);
   };
 
+  const tabs: { id: Tab; label: string }[] = [
+    { id: 'general', label: 'Algemeen' },
+    { id: 'personal', label: 'Persoonlijk' },
+    { id: 'contracts', label: 'Contracten' },
+    { id: 'salary', label: 'Salaris & Bank' },
+  ];
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-            Naam *
-          </label>
-          <Input
-            value={formData.name}
-            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-            required
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-            E-mail *
-          </label>
-          <Input
-            type="email"
-            value={formData.email}
-            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-            required
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-            Telefoon
-          </label>
-          <Input
-            value={formData.phone}
-            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-            Functie *
-          </label>
-          <Input
-            value={formData.role}
-            onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-            required
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-            Datum in dienst *
-          </label>
-          <Input
-            type="date"
-            value={formData.hireDate}
-            onChange={(e) => setFormData({ ...formData, hireDate: e.target.value })}
-            required
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-            Beschikbaarheid
-          </label>
-          <select
-            value={formData.availability}
-            onChange={(e) => setFormData({ ...formData, availability: e.target.value as Employee['availability'] })}
-            className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="flex border-b border-slate-200 dark:border-slate-700 mb-6">
+        {tabs.map((tab) => (
+          <button
+            key={tab.id}
+            type="button"
+            onClick={() => setActiveTab(tab.id)}
+            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+              activeTab === tab.id
+                ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                : 'border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300'
+            }`}
           >
-            <option value="available">Beschikbaar</option>
-            <option value="unavailable">Niet beschikbaar</option>
-            <option value="vacation">Vakantie</option>
-          </select>
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-            Vakantiedagen per jaar
-          </label>
-          <Input
-            type="number"
-            value={formData.vacationDays}
-            onChange={(e) => setFormData({ ...formData, vacationDays: e.target.value })}
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      <div className="px-1">
+        {activeTab === 'general' && (
+          <EmployeeGeneralForm
+            formData={formData}
+            setFormData={setFormData}
+            permissions={PERMISSIONS}
+            permissionLabels={PERMISSION_LABELS}
+            onPermissionToggle={handlePermissionToggle}
+            isEditing={!!employee}
           />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-            Gebruikte vakantiedagen
-          </label>
-          <Input
-            type="number"
-            value={formData.usedVacationDays}
-            onChange={(e) => setFormData({ ...formData, usedVacationDays: e.target.value })}
-          />
-        </div>
-        {!employee && (
-          <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-              Wachtwoord
-            </label>
-            <Input
-              type="password"
-              value={formData.password}
-              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-              placeholder="Laat leeg voor standaard wachtwoord"
-            />
-          </div>
         )}
-        <div className="md:col-span-2">
-          <label className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              checked={formData.isAdmin}
-              onChange={(e) => {
-                setFormData(prev => ({
-                  ...prev,
-                  isAdmin: e.target.checked,
-                  permissions: e.target.checked ? PERMISSIONS : [],
-                }));
-              }}
-              className="rounded border-slate-300 dark:border-slate-600"
-            />
-            <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-              Volledige admin rechten
-            </span>
-          </label>
-        </div>
-        {!formData.isAdmin && (
-          <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-              Rechten
-            </label>
-            <div className="grid grid-cols-2 gap-2">
-              {PERMISSIONS.filter(p => p !== 'full_admin').map((permission) => (
-                <label key={permission} className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    checked={formData.permissions.includes(permission)}
-                    onChange={() => handlePermissionToggle(permission)}
-                    className="rounded border-slate-300 dark:border-slate-600"
-                  />
-                  <span className="text-sm text-slate-700 dark:text-slate-300">
-                    {PERMISSION_LABELS[permission]}
-                  </span>
-                </label>
-              ))}
-            </div>
-          </div>
+
+        {activeTab === 'personal' && (
+          <EmployeePersonalForm
+            personalDetails={formData.personalDetails as PersonalDetails}
+            onChange={(details) => setFormData({ ...formData, personalDetails: details })}
+          />
+        )}
+
+        {activeTab === 'contracts' && (
+          <EmployeeContractForm
+            contracts={formData.contracts || []}
+            onChange={(contracts) => setFormData({ ...formData, contracts })}
+          />
+        )}
+
+        {activeTab === 'salary' && (
+          <EmployeeSalaryForm
+            salaryHistory={formData.salaryHistory || []}
+            bankDetails={formData.bankDetails as BankDetails}
+            onSalaryChange={(history) => setFormData({ ...formData, salaryHistory: history })}
+            onBankDetailsChange={(details) => setFormData({ ...formData, bankDetails: details })}
+          />
         )}
       </div>
 
-      <div className="flex justify-end gap-2 pt-4">
+      <div className="flex justify-end gap-2 pt-6 mt-6 border-t border-slate-200 dark:border-slate-700">
         <Button type="button" variant="outline" onClick={onCancel}>
           Annuleren
         </Button>
