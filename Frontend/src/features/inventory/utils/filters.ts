@@ -157,3 +157,94 @@ export const sortInventoryItems = (
   });
 };
 
+/**
+ * Apply extended filters to inventory items
+ * Filters are applied based on filterData field and standard item properties
+ */
+export const applyExtendedFilters = (
+  items: InventoryItem[],
+  filters: Record<string, any>,
+  selectedCategory?: string | null
+): InventoryItem[] => {
+  if (!filters || Object.keys(filters).length === 0) {
+    return items;
+  }
+
+  return items.filter((item) => {
+    // If category filter is set, check category match first
+    if (selectedCategory) {
+      // Map webshop category IDs to inventory category matching
+      // This is a simplified matching - you may need to adjust based on your category structure
+      const categoryMatch = item.categoryId === selectedCategory;
+      if (!categoryMatch) return false;
+    }
+
+    // Apply each filter
+    for (const [filterId, filterValue] of Object.entries(filters)) {
+      if (filterValue === null || filterValue === undefined || filterValue === '' || 
+          (Array.isArray(filterValue) && filterValue.length === 0)) {
+        continue; // Skip empty filters
+      }
+
+      // Price range filter
+      if (filterId === 'price' && typeof filterValue === 'object' && filterValue.min !== undefined) {
+        const itemPrice = item.salePrice || 0;
+        if (itemPrice < filterValue.min || itemPrice > filterValue.max) {
+          return false;
+        }
+        continue;
+      }
+
+      // Check filterData field first (category-specific attributes)
+      if (item.filterData && item.filterData[filterId] !== undefined) {
+        const itemValue = item.filterData[filterId];
+        
+        // Array filters (checkboxes, colors)
+        if (Array.isArray(filterValue)) {
+          if (Array.isArray(itemValue)) {
+            // Check if any selected value matches any item value
+            if (!filterValue.some(fv => itemValue.includes(fv))) {
+              return false;
+            }
+          } else {
+            // Single item value, check if it's in filter array
+            if (!filterValue.includes(itemValue)) {
+              return false;
+            }
+          }
+        } else {
+          // Single value filter (dropdown)
+          if (itemValue !== filterValue) {
+            return false;
+          }
+        }
+        continue;
+      }
+
+      // Fallback to standard item properties
+      // Map common filter IDs to item properties
+      const propertyMap: Record<string, keyof InventoryItem> = {
+        'material': 'name' as keyof InventoryItem, // You may need to add a material field
+        'color': 'name' as keyof InventoryItem, // You may need to add a color field
+      };
+
+      const property = propertyMap[filterId];
+      if (property && item[property]) {
+        const itemValue = String(item[property]).toLowerCase();
+        
+        if (Array.isArray(filterValue)) {
+          if (!filterValue.some(fv => itemValue.includes(String(fv).toLowerCase()))) {
+            return false;
+          }
+        } else {
+          if (!itemValue.includes(String(filterValue).toLowerCase())) {
+            return false;
+          }
+        }
+      }
+    }
+
+    return true;
+  });
+};
+

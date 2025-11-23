@@ -8,7 +8,7 @@ import { Input } from '@/components/common/Input';
 import { Modal } from '@/components/common/Modal';
 import { CSVUpload } from '@/components/common/CSVUpload';
 import { ExtendedSearchFilters, defaultCategories as webshopCategories } from '@/components/ExtendedSearchFilters';
-import { filterBySearchTerm, filterByCategory } from '../utils/filters';
+import { filterBySearchTerm, filterByCategory, applyExtendedFilters } from '../utils/filters';
 import type { InventoryItem } from '../types';
 
 export const InventoryPage: React.FC = () => {
@@ -30,6 +30,8 @@ export const InventoryPage: React.FC = () => {
   const [editingItem, setEditingItem] = useState<InventoryItem | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showExtendedFilters, setShowExtendedFilters] = useState(false);
+  const [extendedFilterValues, setExtendedFilterValues] = useState<Record<string, any>>({});
+  const [selectedExtendedCategory, setSelectedExtendedCategory] = useState<string | null>(null);
   
   // Use comprehensive filtering like webshop and POS
   const filteredItems = useMemo(() => {
@@ -45,8 +47,13 @@ export const InventoryPage: React.FC = () => {
       result = filterByCategory(result, selectedCategoryId);
     }
     
+    // Apply extended filters if any are set
+    if (extendedFilterValues && Object.keys(extendedFilterValues).length > 0) {
+      result = applyExtendedFilters(result, extendedFilterValues, selectedExtendedCategory);
+    }
+    
     return result;
-  }, [items, search, selectedCategoryId, suppliers, categories]);
+  }, [items, search, selectedCategoryId, suppliers, categories, extendedFilterValues, selectedExtendedCategory]);
 
   const handleAdd = () => {
     setEditingItem(null);
@@ -189,11 +196,16 @@ export const InventoryPage: React.FC = () => {
       {/* Extended Search Filters */}
       <ExtendedSearchFilters
         isOpen={showExtendedFilters}
-        onClose={() => setShowExtendedFilters(false)}
-        onApplyFilters={(filters) => {
-          // Apply filters to search - can be extended based on filter values
-          console.log('Applied filters:', filters);
-          // For now, we'll use the basic search, but this can be extended
+        onClose={() => {
+          setShowExtendedFilters(false);
+          // Optionally clear filters when closing
+          // setExtendedFilterValues({});
+          // setSelectedExtendedCategory(null);
+        }}
+        onApplyFilters={(filters, categoryId) => {
+          setExtendedFilterValues(filters);
+          setSelectedExtendedCategory(categoryId);
+          setShowExtendedFilters(false);
         }}
       />
     </div>

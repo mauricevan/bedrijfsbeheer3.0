@@ -55,7 +55,7 @@ interface ExtendedSearchFiltersProps {
   onClose: () => void;
   categories?: Category[];
   categoryFilters?: Record<string, Filter[]>;
-  onApplyFilters?: (filters: Record<string, any>) => void;
+  onApplyFilters?: (filters: Record<string, any>, categoryId?: string | null) => void;
 }
 
 // Default webshop categories (for backward compatibility)
@@ -376,10 +376,10 @@ export const ExtendedSearchFilters: React.FC<ExtendedSearchFiltersProps> = ({
 
   const handleApplyFilters = useCallback(() => {
     if (onApplyFilters) {
-      onApplyFilters(filterValues);
+      onApplyFilters(filterValues, selectedCategory);
     }
     handleClose();
-  }, [filterValues, onApplyFilters, handleClose]);
+  }, [filterValues, selectedCategory, onApplyFilters, handleClose]);
 
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {

@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Search, Plus } from 'lucide-react';
 import { useInventory } from '@/features/inventory';
 import { Input } from '@/components/common/Input';
 import { Button } from '@/components/common/Button';
 import { Card } from '@/components/common/Card';
 import { ExtendedSearchFilters } from '@/components/ExtendedSearchFilters';
+import { applyExtendedFilters } from '@/features/inventory/utils/filters';
 import type { CartItem } from '../types';
 
 type ProductSelectorProps = {
@@ -16,32 +17,43 @@ export const ProductSelector: React.FC<ProductSelectorProps> = ({ onAddToCart })
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
   const [showExtendedFilters, setShowExtendedFilters] = useState(false);
+  const [extendedFilterValues, setExtendedFilterValues] = useState<Record<string, any>>({});
+  const [selectedExtendedCategory, setSelectedExtendedCategory] = useState<string | null>(null);
 
-  const filteredItems = items.filter(item => {
-    // Search filtering (comprehensive like inventory)
-    const matchesSearch = !search || (() => {
-      const query = search.toLowerCase();
-      // Search in name
-      if (item.name.toLowerCase().includes(query)) return true;
-      // Search in SKU types
-      if (item.sku?.toLowerCase().includes(query)) return true;
-      if (item.supplierSku?.toLowerCase().includes(query)) return true;
-      if (item.customSku?.toLowerCase().includes(query)) return true;
-      // Search in description
-      if (item.description?.toLowerCase().includes(query)) return true;
-      // Search in location
-      if (item.location?.toLowerCase().includes(query)) return true;
-      // Search in prices (as string)
-      if (item.purchasePrice?.toString().includes(query)) return true;
-      if (item.salePrice?.toString().includes(query)) return true;
-      // Search in POS alert note
-      if (item.posAlert?.toLowerCase().includes(query)) return true;
-      return false;
-    })();
-    
-    const matchesCategory = !selectedCategory || item.categoryId === selectedCategory;
-    return matchesSearch && matchesCategory && item.quantity > 0;
-  });
+  const filteredItems = useMemo(() => {
+    let result = items.filter(item => {
+      // Search filtering (comprehensive like inventory)
+      const matchesSearch = !search || (() => {
+        const query = search.toLowerCase();
+        // Search in name
+        if (item.name.toLowerCase().includes(query)) return true;
+        // Search in SKU types
+        if (item.sku?.toLowerCase().includes(query)) return true;
+        if (item.supplierSku?.toLowerCase().includes(query)) return true;
+        if (item.customSku?.toLowerCase().includes(query)) return true;
+        // Search in description
+        if (item.description?.toLowerCase().includes(query)) return true;
+        // Search in location
+        if (item.location?.toLowerCase().includes(query)) return true;
+        // Search in prices (as string)
+        if (item.purchasePrice?.toString().includes(query)) return true;
+        if (item.salePrice?.toString().includes(query)) return true;
+        // Search in POS alert note
+        if (item.posAlert?.toLowerCase().includes(query)) return true;
+        return false;
+      });
+      
+      const matchesCategory = !selectedCategory || item.categoryId === selectedCategory;
+      return matchesSearch && matchesCategory && item.quantity > 0;
+    });
+
+    // Apply extended filters if any are set
+    if (extendedFilterValues && Object.keys(extendedFilterValues).length > 0) {
+      result = applyExtendedFilters(result, extendedFilterValues, selectedExtendedCategory);
+    }
+
+    return result;
+  }, [items, search, selectedCategory, extendedFilterValues, selectedExtendedCategory]);
 
   const handleAddToCart = (item: typeof items[0]) => {
     onAddToCart({
@@ -129,11 +141,16 @@ export const ProductSelector: React.FC<ProductSelectorProps> = ({ onAddToCart })
       {/* Extended Search Filters */}
       <ExtendedSearchFilters
         isOpen={showExtendedFilters}
-        onClose={() => setShowExtendedFilters(false)}
-        onApplyFilters={(filters) => {
-          // Apply filters to search - can be extended based on filter values
-          console.log('Applied filters:', filters);
-          // For now, we'll use the basic search, but this can be extended
+        onClose={() => {
+          setShowExtendedFilters(false);
+          // Optionally clear filters when closing
+          // setExtendedFilterValues({});
+          // setSelectedExtendedCategory(null);
+        }}
+        onApplyFilters={(filters, categoryId) => {
+          setExtendedFilterValues(filters);
+          setSelectedExtendedCategory(categoryId);
+          setShowExtendedFilters(false);
         }}
       />
     </div>

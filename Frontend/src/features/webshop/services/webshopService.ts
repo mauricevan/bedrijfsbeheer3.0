@@ -25,6 +25,52 @@ const DEFAULT_CATEGORIES: WebshopCategory[] = [
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   },
+  // Webshop categories matching ExtendedSearchFilters
+  {
+    id: 'cilinders',
+    name: 'Cilinders',
+    slug: 'cilinders',
+    sortOrder: 3,
+    status: 'active',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: 'eenpuntsloten',
+    name: 'Eenpuntsloten',
+    slug: 'eenpuntsloten',
+    sortOrder: 4,
+    status: 'active',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: 'meerpuntsloten',
+    name: 'Meerpuntsloten',
+    slug: 'meerpuntsloten',
+    sortOrder: 5,
+    status: 'active',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: 'deurbeslag',
+    name: 'Deurbeslag',
+    slug: 'deurbeslag',
+    sortOrder: 6,
+    status: 'active',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: 'veiligheidsbeslag',
+    name: 'Veiligheidsbeslag',
+    slug: 'veiligheidsbeslag',
+    sortOrder: 7,
+    status: 'active',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
 ];
 
 let PRODUCTS = storage.get<WebshopProduct[]>(PRODUCTS_KEY, []);

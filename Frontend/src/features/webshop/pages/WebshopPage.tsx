@@ -8,6 +8,7 @@ import { ExtendedSearchFilters } from '@/components/ExtendedSearchFilters';
 import { useWebshop } from '../hooks/useWebshop';
 import { ProductForm } from '../components/ProductForm';
 import { CategoryForm } from '../components/CategoryForm';
+import { applyExtendedFiltersToProducts } from '../utils/filters';
 import type { WebshopProduct, WebshopCategory, WebshopOrder } from '../types/webshop.types';
 
 export const WebshopPage: React.FC = () => {
@@ -33,29 +34,42 @@ export const WebshopPage: React.FC = () => {
   const [editingProduct, setEditingProduct] = useState<WebshopProduct | null>(null);
   const [editingCategory, setEditingCategory] = useState<WebshopCategory | null>(null);
   const [showExtendedFilters, setShowExtendedFilters] = useState(false);
+  const [extendedFilterValues, setExtendedFilterValues] = useState<Record<string, any>>({});
+  const [selectedExtendedCategory, setSelectedExtendedCategory] = useState<string | null>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   const filteredProducts = useMemo(() => {
-    if (!searchQuery) return products;
-    const query = searchQuery.toLowerCase();
-    return products.filter(p => {
-      // Search in name
-      if (p.name.toLowerCase().includes(query)) return true;
-      // Search in SKU
-      if (p.sku.toLowerCase().includes(query)) return true;
-      // Search in description
-      if (p.description?.toLowerCase().includes(query)) return true;
-      // Search in category name
-      if (p.categoryName?.toLowerCase().includes(query)) return true;
-      // Search in price (as string)
-      if (p.price.toString().includes(query)) return true;
-      // Search in stock (as string)
-      if (p.stock.toString().includes(query)) return true;
-      // Search in tags
-      if (p.tags?.some(tag => tag.toLowerCase().includes(query))) return true;
-      return false;
-    });
-  }, [products, searchQuery]);
+    let result = products;
+    
+    // Apply search filter
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      result = result.filter(p => {
+        // Search in name
+        if (p.name.toLowerCase().includes(query)) return true;
+        // Search in SKU
+        if (p.sku.toLowerCase().includes(query)) return true;
+        // Search in description
+        if (p.description?.toLowerCase().includes(query)) return true;
+        // Search in category name
+        if (p.categoryName?.toLowerCase().includes(query)) return true;
+        // Search in price (as string)
+        if (p.price.toString().includes(query)) return true;
+        // Search in stock (as string)
+        if (p.stock.toString().includes(query)) return true;
+        // Search in tags
+        if (p.tags?.some(tag => tag.toLowerCase().includes(query))) return true;
+        return false;
+      });
+    }
+    
+    // Apply extended filters if any are set
+    if (extendedFilterValues && Object.keys(extendedFilterValues).length > 0) {
+      result = applyExtendedFiltersToProducts(result, extendedFilterValues, selectedExtendedCategory);
+    }
+    
+    return result;
+  }, [products, searchQuery, extendedFilterValues, selectedExtendedCategory]);
 
   const filteredCategories = useMemo(() => {
     if (!searchQuery) return categories;
@@ -488,7 +502,17 @@ export const WebshopPage: React.FC = () => {
       {/* Extended Search Filters */}
       <ExtendedSearchFilters
         isOpen={showExtendedFilters}
-        onClose={() => setShowExtendedFilters(false)}
+        onClose={() => {
+          setShowExtendedFilters(false);
+          // Optionally clear filters when closing
+          // setExtendedFilterValues({});
+          // setSelectedExtendedCategory(null);
+        }}
+        onApplyFilters={(filters, categoryId) => {
+          setExtendedFilterValues(filters);
+          setSelectedExtendedCategory(categoryId);
+          setShowExtendedFilters(false);
+        }}
       />
     </div>
   );
