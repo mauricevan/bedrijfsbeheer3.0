@@ -1,17 +1,27 @@
 import React, { useState, useEffect } from 'react';
-import { BookOpen, FileText, Receipt, Users, TrendingUp, Download } from 'lucide-react';
+import { BookOpen, FileText, Receipt, Users, TrendingUp, Download, Plus, Search, Filter } from 'lucide-react';
 import { Card } from '@/components/common/Card';
 import { Button } from '@/components/common/Button';
 import { Input } from '@/components/common/Input';
 import { useBookkeeping } from '../hooks/useBookkeeping';
 import { useAccounting } from '@/features/accounting/hooks/useAccounting';
+import { useToast } from '@/context/ToastContext';
+import { JournalEntryForm } from '../components/JournalEntryForm';
+import { JournalEntryDetailModal } from '../components/JournalEntryDetailModal';
+import { EmptyState } from '../components/EmptyState';
+import type { JournalEntry } from '../types/bookkeeping.types';
 
 export const BookkeepingPage: React.FC = () => {
-  const { ledgerAccounts, journalEntries, posSales, customerDossiers, isLoading, getVatReport, createJournalEntryFromInvoice } = useBookkeeping();
+  const { ledgerAccounts, journalEntries, posSales, customerDossiers, isLoading, getVatReport, createManualJournalEntry } = useBookkeeping();
   const { invoices } = useAccounting();
+  const { showToast } = useToast();
+  
   const [activeTab, setActiveTab] = useState<'ledger' | 'journal' | 'vat' | 'invoices' | 'pos' | 'dossiers'>('ledger');
   const [period, setPeriod] = useState<'month' | 'quarter' | 'year'>('month');
   const [vatReport, setVatReport] = useState<any>(null);
+  const [showJournalEntryForm, setShowJournalEntryForm] = useState(false);
+  const [selectedJournalEntry, setSelectedJournalEntry] = useState<JournalEntry | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     const loadVatReport = async () => {
@@ -40,6 +50,41 @@ export const BookkeepingPage: React.FC = () => {
   
   const vatToPay = vatReport?.vatToPay || 0;
   const outstandingInvoices = invoices.filter(i => i.status !== 'paid' && i.status !== 'cancelled').length;
+
+  const handleCreateJournalEntry = async (data: {
+    date: string;
+    description: string;
+    entries: any[];
+  }) => {
+    try {
+      await createManualJournalEntry(data);
+      setShowJournalEntryForm(false);
+      showToast('Journaalpost succesvol aangemaakt', 'success');
+    } catch (error) {
+      showToast('Fout bij het aanmaken van journaalpost', 'error');
+      throw error;
+    }
+  };
+
+  // Filter functions
+  const filteredJournalEntries = journalEntries.filter(entry =>
+    entry.entryNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    entry.description.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const filteredInvoices = invoices.filter(invoice =>
+    invoice.invoiceNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    invoice.customerName.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const filteredPosSales = posSales.filter(sale =>
+    sale.saleNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    sale.employeeName.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const filteredCustomerDossiers = customerDossiers.filter(dossier =>
+    dossier.customerName.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
     <div className="space-y-6">
@@ -97,10 +142,10 @@ export const BookkeepingPage: React.FC = () => {
 
       <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-700">
         <div className="flex flex-col sm:flex-row gap-4 mb-4">
-          <div className="flex gap-2 border-b border-slate-200 dark:border-slate-700">
+          <div className="flex gap-2 border-b border-slate-200 dark:border-slate-700 flex-1 overflow-x-auto">
             <button
               onClick={() => setActiveTab('ledger')}
-              className={`px-4 py-2 font-medium transition-colors ${
+              className={`px-4 py-2 font-medium transition-colors whitespace-nowrap ${
                 activeTab === 'ledger'
                   ? 'text-indigo-600 dark:text-indigo-400 border-b-2 border-indigo-600'
                   : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
@@ -110,7 +155,7 @@ export const BookkeepingPage: React.FC = () => {
             </button>
             <button
               onClick={() => setActiveTab('journal')}
-              className={`px-4 py-2 font-medium transition-colors ${
+              className={`px-4 py-2 font-medium transition-colors whitespace-nowrap ${
                 activeTab === 'journal'
                   ? 'text-indigo-600 dark:text-indigo-400 border-b-2 border-indigo-600'
                   : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
@@ -120,7 +165,7 @@ export const BookkeepingPage: React.FC = () => {
             </button>
             <button
               onClick={() => setActiveTab('vat')}
-              className={`px-4 py-2 font-medium transition-colors ${
+              className={`px-4 py-2 font-medium transition-colors whitespace-nowrap ${
                 activeTab === 'vat'
                   ? 'text-indigo-600 dark:text-indigo-400 border-b-2 border-indigo-600'
                   : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
@@ -130,7 +175,7 @@ export const BookkeepingPage: React.FC = () => {
             </button>
             <button
               onClick={() => setActiveTab('invoices')}
-              className={`px-4 py-2 font-medium transition-colors ${
+              className={`px-4 py-2 font-medium transition-colors whitespace-nowrap ${
                 activeTab === 'invoices'
                   ? 'text-indigo-600 dark:text-indigo-400 border-b-2 border-indigo-600'
                   : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
@@ -140,7 +185,7 @@ export const BookkeepingPage: React.FC = () => {
             </button>
             <button
               onClick={() => setActiveTab('pos')}
-              className={`px-4 py-2 font-medium transition-colors ${
+              className={`px-4 py-2 font-medium transition-colors whitespace-nowrap ${
                 activeTab === 'pos'
                   ? 'text-indigo-600 dark:text-indigo-400 border-b-2 border-indigo-600'
                   : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
@@ -150,7 +195,7 @@ export const BookkeepingPage: React.FC = () => {
             </button>
             <button
               onClick={() => setActiveTab('dossiers')}
-              className={`px-4 py-2 font-medium transition-colors ${
+              className={`px-4 py-2 font-medium transition-colors whitespace-nowrap ${
                 activeTab === 'dossiers'
                   ? 'text-indigo-600 dark:text-indigo-400 border-b-2 border-indigo-600'
                   : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
@@ -159,16 +204,38 @@ export const BookkeepingPage: React.FC = () => {
               Dossiers
             </button>
           </div>
-          <div className="flex gap-2">
-            <select
-              value={period}
-              onChange={(e) => setPeriod(e.target.value as any)}
-              className="px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
-            >
-              <option value="month">Maand</option>
-              <option value="quarter">Kwartaal</option>
-              <option value="year">Jaar</option>
-            </select>
+          <div className="flex gap-2 items-center">
+            {activeTab !== 'ledger' && activeTab !== 'vat' && (
+              <div className="relative flex-1 sm:flex-initial">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
+                <Input
+                  type="search"
+                  placeholder="Zoeken..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10 w-full sm:w-64"
+                />
+              </div>
+            )}
+            {activeTab === 'journal' && (
+              <Button
+                leftIcon={<Plus className="h-4 w-4" />}
+                onClick={() => setShowJournalEntryForm(true)}
+              >
+                Nieuwe Post
+              </Button>
+            )}
+            {activeTab === 'vat' && (
+              <select
+                value={period}
+                onChange={(e) => setPeriod(e.target.value as any)}
+                className="px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+              >
+                <option value="month">Maand</option>
+                <option value="quarter">Kwartaal</option>
+                <option value="year">Jaar</option>
+              </select>
+            )}
             <Button variant="outline" leftIcon={<Download className="h-4 w-4" />}>
               Exporteren
             </Button>
@@ -218,16 +285,30 @@ export const BookkeepingPage: React.FC = () => {
 
         {activeTab === 'journal' && (
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Journaalposten</h3>
-            <p className="text-slate-500 dark:text-slate-400">Journaalposten worden automatisch gegenereerd vanuit facturen en kassaverkopen.</p>
-            {journalEntries.length === 0 ? (
-              <div className="text-center py-8 text-slate-500 dark:text-slate-400">
-                Geen journaalposten gevonden
-              </div>
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Journaalposten</h3>
+            </div>
+            {filteredJournalEntries.length === 0 ? (
+              <EmptyState
+                icon={BookOpen}
+                title="Geen journaalposten gevonden"
+                description={searchQuery ? "Geen resultaten voor je zoekopdracht. Probeer andere zoektermen." : "Journaalposten worden automatisch gegenereerd vanuit facturen en kassaverkopen, of je kunt handmatig een journaalpost aanmaken."}
+                actionLabel={!searchQuery ? "Nieuwe Journaalpost" : undefined}
+                onAction={!searchQuery ? () => setShowJournalEntryForm(true) : undefined}
+                suggestions={!searchQuery ? [
+                  "Maak facturen aan in de Accounting module",
+                  "Registreer verkopen in de POS module",
+                  "Maak handmatig een journaalpost aan voor correcties"
+                ] : undefined}
+              />
             ) : (
               <div className="space-y-4">
-                {journalEntries.map(entry => (
-                  <Card key={entry.id} className="p-4">
+                {filteredJournalEntries.map(entry => (
+                  <Card 
+                    key={entry.id} 
+                    className="p-4 cursor-pointer hover:shadow-md transition-shadow"
+                    onClick={() => setSelectedJournalEntry(entry)}
+                  >
                     <div className="flex justify-between items-start mb-3">
                       <div>
                         <h4 className="font-semibold text-slate-900 dark:text-white">{entry.entryNumber}</h4>
@@ -236,28 +317,26 @@ export const BookkeepingPage: React.FC = () => {
                           {new Date(entry.date).toLocaleDateString('nl-NL')}
                         </p>
                       </div>
+                      <div className="flex items-center gap-2">
+                        {entry.invoiceId && (
+                          <span className="text-xs px-2 py-1 rounded-full bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300">
+                            Factuur
+                          </span>
+                        )}
+                        {entry.posSaleId && (
+                          <span className="text-xs px-2 py-1 rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300">
+                            POS
+                          </span>
+                        )}
+                        {!entry.invoiceId && !entry.posSaleId && (
+                          <span className="text-xs px-2 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                            Handmatig
+                          </span>
+                        )}
+                      </div>
                     </div>
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-sm">
-                        <thead>
-                          <tr className="border-b border-slate-200 dark:border-slate-700">
-                            <th className="text-left p-2 text-slate-700 dark:text-slate-300">Rekening</th>
-                            <th className="text-left p-2 text-slate-700 dark:text-slate-300">Omschrijving</th>
-                            <th className="text-right p-2 text-slate-700 dark:text-slate-300">Debet</th>
-                            <th className="text-right p-2 text-slate-700 dark:text-slate-300">Credit</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {entry.entries.map(line => (
-                            <tr key={line.id} className="border-b border-slate-100 dark:border-slate-800">
-                              <td className="p-2 text-slate-900 dark:text-white">{line.accountNumber} - {line.accountName}</td>
-                              <td className="p-2 text-slate-600 dark:text-slate-400">{line.description}</td>
-                              <td className="p-2 text-right text-slate-900 dark:text-white">{line.debit > 0 ? `€${line.debit.toFixed(2)}` : '-'}</td>
-                              <td className="p-2 text-right text-slate-900 dark:text-white">{line.credit > 0 ? `€${line.credit.toFixed(2)}` : '-'}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
+                    <div className="text-xs text-slate-500 dark:text-slate-400">
+                      {entry.entries.length} boekingsregels
                     </div>
                   </Card>
                 ))}
@@ -327,11 +406,19 @@ export const BookkeepingPage: React.FC = () => {
         {activeTab === 'invoices' && (
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Factuur Archief</h3>
-            {invoices.length === 0 ? (
-              <p className="text-slate-500 dark:text-slate-400">Geen facturen gevonden.</p>
+            {filteredInvoices.length === 0 ? (
+              <EmptyState
+                icon={FileText}
+                title="Geen facturen gevonden"
+                description={searchQuery ? "Geen resultaten voor je zoekopdracht." : "Facturen worden automatisch gearchiveerd wanneer je ze aanmaakt in de Accounting module."}
+                suggestions={!searchQuery ? [
+                  "Ga naar de Accounting module om facturen aan te maken",
+                  "Facturen worden hier automatisch weergegeven"
+                ] : undefined}
+              />
             ) : (
               <div className="space-y-2">
-                {invoices.map(invoice => (
+                {filteredInvoices.map(invoice => (
                   <Card key={invoice.id} className="p-4">
                     <div className="flex justify-between items-center">
                       <div>
@@ -362,11 +449,19 @@ export const BookkeepingPage: React.FC = () => {
         {activeTab === 'pos' && (
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Kassa Verkopen</h3>
-            {posSales.length === 0 ? (
-              <p className="text-slate-500 dark:text-slate-400">Geen kassaverkopen gevonden.</p>
+            {filteredPosSales.length === 0 ? (
+              <EmptyState
+                icon={Receipt}
+                title="Geen kassaverkopen gevonden"
+                description={searchQuery ? "Geen resultaten voor je zoekopdracht." : "Kassaverkopen worden automatisch geregistreerd wanneer je transacties verwerkt in de POS module."}
+                suggestions={!searchQuery ? [
+                  "Ga naar de POS module om verkopen te registreren",
+                  "Verkopen worden hier automatisch weergegeven"
+                ] : undefined}
+              />
             ) : (
               <div className="space-y-2">
-                {posSales.map(sale => (
+                {filteredPosSales.map(sale => (
                   <Card key={sale.id} className="p-4">
                     <div className="flex justify-between items-center">
                       <div>
@@ -393,11 +488,19 @@ export const BookkeepingPage: React.FC = () => {
         {activeTab === 'dossiers' && (
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Klant Dossiers</h3>
-            {customerDossiers.length === 0 ? (
-              <p className="text-slate-500 dark:text-slate-400">Geen klantdossiers gevonden.</p>
+            {filteredCustomerDossiers.length === 0 ? (
+              <EmptyState
+                icon={Users}
+                title="Geen klantdossiers gevonden"
+                description={searchQuery ? "Geen resultaten voor je zoekopdracht." : "Klantdossiers worden automatisch aangemaakt wanneer je facturen of offertes voor klanten aanmaakt."}
+                suggestions={!searchQuery ? [
+                  "Maak facturen aan voor klanten in de Accounting module",
+                  "Dossiers tonen een overzicht van alle financiële interacties"
+                ] : undefined}
+              />
             ) : (
               <div className="space-y-2">
-                {customerDossiers.map(dossier => (
+                {filteredCustomerDossiers.map(dossier => (
                   <Card key={dossier.customerId} className="p-4">
                     <div className="flex justify-between items-start">
                       <div>
@@ -432,7 +535,22 @@ export const BookkeepingPage: React.FC = () => {
         </div>
         </>
       )}
+
+      {/* Modals */}
+      {showJournalEntryForm && (
+        <JournalEntryForm
+          ledgerAccounts={ledgerAccounts}
+          onSubmit={handleCreateJournalEntry}
+          onCancel={() => setShowJournalEntryForm(false)}
+        />
+      )}
+
+      {selectedJournalEntry && (
+        <JournalEntryDetailModal
+          entry={selectedJournalEntry}
+          onClose={() => setSelectedJournalEntry(null)}
+        />
+      )}
     </div>
   );
 };
-

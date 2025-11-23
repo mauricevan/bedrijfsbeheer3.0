@@ -1,4 +1,4 @@
-import type { JournalEntry, JournalEntryLine, VatReport, PosSale, CustomerDossier, SupplierDossier, LedgerAccount } from '../types';
+import type { JournalEntry, JournalEntryLine, VatReport, PosSale, CustomerDossier, SupplierDossier, LedgerAccount } from '../types/bookkeeping.types';
 import { storage } from '@/utils/storage';
 import { accountingService } from '@/features/accounting/services/accountingService';
 
@@ -77,6 +77,37 @@ export const bookkeepingService = {
     }
     
     return entries.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  },
+
+  createManualJournalEntry: async (data: {
+    date: string;
+    description: string;
+    entries: JournalEntryLine[];
+  }): Promise<JournalEntry> => {
+    await delay(500);
+    
+    const entryNumber = generateJournalEntryNumber();
+    
+    const journalEntry: JournalEntry = {
+      id: `entry-${Date.now()}`,
+      entryNumber,
+      date: data.date,
+      description: data.description,
+      entries: data.entries.map((line, index) => ({
+        ...line,
+        id: `line-${Date.now()}-${index}`,
+      })),
+      createdAt: new Date().toISOString(),
+    };
+
+    // Update ledger account balances
+    data.entries.forEach(line => {
+      updateAccountBalance(line.accountNumber, line.debit, line.credit);
+    });
+
+    JOURNAL_ENTRIES.push(journalEntry);
+    saveJournalEntries();
+    return journalEntry;
   },
 
   createJournalEntryFromInvoice: async (invoiceId: string): Promise<JournalEntry> => {

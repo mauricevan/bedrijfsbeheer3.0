@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import type { JournalEntry, VatReport, PosSale, CustomerDossier, SupplierDossier, LedgerAccount } from '../types';
+import type { JournalEntry, JournalEntryLine, VatReport, PosSale, CustomerDossier, SupplierDossier, LedgerAccount } from '../types/bookkeeping.types';
 import { bookkeepingService } from '../services/bookkeepingService';
 
 export const useBookkeeping = () => {
@@ -54,6 +54,17 @@ export const useBookkeeping = () => {
     return sale;
   };
 
+  const createManualJournalEntry = async (data: {
+    date: string;
+    description: string;
+    entries: JournalEntryLine[];
+  }) => {
+    const entry = await bookkeepingService.createManualJournalEntry(data);
+    setJournalEntries(prev => [...prev, entry]);
+    await fetchData(); // Refresh ledger accounts
+    return entry;
+  };
+
   return {
     ledgerAccounts,
     journalEntries,
@@ -64,6 +75,7 @@ export const useBookkeeping = () => {
     getVatReport,
     createJournalEntryFromInvoice,
     createPosSale,
+    createManualJournalEntry,
     refresh: fetchData,
   };
 };
