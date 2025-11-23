@@ -4,9 +4,10 @@
  */
 
 import React from 'react';
-import { Edit, Trash2, AlertTriangle, Plus, Minus, Link as LinkIcon } from 'lucide-react';
+import { Edit, Trash2, AlertTriangle, Link as LinkIcon, Package } from 'lucide-react';
 import type { InventoryItem, Category } from '../types';
 import { Button } from '@/components/common/Button';
+import { EmptyState } from '@/components/common/EmptyState';
 import { cn } from '@/utils/cn';
 import { calculateMargin, calculatePriceInclBTW } from '../utils/btw';
 
@@ -37,9 +38,18 @@ export const InventoryList: React.FC<InventoryListProps> = ({
 
   if (items.length === 0) {
     return (
-      <div className="text-center p-8 text-slate-500 dark:text-slate-400">
-        Geen items gevonden.
-      </div>
+      <EmptyState
+        icon={Package}
+        title="Geen voorraaditems gevonden"
+        description="Er zijn nog geen voorraaditems in het systeem. Voeg je eerste item toe om te beginnen."
+        actionLabel="Nieuw Item Toevoegen"
+        onAction={() => onEdit({} as InventoryItem)}
+        suggestions={[
+          "Voeg producten toe met naam, SKU en prijs",
+          "Stel voorraadniveaus in voor automatische meldingen",
+          "Koppel items aan categorieën voor betere organisatie"
+        ]}
+      />
     );
   }
 

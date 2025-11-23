@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { Check, X } from 'lucide-react';
 import { Modal } from '@/components/common/Modal';
 import { Button } from '@/components/common/Button';
 import type { Invoice } from '../types';

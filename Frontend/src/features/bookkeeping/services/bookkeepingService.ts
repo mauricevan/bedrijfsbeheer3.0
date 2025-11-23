@@ -17,9 +17,9 @@ const DEFAULT_LEDGER_ACCOUNTS: LedgerAccount[] = [
   { id: '8', accountNumber: '4000', name: 'Inkoop grondstoffen', type: 'expense', debit: 0, credit: 0, balance: 0 },
 ];
 
-let JOURNAL_ENTRIES = storage.get<JournalEntry[]>(JOURNAL_ENTRIES_KEY, []);
-let POS_SALES = storage.get<PosSale[]>(POS_SALES_KEY, []);
-let LEDGER_ACCOUNTS = storage.get<LedgerAccount[]>(LEDGER_ACCOUNTS_KEY, DEFAULT_LEDGER_ACCOUNTS);
+const JOURNAL_ENTRIES = storage.get<JournalEntry[]>(JOURNAL_ENTRIES_KEY, []);
+const POS_SALES = storage.get<PosSale[]>(POS_SALES_KEY, []);
+const LEDGER_ACCOUNTS = storage.get<LedgerAccount[]>(LEDGER_ACCOUNTS_KEY, DEFAULT_LEDGER_ACCOUNTS);
 
 const saveJournalEntries = () => storage.set(JOURNAL_ENTRIES_KEY, JOURNAL_ENTRIES);
 const savePosSales = () => storage.set(POS_SALES_KEY, POS_SALES);
@@ -137,7 +137,6 @@ export const bookkeepingService = {
     // Credit: Revenue accounts based on VAT rates
     const vat21Items = invoice.items.filter(i => i.vatRate === 21);
     const vat9Items = invoice.items.filter(i => i.vatRate === 9);
-    const vat0Items = invoice.items.filter(i => i.vatRate === 0);
 
     if (vat21Items.length > 0) {
       const revenue21 = vat21Items.reduce((sum, i) => sum + i.total, 0);

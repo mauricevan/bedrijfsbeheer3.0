@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Bell, Check, X, AlertCircle, Info, CheckCircle, AlertTriangle } from 'lucide-react';
+import { Bell, X, AlertCircle, Info, CheckCircle, AlertTriangle } from 'lucide-react';
 import { cn } from '@/utils/cn';
 import {
   getNotifications,

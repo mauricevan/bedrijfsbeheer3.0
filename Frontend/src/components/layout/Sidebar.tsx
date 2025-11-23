@@ -1,5 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
+import { X } from 'lucide-react';
 import { 
   LayoutDashboard, 
   Package, 
@@ -15,6 +16,8 @@ import {
   Store
 } from 'lucide-react';
 import { cn } from '@/utils/cn';
+import { EmployeeProfile } from './EmployeeProfile';
+import { Button } from '@/components/common/Button';
 
 const navItems = [
   { icon: LayoutDashboard, label: 'Dashboard', to: '/' },
@@ -31,13 +34,33 @@ const navItems = [
   { icon: Settings, label: 'Settings', to: '/settings' },
 ];
 
-export const Sidebar: React.FC = () => {
+interface SidebarProps {
+  isOpen?: boolean;
+  onClose?: () => void;
+}
+
+export const Sidebar: React.FC<SidebarProps> = ({ isOpen = true, onClose }) => {
   return (
-    <aside className="fixed left-0 top-0 z-40 h-screen w-64 border-r border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900 transition-transform lg:translate-x-0">
-      <div className="flex h-16 items-center border-b border-slate-200 px-6 dark:border-slate-700">
+    <aside
+      className={cn(
+        'fixed left-0 top-0 z-40 h-screen w-64 border-r border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900 transition-transform duration-300 ease-in-out',
+        isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+      )}
+    >
+      <div className="flex h-16 items-center justify-between border-b border-slate-200 px-6 dark:border-slate-700">
         <span className="text-xl font-bold bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">
           Bedrijfsbeheer
         </span>
+        {/* Close button for mobile */}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onClose}
+          className="lg:hidden"
+          aria-label="Close menu"
+        >
+          <X className="h-5 w-5" />
+        </Button>
       </div>
       
       <div className="h-[calc(100vh-4rem)] overflow-y-auto py-4 flex flex-col">
@@ -46,6 +69,12 @@ export const Sidebar: React.FC = () => {
             <NavLink
               key={item.to}
               to={item.to}
+              onClick={() => {
+                // Close sidebar on mobile when navigating
+                if (window.innerWidth < 1024 && onClose) {
+                  onClose();
+                }
+              }}
               className={({ isActive }) =>
                 cn(
                   'flex items-center rounded-lg px-3 py-2 text-sm font-medium transition-colors',
@@ -61,11 +90,16 @@ export const Sidebar: React.FC = () => {
           ))}
         </nav>
         
+        {/* Employee Profile */}
+        <div className="px-3 pb-3 border-t border-slate-200 dark:border-slate-700 pt-3">
+          <EmployeeProfile />
+        </div>
+        
         {/* Version Display */}
-        <div className="px-3 py-4 border-t border-slate-200 dark:border-slate-700">
+        <div className="px-3 py-2">
           <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
             <span>Versie</span>
-            <span className="font-medium text-slate-700 dark:text-slate-300">4.5.0</span>
+            <span className="font-medium text-slate-700 dark:text-slate-300">5.8.0</span>
           </div>
         </div>
       </div>

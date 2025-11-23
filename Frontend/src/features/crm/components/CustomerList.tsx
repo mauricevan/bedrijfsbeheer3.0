@@ -1,6 +1,7 @@
 import React from 'react';
-import { Edit, Trash2, Mail, Phone, Building2 } from 'lucide-react';
+import { Edit, Trash2, Mail, Phone, Building2, Users } from 'lucide-react';
 import { Card } from '@/components/common/Card';
+import { EmptyState } from '@/components/common/EmptyState';
 import type { Customer } from '../types/crm.types';
 
 interface CustomerListProps {
@@ -12,9 +13,18 @@ interface CustomerListProps {
 export const CustomerList: React.FC<CustomerListProps> = ({ customers, onEdit, onDelete }) => {
   if (customers.length === 0) {
     return (
-      <Card>
-        <p className="text-slate-500 dark:text-slate-400 text-center py-8">Geen klanten gevonden</p>
-      </Card>
+      <EmptyState
+        icon={Users}
+        title="Geen klanten gevonden"
+        description="Er zijn nog geen klanten in het systeem. Voeg je eerste klant toe om te beginnen met CRM."
+        actionLabel="Nieuwe Klant Toevoegen"
+        onAction={() => onEdit({} as Customer)}
+        suggestions={[
+          "Voeg klantgegevens toe zoals naam, e-mail en telefoon",
+          "Koppel klanten aan offertes en facturen",
+          "Bewaar klantgeschiedenis voor betere service"
+        ]}
+      />
     );
   }
 

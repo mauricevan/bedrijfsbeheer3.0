@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
-import { Users, Plus, TrendingUp, Phone, MessageSquare, CheckSquare, Search } from 'lucide-react';
+import { Users, Plus, TrendingUp, CheckSquare, Search } from 'lucide-react';
 import { Card } from '@/components/common/Card';
 import { Button } from '@/components/common/Button';
 import { Modal } from '@/components/common/Modal';
 import { Input } from '@/components/common/Input';
+import { ConfirmDialog } from '@/components/common/ConfirmDialog';
+import { SkeletonList } from '@/components/common/SkeletonList';
 import { useCRM } from '../hooks/useCRM';
 import { useToast } from '@/context/ToastContext';
 import {
@@ -51,6 +53,13 @@ export const CRMPage: React.FC = () => {
   const [editingInteraction, setEditingInteraction] = useState<Interaction | null>(null);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [showDeleteCustomerConfirm, setShowDeleteCustomerConfirm] = useState(false);
+  const [showDeleteLeadConfirm, setShowDeleteLeadConfirm] = useState(false);
+  const [showDeleteInteractionConfirm, setShowDeleteInteractionConfirm] = useState(false);
+  const [showDeleteTaskConfirm, setShowDeleteTaskConfirm] = useState(false);
+  const [showConvertLeadConfirm, setShowConvertLeadConfirm] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<string | null>(null);
+  const [leadToConvert, setLeadToConvert] = useState<string | null>(null);
 
   // Statistics
   const activeLeads = leads.filter(l => l.status !== 'won' && l.status !== 'lost').length;
@@ -107,10 +116,17 @@ export const CRMPage: React.FC = () => {
     }
   };
 
-  const handleDeleteCustomer = async (id: string) => {
-    if (window.confirm('Weet u zeker dat u deze klant wilt verwijderen?')) {
-      await deleteCustomer(id);
+  const handleDeleteCustomer = (id: string) => {
+    setItemToDelete(id);
+    setShowDeleteCustomerConfirm(true);
+  };
+
+  const confirmDeleteCustomer = async () => {
+    if (itemToDelete) {
+      await deleteCustomer(itemToDelete);
       showToast('Klant verwijderd', 'info');
+      setItemToDelete(null);
+      setShowDeleteCustomerConfirm(false);
     }
   };
 
@@ -135,17 +151,31 @@ export const CRMPage: React.FC = () => {
     }
   };
 
-  const handleDeleteLead = async (id: string) => {
-    if (window.confirm('Weet u zeker dat u deze lead wilt verwijderen?')) {
-      await deleteLead(id);
+  const handleDeleteLead = (id: string) => {
+    setItemToDelete(id);
+    setShowDeleteLeadConfirm(true);
+  };
+
+  const confirmDeleteLead = async () => {
+    if (itemToDelete) {
+      await deleteLead(itemToDelete);
       showToast('Lead verwijderd', 'info');
+      setItemToDelete(null);
+      setShowDeleteLeadConfirm(false);
     }
   };
 
-  const handleConvertLead = async (leadId: string) => {
-    if (window.confirm('Weet u zeker dat u deze lead naar een klant wilt converteren?')) {
-      await convertLeadToCustomer(leadId);
+  const handleConvertLead = (leadId: string) => {
+    setLeadToConvert(leadId);
+    setShowConvertLeadConfirm(true);
+  };
+
+  const confirmConvertLead = async () => {
+    if (leadToConvert) {
+      await convertLeadToCustomer(leadToConvert);
       showToast('Lead succesvol geconverteerd naar klant! 🎉', 'success');
+      setLeadToConvert(null);
+      setShowConvertLeadConfirm(false);
     }
   };
 
@@ -170,10 +200,17 @@ export const CRMPage: React.FC = () => {
     }
   };
 
-  const handleDeleteInteraction = async (id: string) => {
-    if (window.confirm('Weet u zeker dat u deze interactie wilt verwijderen?')) {
-      await deleteInteraction(id);
+  const handleDeleteInteraction = (id: string) => {
+    setItemToDelete(id);
+    setShowDeleteInteractionConfirm(true);
+  };
+
+  const confirmDeleteInteraction = async () => {
+    if (itemToDelete) {
+      await deleteInteraction(itemToDelete);
       showToast('Interactie verwijderd', 'info');
+      setItemToDelete(null);
+      setShowDeleteInteractionConfirm(false);
     }
   };
 
@@ -198,10 +235,17 @@ export const CRMPage: React.FC = () => {
     }
   };
 
-  const handleDeleteTask = async (id: string) => {
-    if (window.confirm('Weet u zeker dat u deze taak wilt verwijderen?')) {
-      await deleteTask(id);
+  const handleDeleteTask = (id: string) => {
+    setItemToDelete(id);
+    setShowDeleteTaskConfirm(true);
+  };
+
+  const confirmDeleteTask = async () => {
+    if (itemToDelete) {
+      await deleteTask(itemToDelete);
       showToast('Taak verwijderd', 'info');
+      setItemToDelete(null);
+      setShowDeleteTaskConfirm(false);
     }
   };
 
@@ -214,11 +258,7 @@ export const CRMPage: React.FC = () => {
   };
 
   if (isLoading) {
-    return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
-      </div>
-    );
+    return <SkeletonList count={6} showAvatar={true} showActions={true} />;
   }
 
   return (
@@ -471,6 +511,77 @@ export const CRMPage: React.FC = () => {
           }}
         />
       </Modal>
+
+      {/* Confirmation Dialogs */}
+      <ConfirmDialog
+        isOpen={showDeleteCustomerConfirm}
+        onClose={() => {
+          setShowDeleteCustomerConfirm(false);
+          setItemToDelete(null);
+        }}
+        onConfirm={confirmDeleteCustomer}
+        title="Klant Verwijderen"
+        message="Weet u zeker dat u deze klant wilt verwijderen? Deze actie kan niet ongedaan worden gemaakt."
+        confirmText="Verwijderen"
+        cancelText="Annuleren"
+        type="danger"
+      />
+
+      <ConfirmDialog
+        isOpen={showDeleteLeadConfirm}
+        onClose={() => {
+          setShowDeleteLeadConfirm(false);
+          setItemToDelete(null);
+        }}
+        onConfirm={confirmDeleteLead}
+        title="Lead Verwijderen"
+        message="Weet u zeker dat u deze lead wilt verwijderen? Deze actie kan niet ongedaan worden gemaakt."
+        confirmText="Verwijderen"
+        cancelText="Annuleren"
+        type="danger"
+      />
+
+      <ConfirmDialog
+        isOpen={showDeleteInteractionConfirm}
+        onClose={() => {
+          setShowDeleteInteractionConfirm(false);
+          setItemToDelete(null);
+        }}
+        onConfirm={confirmDeleteInteraction}
+        title="Interactie Verwijderen"
+        message="Weet u zeker dat u deze interactie wilt verwijderen? Deze actie kan niet ongedaan worden gemaakt."
+        confirmText="Verwijderen"
+        cancelText="Annuleren"
+        type="danger"
+      />
+
+      <ConfirmDialog
+        isOpen={showDeleteTaskConfirm}
+        onClose={() => {
+          setShowDeleteTaskConfirm(false);
+          setItemToDelete(null);
+        }}
+        onConfirm={confirmDeleteTask}
+        title="Taak Verwijderen"
+        message="Weet u zeker dat u deze taak wilt verwijderen? Deze actie kan niet ongedaan worden gemaakt."
+        confirmText="Verwijderen"
+        cancelText="Annuleren"
+        type="danger"
+      />
+
+      <ConfirmDialog
+        isOpen={showConvertLeadConfirm}
+        onClose={() => {
+          setShowConvertLeadConfirm(false);
+          setLeadToConvert(null);
+        }}
+        onConfirm={confirmConvertLead}
+        title="Lead Converteren"
+        message="Weet u zeker dat u deze lead naar een klant wilt converteren?"
+        confirmText="Converteren"
+        cancelText="Annuleren"
+        type="info"
+      />
     </div>
   );
 };

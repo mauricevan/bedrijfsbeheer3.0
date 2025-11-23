@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { 
-  User, Mail, Phone, MapPin, Calendar, CreditCard, 
-  FileText, TrendingUp, Clock, AlertCircle 
+  User, Mail, Phone, CreditCard, 
+  FileText, Clock, AlertCircle 
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { nl } from 'date-fns/locale';

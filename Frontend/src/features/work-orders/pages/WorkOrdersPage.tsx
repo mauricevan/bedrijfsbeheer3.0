@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus } from 'lucide-react';
+import { Plus, ClipboardList } from 'lucide-react';
 import { useWorkOrders } from '../hooks/useWorkOrders';
 import { useWorkboard } from '../hooks/useWorkboard';
 import { useHRM } from '@/features/hrm/hooks/useHRM';
@@ -13,6 +13,9 @@ import {
 } from '../components';
 import { Modal } from '@/components/common/Modal';
 import { Button } from '@/components/common/Button';
+import { ConfirmDialog } from '@/components/common/ConfirmDialog';
+import { EmptyState } from '@/components/common/EmptyState';
+import { SkeletonList } from '@/components/common/SkeletonList';
 import type { WorkOrder, WorkOrderStatus } from '../types';
 
 export const WorkOrdersPage: React.FC = () => {
@@ -33,6 +36,7 @@ export const WorkOrdersPage: React.FC = () => {
 
   const [showFormModal, setShowFormModal] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [editingWorkOrder, setEditingWorkOrder] = useState<WorkOrder | null>(null);
   const [selectedWorkOrder, setSelectedWorkOrder] = useState<WorkOrder | null>(null);
 
@@ -57,10 +61,15 @@ export const WorkOrdersPage: React.FC = () => {
   };
 
   const handleDelete = async () => {
-    if (selectedWorkOrder && window.confirm('Weet u zeker dat u deze werkorder wilt verwijderen?')) {
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDelete = async () => {
+    if (selectedWorkOrder) {
       await deleteWorkOrder(selectedWorkOrder.id);
       setShowDetailModal(false);
       setSelectedWorkOrder(null);
+      setShowDeleteConfirm(false);
     }
   };
 
@@ -75,11 +84,7 @@ export const WorkOrdersPage: React.FC = () => {
   };
 
   if (isLoading) {
-    return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
-      </div>
-    );
+    return <SkeletonList count={6} showAvatar={false} showActions={false} />;
   }
 
   const userName = user?.name || 'Gebruiker';
@@ -109,15 +114,32 @@ export const WorkOrdersPage: React.FC = () => {
       </div>
 
       {/* Workboard */}
-      <Workboard
-        workOrders={filteredWorkOrders}
-        userName={userName}
-        viewMode={viewMode}
-        selectedStatus={selectedStatus}
-        onCardClick={handleCardClick}
-        onStatusChange={handleStatusChange}
-        onStatusFilterClick={handleStatusFilterClick}
-      />
+      {filteredWorkOrders.length === 0 ? (
+        <EmptyState
+          icon={ClipboardList}
+          title="Geen werkorders gevonden"
+          description={selectedEmployeeId === 'mine' 
+            ? "Je hebt nog geen werkorders toegewezen gekregen. Werkorders worden hier weergegeven wanneer ze aan jou worden toegewezen."
+            : "Er zijn nog geen werkorders in het systeem. Maak je eerste werkorder aan om te beginnen."}
+          actionLabel="Nieuwe Werkorder"
+          onAction={handleCreate}
+          suggestions={selectedEmployeeId !== 'mine' ? [
+            "Maak werkorders aan voor klanten",
+            "Wijs werkorders toe aan medewerkers",
+            "Houd de status bij voor overzicht"
+          ] : undefined}
+        />
+      ) : (
+        <Workboard
+          workOrders={filteredWorkOrders}
+          userName={userName}
+          viewMode={viewMode}
+          selectedStatus={selectedStatus}
+          onCardClick={handleCardClick}
+          onStatusChange={handleStatusChange}
+          onStatusFilterClick={handleStatusFilterClick}
+        />
+      )}
 
       {/* Form Modal */}
       <Modal
@@ -152,6 +174,18 @@ export const WorkOrdersPage: React.FC = () => {
           onDelete={handleDelete}
         />
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        onConfirm={confirmDelete}
+        title="Werkorder Verwijderen"
+        message={`Weet u zeker dat u werkorder "${selectedWorkOrder?.title}" wilt verwijderen? Deze actie kan niet ongedaan worden gemaakt.`}
+        confirmText="Verwijderen"
+        cancelText="Annuleren"
+        type="danger"
+      />
     </div>
   );
 };

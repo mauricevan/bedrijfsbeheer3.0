@@ -1,8 +1,11 @@
 import React, { useState } from 'react';
-import { FileText, Plus, DollarSign, Send, Check, X, Edit, Trash2, ClipboardList, Eye, BarChart3, Receipt } from 'lucide-react';
+import { FileText, Plus, DollarSign, Edit, Trash2, BarChart3, Receipt } from 'lucide-react';
 import { Card } from '@/components/common/Card';
 import { Button } from '@/components/common/Button';
 import { Modal } from '@/components/common/Modal';
+import { ConfirmDialog } from '@/components/common/ConfirmDialog';
+import { EmptyState } from '@/components/common/EmptyState';
+import { SkeletonList } from '@/components/common/SkeletonList';
 import { useAccounting } from '../hooks/useAccounting';
 import { QuoteForm, InvoiceForm, InvoiceValidationModal, AccountingDashboard } from '../components';
 import type { Quote, Invoice } from '../types';
@@ -33,20 +36,18 @@ export const AccountingPage: React.FC = () => {
   const [showQuoteModal, setShowQuoteModal] = useState(false);
   const [showInvoiceModal, setShowInvoiceModal] = useState(false);
   const [showValidationModal, setShowValidationModal] = useState(false);
-  const [showQuoteDetail, setShowQuoteDetail] = useState(false);
-  const [showInvoiceDetail, setShowInvoiceDetail] = useState(false);
   const [editingQuote, setEditingQuote] = useState<Quote | null>(null);
   const [editingInvoice, setEditingInvoice] = useState<Invoice | null>(null);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [activeTab, setActiveTab] = useState<'dashboard' | 'transactions' | 'quotes' | 'invoices'>('dashboard');
+  const [showDeleteQuoteConfirm, setShowDeleteQuoteConfirm] = useState(false);
+  const [showDeleteInvoiceConfirm, setShowDeleteInvoiceConfirm] = useState(false);
+  const [showConvertToInvoiceConfirm, setShowConvertToInvoiceConfirm] = useState(false);
+  const [showConvertQuoteToWorkOrderConfirm, setShowConvertQuoteToWorkOrderConfirm] = useState(false);
+  const [showConvertInvoiceToWorkOrderConfirm, setShowConvertInvoiceToWorkOrderConfirm] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<string | null>(null);
+  const [itemToConvert, setItemToConvert] = useState<string | null>(null);
 
-  const totalQuoted = quotes.reduce((sum, q) => sum + q.total, 0);
-  const totalInvoiced = invoices.reduce((sum, i) => sum + i.total, 0);
-  const outstanding = invoices.filter(i => i.status !== 'paid' && i.status !== 'cancelled').reduce((sum, i) => sum + i.total, 0);
-  const overdue = invoices.filter(i => {
-    if (i.status === 'paid' || i.status === 'cancelled') return false;
-    return new Date(i.dueDate) < new Date();
-  }).reduce((sum, i) => sum + i.total, 0);
 
   const handleCreateQuote = async (data: any) => {
     await createQuote(data);
@@ -67,9 +68,16 @@ export const AccountingPage: React.FC = () => {
     setShowQuoteModal(true);
   };
 
-  const handleDeleteQuote = async (id: string) => {
-    if (window.confirm('Weet u zeker dat u deze offerte wilt verwijderen?')) {
-      await deleteQuote(id);
+  const handleDeleteQuote = (id: string) => {
+    setItemToDelete(id);
+    setShowDeleteQuoteConfirm(true);
+  };
+
+  const confirmDeleteQuote = async () => {
+    if (itemToDelete) {
+      await deleteQuote(itemToDelete);
+      setItemToDelete(null);
+      setShowDeleteQuoteConfirm(false);
     }
   };
 
@@ -92,89 +100,119 @@ export const AccountingPage: React.FC = () => {
     setShowInvoiceModal(true);
   };
 
-  const handleDeleteInvoice = async (id: string) => {
-    if (window.confirm('Weet u zeker dat u deze factuur wilt verwijderen?')) {
-      await deleteInvoice(id);
+  const handleDeleteInvoice = (id: string) => {
+    setItemToDelete(id);
+    setShowDeleteInvoiceConfirm(true);
+  };
+
+  const confirmDeleteInvoice = async () => {
+    if (itemToDelete) {
+      await deleteInvoice(itemToDelete);
+      setItemToDelete(null);
+      setShowDeleteInvoiceConfirm(false);
     }
   };
 
-  const handleConvertToInvoice = async (quoteId: string) => {
-    if (window.confirm('Weet u zeker dat u deze offerte naar een factuur wilt converteren?')) {
-      await convertQuoteToInvoice(quoteId);
+  const handleConvertToInvoice = (quoteId: string) => {
+    setItemToConvert(quoteId);
+    setShowConvertToInvoiceConfirm(true);
+  };
+
+  const confirmConvertToInvoice = async () => {
+    if (itemToConvert) {
+      await convertQuoteToInvoice(itemToConvert);
+      setItemToConvert(null);
+      setShowConvertToInvoiceConfirm(false);
     }
   };
 
-  const handleConvertQuoteToWorkOrder = async (quoteId: string) => {
+  const handleConvertQuoteToWorkOrder = (quoteId: string) => {
     const employeeId = employees[0]?.id || '';
     if (!employeeId) {
       alert('Geen medewerker beschikbaar. Voeg eerst een medewerker toe in HRM.');
       return;
     }
-    
-    if (window.confirm('Weet u zeker dat u deze offerte naar een werkorder wilt converteren?')) {
-      const { quote, workOrderId } = await convertQuoteToWorkOrder(quoteId, employeeId);
-      
-      // Create work order
-      await createWorkOrder({
-        title: `Werkorder voor ${quote.customerName}`,
-        description: quote.notes || 'Werkorder gegenereerd vanuit offerte',
-        status: 'todo',
-        assignedTo: employeeId,
-        customerId: quote.customerId,
-        location: quote.location,
-        scheduledDate: quote.scheduledDate,
-        materials: quote.items.map(item => ({
-          inventoryItemId: item.inventoryItemId || '',
-          name: item.description,
-          quantity: item.quantity,
-          unit: 'stuks',
-        })).filter(m => m.inventoryItemId),
-        estimatedHours: quote.labor?.reduce((sum, l) => sum + l.hours, 0) || 0,
-        hoursSpent: 0,
-        estimatedCost: quote.total,
-        notes: quote.notes,
-        quoteId: quote.id,
-        sortIndex: 0,
-      });
-      
-      alert(`Werkorder ${workOrderId} aangemaakt!`);
-    }
+    setItemToConvert(quoteId);
+    setShowConvertQuoteToWorkOrderConfirm(true);
   };
 
-  const handleConvertInvoiceToWorkOrder = async (invoiceId: string) => {
+  const confirmConvertQuoteToWorkOrder = async () => {
+    if (!itemToConvert) return;
+    const employeeId = employees[0]?.id || '';
+    if (!employeeId) return;
+    
+    const { quote, workOrderId } = await convertQuoteToWorkOrder(itemToConvert, employeeId);
+    
+    // Create work order
+    await createWorkOrder({
+      title: `Werkorder voor ${quote.customerName}`,
+      description: quote.notes || 'Werkorder gegenereerd vanuit offerte',
+      status: 'todo',
+      assignedTo: employeeId,
+      customerId: quote.customerId,
+      location: quote.location,
+      scheduledDate: quote.scheduledDate,
+      materials: quote.items.map(item => ({
+        inventoryItemId: item.inventoryItemId || '',
+        name: item.description,
+        quantity: item.quantity,
+        unit: 'stuks',
+      })).filter(m => m.inventoryItemId),
+      estimatedHours: quote.labor?.reduce((sum, l) => sum + l.hours, 0) || 0,
+      hoursSpent: 0,
+      estimatedCost: quote.total,
+      notes: quote.notes,
+      quoteId: quote.id,
+      sortIndex: 0,
+    });
+    
+    alert(`Werkorder ${workOrderId} aangemaakt!`);
+    setItemToConvert(null);
+    setShowConvertQuoteToWorkOrderConfirm(false);
+  };
+
+  const handleConvertInvoiceToWorkOrder = (invoiceId: string) => {
     const employeeId = employees[0]?.id || '';
     if (!employeeId) {
       alert('Geen medewerker beschikbaar. Voeg eerst een medewerker toe in HRM.');
       return;
     }
+    setItemToConvert(invoiceId);
+    setShowConvertInvoiceToWorkOrderConfirm(true);
+  };
+
+  const confirmConvertInvoiceToWorkOrder = async () => {
+    if (!itemToConvert) return;
+    const employeeId = employees[0]?.id || '';
+    if (!employeeId) return;
     
-    if (window.confirm('Weet u zeker dat u deze factuur naar een werkorder wilt converteren?')) {
-      const { invoice, workOrderId } = await convertInvoiceToWorkOrder(invoiceId, employeeId);
-      
-      await createWorkOrder({
-        title: `Werkorder voor ${invoice.customerName}`,
-        description: invoice.notes || 'Werkorder gegenereerd vanuit factuur',
-        status: 'todo',
-        assignedTo: employeeId,
-        customerId: invoice.customerId,
-        location: invoice.location,
-        scheduledDate: invoice.scheduledDate,
-        materials: invoice.items.map(item => ({
-          inventoryItemId: item.inventoryItemId || '',
-          name: item.description,
-          quantity: item.quantity,
-          unit: 'stuks',
-        })).filter(m => m.inventoryItemId),
-        estimatedHours: invoice.labor?.reduce((sum, l) => sum + l.hours, 0) || 0,
-        hoursSpent: 0,
-        estimatedCost: invoice.total,
-        notes: invoice.notes,
-        invoiceId: invoice.id,
-        sortIndex: 0,
-      });
-      
-      alert(`Werkorder ${workOrderId} aangemaakt!`);
-    }
+    const { invoice, workOrderId } = await convertInvoiceToWorkOrder(itemToConvert, employeeId);
+    
+    await createWorkOrder({
+      title: `Werkorder voor ${invoice.customerName}`,
+      description: invoice.notes || 'Werkorder gegenereerd vanuit factuur',
+      status: 'todo',
+      assignedTo: employeeId,
+      customerId: invoice.customerId,
+      location: invoice.location,
+      scheduledDate: invoice.scheduledDate,
+      materials: invoice.items.map(item => ({
+        inventoryItemId: item.inventoryItemId || '',
+        name: item.description,
+        quantity: item.quantity,
+        unit: 'stuks',
+      })).filter(m => m.inventoryItemId),
+      estimatedHours: invoice.labor?.reduce((sum, l) => sum + l.hours, 0) || 0,
+      hoursSpent: 0,
+      estimatedCost: invoice.total,
+      notes: invoice.notes,
+      invoiceId: invoice.id,
+      sortIndex: 0,
+    });
+    
+    alert(`Werkorder ${workOrderId} aangemaakt!`);
+    setItemToConvert(null);
+    setShowConvertInvoiceToWorkOrderConfirm(false);
   };
 
   const handleSendInvoice = async (invoice: Invoice) => {
@@ -222,11 +260,7 @@ export const AccountingPage: React.FC = () => {
   };
 
   if (isLoading) {
-    return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
-      </div>
-    );
+    return <SkeletonList count={5} showAvatar={false} showActions={true} />;
   }
 
   return (
@@ -325,9 +359,21 @@ export const AccountingPage: React.FC = () => {
         <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-700">
           <div className="space-y-3">
             {quotes.length === 0 ? (
-              <Card className="p-8 text-center text-slate-500 dark:text-slate-400">
-                Geen offertes gevonden
-              </Card>
+              <EmptyState
+                icon={FileText}
+                title="Geen offertes gevonden"
+                description="Er zijn nog geen offertes in het systeem. Maak je eerste offerte aan om te beginnen."
+                actionLabel="Nieuwe Offerte"
+                onAction={() => {
+                  setEditingQuote(null);
+                  setShowQuoteModal(true);
+                }}
+                suggestions={[
+                  "Maak offertes aan voor potentiële klanten",
+                  "Converteer offertes naar facturen wanneer geaccepteerd",
+                  "Bewaar offertegeschiedenis voor referentie"
+                ]}
+              />
             ) : (
               quotes.map(quote => (
                 <Card key={quote.id} className="p-4 hover:shadow-md transition-shadow">
@@ -428,9 +474,21 @@ export const AccountingPage: React.FC = () => {
         <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-700">
           <div className="space-y-3">
             {invoices.length === 0 ? (
-              <Card className="p-8 text-center text-slate-500 dark:text-slate-400">
-                Geen facturen gevonden
-              </Card>
+              <EmptyState
+                icon={Receipt}
+                title="Geen facturen gevonden"
+                description="Er zijn nog geen facturen in het systeem. Maak je eerste factuur aan om te beginnen."
+                actionLabel="Nieuwe Factuur"
+                onAction={() => {
+                  setEditingInvoice(null);
+                  setShowInvoiceModal(true);
+                }}
+                suggestions={[
+                  "Maak facturen aan voor geleverde diensten",
+                  "Converteer offertes naar facturen",
+                  "Houd betalingsstatus bij voor overzicht"
+                ]}
+              />
             ) : (
               invoices.map(invoice => (
                 <Card key={invoice.id} className="p-4 hover:shadow-md transition-shadow">
@@ -564,6 +622,77 @@ export const AccountingPage: React.FC = () => {
           onConfirm={handleValidateAndSend}
         />
       )}
+
+      {/* Confirmation Dialogs */}
+      <ConfirmDialog
+        isOpen={showDeleteQuoteConfirm}
+        onClose={() => {
+          setShowDeleteQuoteConfirm(false);
+          setItemToDelete(null);
+        }}
+        onConfirm={confirmDeleteQuote}
+        title="Offerte Verwijderen"
+        message="Weet u zeker dat u deze offerte wilt verwijderen? Deze actie kan niet ongedaan worden gemaakt."
+        confirmText="Verwijderen"
+        cancelText="Annuleren"
+        type="danger"
+      />
+
+      <ConfirmDialog
+        isOpen={showDeleteInvoiceConfirm}
+        onClose={() => {
+          setShowDeleteInvoiceConfirm(false);
+          setItemToDelete(null);
+        }}
+        onConfirm={confirmDeleteInvoice}
+        title="Factuur Verwijderen"
+        message="Weet u zeker dat u deze factuur wilt verwijderen? Deze actie kan niet ongedaan worden gemaakt."
+        confirmText="Verwijderen"
+        cancelText="Annuleren"
+        type="danger"
+      />
+
+      <ConfirmDialog
+        isOpen={showConvertToInvoiceConfirm}
+        onClose={() => {
+          setShowConvertToInvoiceConfirm(false);
+          setItemToConvert(null);
+        }}
+        onConfirm={confirmConvertToInvoice}
+        title="Offerte Converteren"
+        message="Weet u zeker dat u deze offerte naar een factuur wilt converteren?"
+        confirmText="Converteren"
+        cancelText="Annuleren"
+        type="info"
+      />
+
+      <ConfirmDialog
+        isOpen={showConvertQuoteToWorkOrderConfirm}
+        onClose={() => {
+          setShowConvertQuoteToWorkOrderConfirm(false);
+          setItemToConvert(null);
+        }}
+        onConfirm={confirmConvertQuoteToWorkOrder}
+        title="Offerte naar Werkorder"
+        message="Weet u zeker dat u deze offerte naar een werkorder wilt converteren?"
+        confirmText="Converteren"
+        cancelText="Annuleren"
+        type="info"
+      />
+
+      <ConfirmDialog
+        isOpen={showConvertInvoiceToWorkOrderConfirm}
+        onClose={() => {
+          setShowConvertInvoiceToWorkOrderConfirm(false);
+          setItemToConvert(null);
+        }}
+        onConfirm={confirmConvertInvoiceToWorkOrder}
+        title="Factuur naar Werkorder"
+        message="Weet u zeker dat u deze factuur naar een werkorder wilt converteren?"
+        confirmText="Converteren"
+        cancelText="Annuleren"
+        type="info"
+      />
     </div>
   );
 };

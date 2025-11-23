@@ -6,24 +6,23 @@ import { InventoryForm } from '../components/InventoryForm';
 import { Button } from '@/components/common/Button';
 import { Input } from '@/components/common/Input';
 import { Modal } from '@/components/common/Modal';
-import { CSVUpload } from '@/components/common/CSVUpload';
 import { ExtendedSearchFilters, defaultCategories as webshopCategories } from '@/components/ExtendedSearchFilters';
 import { filterBySearchTerm, filterByCategory, applyExtendedFilters } from '../utils/filters';
 import type { InventoryItem } from '../types';
+import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 
 export const InventoryPage: React.FC = () => {
-  const { 
+  const {
     items,
-    categories, 
+    categories,
     suppliers,
-    isLoading, 
+    isLoading,
     createItem,
     updateItem,
     deleteItem,
     quickAdjustStock,
-    getFilteredItems 
   } = useInventory();
-  
+
   const [search, setSearch] = useState('');
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -32,26 +31,20 @@ export const InventoryPage: React.FC = () => {
   const [showExtendedFilters, setShowExtendedFilters] = useState(false);
   const [extendedFilterValues, setExtendedFilterValues] = useState<Record<string, any>>({});
   const [selectedExtendedCategory, setSelectedExtendedCategory] = useState<string | null>(null);
-  
-  // Use comprehensive filtering like webshop and POS
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<string | null>(null);
+
   const filteredItems = useMemo(() => {
     let result = items;
-    
-    // Apply search filter (comprehensive)
     if (search) {
       result = filterBySearchTerm(result, search, suppliers, categories);
     }
-    
-    // Apply category filter
     if (selectedCategoryId) {
       result = filterByCategory(result, selectedCategoryId);
     }
-    
-    // Apply extended filters if any are set
     if (extendedFilterValues && Object.keys(extendedFilterValues).length > 0) {
       result = applyExtendedFilters(result, extendedFilterValues, selectedExtendedCategory);
     }
-    
     return result;
   }, [items, search, selectedCategoryId, suppliers, categories, extendedFilterValues, selectedExtendedCategory]);
 
@@ -65,9 +58,16 @@ export const InventoryPage: React.FC = () => {
     setIsModalOpen(true);
   };
 
-  const handleDelete = async (id: string) => {
-    if (window.confirm('Are you sure you want to delete this item?')) {
-      await deleteItem(id);
+  const handleDelete = (id: string) => {
+    setItemToDelete(id);
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDelete = async () => {
+    if (itemToDelete) {
+      await deleteItem(itemToDelete);
+      setShowDeleteConfirm(false);
+      setItemToDelete(null);
     }
   };
 
@@ -107,19 +107,9 @@ export const InventoryPage: React.FC = () => {
           </p>
         </div>
         <div className="flex gap-2">
-          <Button 
-            variant="outline"
-            onClick={() => setShowExtendedFilters(true)}
-            leftIcon={<Search className="h-4 w-4" />}
-          >
-            🔍 Uitgebreid zoeken
-          </Button>
-          <Button variant="outline" leftIcon={<FileDown className="h-4 w-4" />}>
-            📄 CSV Import
-          </Button>
-          <Button leftIcon={<Plus className="h-4 w-4" />} onClick={handleAdd}>
-            + Nieuw Item
-          </Button>
+          <Button variant="outline" onClick={() => setShowExtendedFilters(true)} leftIcon={<Search className="h-4 w-4" />}>🔍 Uitgebreid zoeken</Button>
+          <Button variant="outline" leftIcon={<FileDown className="h-4 w-4" />}>📄 CSV Import</Button>
+          <Button leftIcon={<Plus className="h-4 w-4" />} onClick={handleAdd}>+ Nieuw Item</Button>
         </div>
       </div>
 
@@ -128,18 +118,10 @@ export const InventoryPage: React.FC = () => {
 
       {/* Tabs */}
       <div className="flex gap-2 border-b border-slate-200 dark:border-slate-700">
-        <button className="px-4 py-2 text-sm font-medium text-indigo-600 dark:text-indigo-400 border-b-2 border-indigo-600 dark:border-indigo-400">
-          📦 Items ({items.length})
-        </button>
-        <button className="px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200">
-          🏢 Leveranciers ({suppliers.length})
-        </button>
-        <button className="px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200">
-          📊 Rapportages
-        </button>
-        <button className="px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200">
-          🏷️ Categorieën ({categories.length})
-        </button>
+        <button className="px-4 py-2 text-sm font-medium text-indigo-600 dark:text-indigo-400 border-b-2 border-indigo-600 dark:border-indigo-400">📦 Items ({items.length})</button>
+        <button className="px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200">🏢 Leveranciers ({suppliers.length})</button>
+        <button className="px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200">📊 Rapportages</button>
+        <button className="px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200">🏷️ Categorieën ({categories.length})</button>
       </div>
 
       {/* Filters */}
@@ -157,14 +139,7 @@ export const InventoryPage: React.FC = () => {
             leftIcon={<Search className="h-4 w-4" />}
             className="flex-1"
           />
-          <Button
-            variant="outline"
-            onClick={() => setShowExtendedFilters(true)}
-            leftIcon={<Search className="h-4 w-4" />}
-            className="whitespace-nowrap bg-indigo-600 text-white hover:bg-indigo-700 border-indigo-600"
-          >
-            🔍 Uitgebreid zoeken
-          </Button>
+          <Button variant="outline" onClick={() => setShowExtendedFilters(true)} leftIcon={<Search className="h-4 w-4" />} className="whitespace-nowrap bg-indigo-600 text-white hover:bg-indigo-700 border-indigo-600">🔍 Uitgebreid zoeken</Button>
         </div>
       </div>
 
@@ -177,12 +152,7 @@ export const InventoryPage: React.FC = () => {
         isLoading={isLoading}
       />
 
-      <Modal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        title={editingItem ? 'Edit Item' : 'Add New Item'}
-        className="max-w-3xl"
-      >
+      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={editingItem ? 'Edit Item' : 'Add New Item'} className="max-w-3xl">
         <InventoryForm
           initialData={editingItem || {}}
           categories={webshopCategories.map(cat => ({ id: cat.id, name: cat.name }))}
@@ -196,17 +166,24 @@ export const InventoryPage: React.FC = () => {
       {/* Extended Search Filters */}
       <ExtendedSearchFilters
         isOpen={showExtendedFilters}
-        onClose={() => {
-          setShowExtendedFilters(false);
-          // Optionally clear filters when closing
-          // setExtendedFilterValues({});
-          // setSelectedExtendedCategory(null);
-        }}
+        onClose={() => setShowExtendedFilters(false)}
         onApplyFilters={(filters, categoryId) => {
           setExtendedFilterValues(filters);
           setSelectedExtendedCategory(categoryId);
           setShowExtendedFilters(false);
         }}
+      />
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        onConfirm={confirmDelete}
+        title="Bevestig Verwijderen"
+        message="Weet u zeker dat u dit item wilt verwijderen? Deze actie kan niet ongedaan worden gemaakt."
+        confirmText="Verwijderen"
+        cancelText="Annuleren"
+        type="danger"
       />
     </div>
   );

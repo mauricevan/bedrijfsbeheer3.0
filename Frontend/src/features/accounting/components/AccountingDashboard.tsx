@@ -4,7 +4,7 @@
  */
 
 import React, { useMemo, useState } from 'react';
-import { ArrowRight, TrendingUp, Clock, AlertTriangle, CheckCircle } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { Card } from '@/components/common/Card';
 import type { Invoice, Quote } from '../types';
 import {

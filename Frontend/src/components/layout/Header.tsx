@@ -1,15 +1,26 @@
 import React, { useState } from 'react';
 import { ThemeToggle } from '@/components/common/ThemeToggle';
 import { NotificationDropdown } from '@/components/common/NotificationDropdown';
-import { Search, LogOut, ChevronDown } from 'lucide-react';
+import { LogOut, ChevronDown, Menu } from 'lucide-react';
 import { Button } from '@/components/common/Button';
-import { Input } from '@/components/common/Input';
 import { useAuth } from '@/features/auth/hooks/useAuth';
-import { cn } from '@/utils/cn';
+import { UnifiedSearch } from '@/components/UnifiedSearch';
+import { useAccounting } from '@/features/accounting/hooks/useAccounting';
+import { useCRM } from '@/features/crm/hooks/useCRM';
+import { useWorkOrders } from '@/features/work-orders/hooks/useWorkOrders';
 
-export const Header: React.FC = () => {
+interface HeaderProps {
+  onMenuClick?: () => void;
+}
+
+export const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
   const { user, logout } = useAuth();
   const [showUserMenu, setShowUserMenu] = useState(false);
+  
+  // Fetch data for unified search
+  const { quotes, invoices } = useAccounting();
+  const { customers } = useCRM();
+  const { workOrders } = useWorkOrders();
 
   const getUserInitials = () => {
     if (!user?.name) return 'U';
@@ -27,20 +38,30 @@ export const Header: React.FC = () => {
 
   return (
     <header className="sticky top-0 z-30 flex h-16 w-full items-center justify-between border-b border-slate-200 bg-white/80 px-6 backdrop-blur-lg dark:border-slate-700 dark:bg-slate-900/80">
-      <div className="flex w-full max-w-md items-center gap-4">
-        <div>
+      <div className="flex w-full max-w-3xl items-center gap-4">
+        {/* Hamburger menu button for mobile */}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onMenuClick}
+          className="lg:hidden"
+          aria-label="Open menu"
+        >
+          <Menu className="h-5 w-5" />
+        </Button>
+        
+        <div className="flex-shrink-0">
           <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
             Welkom, {getUserFirstName()}
           </h2>
           <p className="text-xs text-slate-500 dark:text-slate-400">Bedrijfsbeheer Dashboard</p>
         </div>
-        <div className="relative w-full">
-          <Input
-            placeholder="🔍 Zoek offerte, factuur, werkorder of klant..."
-            leftIcon={<Search className="h-4 w-4" />}
-            className="bg-slate-50 dark:bg-slate-800"
-          />
-        </div>
+        <UnifiedSearch
+          quotes={quotes}
+          invoices={invoices}
+          workOrders={workOrders}
+          customers={customers}
+        />
       </div>
       
       <div className="flex items-center gap-4">

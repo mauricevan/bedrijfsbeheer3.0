@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Settings, Building2, Users, Shield, Database, Bell, BarChart3, AlertTriangle } from 'lucide-react';
+import { Settings, Building2, Users, Shield, Database, Bell, BarChart3 } from 'lucide-react';
 import { Card } from '@/components/common/Card';
 import { Input } from '@/components/common/Input';
 import { Button } from '@/components/common/Button';

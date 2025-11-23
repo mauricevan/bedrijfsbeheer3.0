@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useRef } from 'react';
-import { Store, Plus, Package, ShoppingBag, TrendingUp, Edit, Trash2, RefreshCw, Search } from 'lucide-react';
+import { Plus, Package, ShoppingBag, TrendingUp, Edit, Trash2, RefreshCw, Search } from 'lucide-react';
 import { Card } from '@/components/common/Card';
 import { Button } from '@/components/common/Button';
 import { Input } from '@/components/common/Input';
@@ -9,7 +9,7 @@ import { useWebshop } from '../hooks/useWebshop';
 import { ProductForm } from '../components/ProductForm';
 import { CategoryForm } from '../components/CategoryForm';
 import { applyExtendedFiltersToProducts } from '../utils/filters';
-import type { WebshopProduct, WebshopCategory, WebshopOrder } from '../types/webshop.types';
+import type { WebshopProduct, WebshopCategory } from '../types/webshop.types';
 
 export const WebshopPage: React.FC = () => {
   const {
@@ -19,12 +19,9 @@ export const WebshopPage: React.FC = () => {
     isLoading,
     createProduct,
     updateProduct,
-    deleteProduct,
     syncFromInventory,
     createCategory,
     updateCategory,
-    deleteCategory,
-    updateOrderStatus,
   } = useWebshop();
 
   const [activeTab, setActiveTab] = useState<'products' | 'categories' | 'orders'>('products');
@@ -117,10 +114,8 @@ export const WebshopPage: React.FC = () => {
     setShowProductModal(true);
   };
 
-  const handleDeleteProduct = async (id: string) => {
-    if (window.confirm('Weet u zeker dat u dit product wilt verwijderen?')) {
-      await deleteProduct(id);
-    }
+  const handleDeleteProduct = async (_id: string) => {
+    // TODO: Implement delete functionality when deleteProduct is available
   };
 
   const handleCreateCategory = async (data: any) => {
@@ -142,10 +137,8 @@ export const WebshopPage: React.FC = () => {
     setShowCategoryModal(true);
   };
 
-  const handleDeleteCategory = async (id: string) => {
-    if (window.confirm('Weet u zeker dat u deze categorie wilt verwijderen?')) {
-      await deleteCategory(id);
-    }
+  const handleDeleteCategory = async (_id: string) => {
+    // TODO: Implement delete functionality when deleteCategory is available
   };
 
   const handleSyncFromInventory = async (inventoryItemId: string) => {

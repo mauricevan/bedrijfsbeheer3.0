@@ -1,5 +1,5 @@
-import type { Quote, Invoice, LineItem } from '../types';
-import { storage, STORAGE_KEYS } from '@/utils/storage';
+import type { Quote, Invoice } from '../types';
+import { storage } from '@/utils/storage';
 
 const QUOTES_KEY = 'bedrijfsbeheer_quotes';
 const INVOICES_KEY = 'bedrijfsbeheer_invoices';
@@ -137,7 +137,7 @@ export const accountingService = {
     return invoice;
   },
 
-  convertQuoteToWorkOrder: async (quoteId: string, employeeId: string): Promise<{ quote: Quote; workOrderId: string }> => {
+  convertQuoteToWorkOrder: async (quoteId: string, _employeeId: string): Promise<{ quote: Quote; workOrderId: string }> => {
     const quote = QUOTES.find(q => q.id === quoteId);
     if (!quote) throw new Error('Quote not found');
     
@@ -148,7 +148,7 @@ export const accountingService = {
     return { quote, workOrderId };
   },
 
-  convertInvoiceToWorkOrder: async (invoiceId: string, employeeId: string): Promise<{ invoice: Invoice; workOrderId: string }> => {
+  convertInvoiceToWorkOrder: async (invoiceId: string, _employeeId: string): Promise<{ invoice: Invoice; workOrderId: string }> => {
     const invoice = INVOICES.find(i => i.id === invoiceId);
     if (!invoice) throw new Error('Invoice not found');
     

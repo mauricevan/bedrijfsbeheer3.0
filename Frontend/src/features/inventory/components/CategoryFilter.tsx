@@ -4,7 +4,7 @@
  */
 
 import React from 'react';
-import { ChevronDown, Tag } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
 import type { Category } from '../types';
 import { cn } from '@/utils/cn';
 

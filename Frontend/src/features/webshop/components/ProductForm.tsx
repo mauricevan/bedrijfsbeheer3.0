@@ -13,7 +13,7 @@ interface ProductFormProps {
   isLoading?: boolean;
 }
 
-export const ProductForm: React.FC<ProductFormProps> = ({ product, categories, onSubmit, onCancel, isLoading }) => {
+export const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel, isLoading }) => {
   const { items: inventoryItems, categories: inventoryCategories } = useInventory();
   // Use the same categories as inventory and extended search (defaultCategories from ExtendedSearchFilters)
   const availableCategories = defaultCategories.map(cat => ({ id: cat.id, name: cat.name }));

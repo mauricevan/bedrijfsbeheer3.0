@@ -5,6 +5,8 @@ import { ProductSelector } from '../components/ProductSelector';
 import { NumberPad } from '../components/NumberPad';
 import { PaymentModal } from '../components/PaymentModal';
 import { Button } from '@/components/common/Button';
+import { ConfirmDialog } from '@/components/common/ConfirmDialog';
+import { useToast } from '@/context/ToastContext';
 import { ShoppingBag, FileText } from 'lucide-react';
 
 export const POSPage: React.FC = () => {
@@ -21,19 +23,44 @@ export const POSPage: React.FC = () => {
     processPayment,
   } = usePOS();
 
+  const { showToast } = useToast();
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
-
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [viewMode, setViewMode] = useState<'products' | 'manual'>('products');
 
   const handleCheckout = () => {
+    if (cart.length === 0) {
+      showToast('Cart is empty', 'warning');
+      return;
+    }
     setIsPaymentModalOpen(true);
   };
 
   const handlePayment = async (method: any) => {
-    await processPayment(method);
-    setIsPaymentModalOpen(false);
-    // Show success message
-    alert('Payment successful!');
+    try {
+      await processPayment(method);
+      // Close modal first
+      setIsPaymentModalOpen(false);
+      // Show success toast
+      showToast('Payment successful! Cart cleared.', 'success');
+    } catch (error) {
+      showToast('Payment failed. Please try again.', 'error');
+      console.error('Payment error:', error);
+    }
+  };
+
+  const handleClearCart = () => {
+    if (cart.length === 0) {
+      showToast('Cart is already empty', 'info');
+      return;
+    }
+    setShowClearConfirm(true);
+  };
+
+  const confirmClearCart = () => {
+    clearCart();
+    showToast('Cart cleared', 'info');
+    setShowClearConfirm(false);
   };
 
   return (
@@ -106,7 +133,7 @@ export const POSPage: React.FC = () => {
               onDecrease={decreaseQuantity}
               onRemove={removeFromCart}
               onCheckout={handleCheckout}
-              onClear={clearCart}
+              onClear={handleClearCart}
             />
           </div>
         </div>
@@ -117,6 +144,17 @@ export const POSPage: React.FC = () => {
         onClose={() => setIsPaymentModalOpen(false)}
         total={totals.total}
         onConfirm={handlePayment}
+      />
+
+      <ConfirmDialog
+        isOpen={showClearConfirm}
+        onClose={() => setShowClearConfirm(false)}
+        onConfirm={confirmClearCart}
+        title="Clear Cart?"
+        message="Are you sure you want to clear all items from the cart? This action cannot be undone."
+        confirmText="Clear Cart"
+        cancelText="Cancel"
+        type="warning"
       />
     </div>
   );

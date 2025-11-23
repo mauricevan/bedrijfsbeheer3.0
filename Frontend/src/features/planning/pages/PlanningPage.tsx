@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Calendar, Plus, ChevronLeft, ChevronRight, Clock } from 'lucide-react';
+import { Plus, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Card } from '@/components/common/Card';
 import { Button } from '@/components/common/Button';
 import { Modal } from '@/components/common/Modal';
@@ -10,7 +10,7 @@ import { nl } from 'date-fns/locale';
 import type { CalendarEvent, CalendarView } from '../types/planning.types';
 
 export const PlanningPage: React.FC = () => {
-  const { events, isLoading, createEvent, updateEvent, deleteEvent } = usePlanning();
+  const { events, isLoading, createEvent, updateEvent } = usePlanning();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState<CalendarView>('week');
   const [showEventModal, setShowEventModal] = useState(false);

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BookOpen, FileText, Receipt, Users, TrendingUp, Download, Plus, Search, Filter } from 'lucide-react';
+import { BookOpen, FileText, Receipt, Users, TrendingUp, Download, Plus, Search } from 'lucide-react';
 import { Card } from '@/components/common/Card';
 import { Button } from '@/components/common/Button';
 import { Input } from '@/components/common/Input';

@@ -252,7 +252,7 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({ quote, onSubmit, onCancel,
         )}
 
         <div className="space-y-3">
-          {lineItems.map((item, index) => (
+          {lineItems.map((item) => (
             <div key={item.id} className="grid grid-cols-12 gap-2 p-3 border border-slate-200 dark:border-slate-700 rounded-lg">
               <div className="col-span-12 md:col-span-4">
                 <Input

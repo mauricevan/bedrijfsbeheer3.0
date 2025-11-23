@@ -18,20 +18,18 @@ type EmployeeFilterProps = {
 export const EmployeeFilter: React.FC<EmployeeFilterProps> = ({
   employees,
   selectedEmployeeId,
-  currentUserId,
   onSelect,
 }) => {
-  const getSelectedLabel = () => {
-    if (selectedEmployeeId === null) return 'Alle medewerkers';
-    if (selectedEmployeeId === 'mine') return 'Mijn werkorders';
-    const employee = employees.find(e => e.id === selectedEmployeeId);
-    return employee ? `${employee.name} (${employee.role})` : 'Mijn werkorders';
-  };
 
   return (
     <div className="relative">
       <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
         Bekijk werkorders van:
+        {selectedEmployeeId === 'mine' && (
+          <span className="ml-2 px-2 py-0.5 text-xs font-semibold bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 rounded">
+            Gefilterd
+          </span>
+        )}
       </label>
       <div className="relative">
         <select
