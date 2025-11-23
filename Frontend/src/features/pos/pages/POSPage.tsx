@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { usePOS } from '../hooks/usePOS';
 import { CartDisplay } from '../components/CartDisplay';
 import { ProductSelector } from '../components/ProductSelector';
+import { NumberPad } from '../components/NumberPad';
 import { PaymentModal } from '../components/PaymentModal';
 import { Button } from '@/components/common/Button';
 import { ShoppingBag, FileText } from 'lucide-react';
@@ -21,6 +22,8 @@ export const POSPage: React.FC = () => {
   } = usePOS();
 
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+
+  const [viewMode, setViewMode] = useState<'products' | 'manual'>('products');
 
   const handleCheckout = () => {
     setIsPaymentModalOpen(true);
@@ -59,8 +62,37 @@ export const POSPage: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2">
-          <ProductSelector onAddToCart={addToCart} />
+        <div className="lg:col-span-2 flex flex-col gap-4">
+          <div className="flex border-b border-slate-200 dark:border-slate-700">
+            <button
+              className={`px-4 py-2 text-sm font-medium transition-colors ${
+                viewMode === 'products'
+                  ? 'border-b-2 border-indigo-600 text-indigo-600 dark:text-indigo-400'
+                  : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'
+              }`}
+              onClick={() => setViewMode('products')}
+            >
+              Producten
+            </button>
+            <button
+              className={`px-4 py-2 text-sm font-medium transition-colors ${
+                viewMode === 'manual'
+                  ? 'border-b-2 border-indigo-600 text-indigo-600 dark:text-indigo-400'
+                  : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'
+              }`}
+              onClick={() => setViewMode('manual')}
+            >
+              Handmatige Invoer
+            </button>
+          </div>
+
+          {viewMode === 'products' ? (
+            <ProductSelector onAddToCart={addToCart} />
+          ) : (
+            <div className="max-w-md mx-auto w-full">
+              <NumberPad onAdd={addToCart} />
+            </div>
+          )}
         </div>
 
         <div className="lg:col-span-1">

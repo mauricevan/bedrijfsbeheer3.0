@@ -3,6 +3,7 @@ import { Input } from '@/components/common/Input';
 import { Button } from '@/components/common/Button';
 import type { WebshopProduct } from '../types/webshop.types';
 import { useInventory } from '@/features/inventory/hooks/useInventory';
+import { defaultCategories } from '@/components/ExtendedSearchFilters';
 
 interface ProductFormProps {
   product?: WebshopProduct | null;
@@ -14,6 +15,8 @@ interface ProductFormProps {
 
 export const ProductForm: React.FC<ProductFormProps> = ({ product, categories, onSubmit, onCancel, isLoading }) => {
   const { items: inventoryItems, categories: inventoryCategories } = useInventory();
+  // Use the same categories as inventory and extended search (defaultCategories from ExtendedSearchFilters)
+  const availableCategories = defaultCategories.map(cat => ({ id: cat.id, name: cat.name }));
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -153,7 +156,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({ product, categories, o
             className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
           >
             <option value="">Geen categorie</option>
-            {categories.map(cat => (
+            {availableCategories.map(cat => (
               <option key={cat.id} value={cat.id}>{cat.name}</option>
             ))}
           </select>
