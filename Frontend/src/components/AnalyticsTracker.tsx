@@ -6,6 +6,7 @@
 import { useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { trackNavigation, type ModuleKey } from '@/utils/analytics';
+import { initPerformanceMonitoring } from '@/utils/performance';
 
 interface AnalyticsTrackerProps {
   userId: string;
@@ -78,6 +79,11 @@ export const AnalyticsTracker: React.FC<AnalyticsTrackerProps> = ({ userId, user
       sessionStartTime.current = Date.now();
     }
   }, [location.pathname, userId, userRole]);
+
+  // Initialize performance monitoring
+  useEffect(() => {
+    initPerformanceMonitoring();
+  }, []);
 
   return null; // This component doesn't render anything
 };

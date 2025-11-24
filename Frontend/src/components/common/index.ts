@@ -9,6 +9,7 @@ export { ConfirmDialog } from './ConfirmDialog';
 export { LoadingButton } from './LoadingButton';
 export { FloatingActionButton } from './FloatingActionButton';
 export { EmptyState } from './EmptyState';
+export { ErrorBoundary } from './ErrorBoundary';
 export { Skeleton } from './Skeleton';
 export { SkeletonCard } from './SkeletonCard';
 export { SkeletonList } from './SkeletonList';

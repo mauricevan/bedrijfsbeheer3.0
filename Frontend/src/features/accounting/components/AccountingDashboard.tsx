@@ -246,7 +246,12 @@ export const AccountingDashboard: React.FC<AccountingDashboardProps> = ({
                 cx="50%"
                 cy="50%"
                 labelLine={false}
-                label={({ status, count }) => `${status}: ${count}`}
+                label={(props: any) => {
+                  const entry = props as { status?: string; count?: number; name?: string; value?: number };
+                  const status = entry.status || entry.name || '';
+                  const count = entry.count ?? entry.value ?? 0;
+                  return `${status}: ${count}`;
+                }}
                 outerRadius={80}
                 fill="#8884d8"
                 dataKey="count"

@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider } from '@/context/ThemeContext';
 import { ToastProvider } from '@/context/ToastContext';
@@ -5,18 +6,28 @@ import { AuthProvider, useAuth } from '@/features/auth/hooks/useAuth';
 import { LoginPage } from '@/features/auth/pages/LoginPage';
 import { MainLayout } from '@/layouts/MainLayout';
 import { AnalyticsTracker } from '@/components/AnalyticsTracker';
-import { DashboardPage } from '@/features/dashboard/pages/DashboardPage';
-import { InventoryPage } from '@/features/inventory/pages/InventoryPage';
-import { POSPage } from '@/features/pos/pages/POSPage';
-import { WorkOrdersPage } from '@/features/work-orders/pages/WorkOrdersPage';
-import { AccountingPage } from '@/features/accounting/pages/AccountingPage';
-import { BookkeepingPage } from '@/features/bookkeeping/pages/BookkeepingPage';
-import { WebshopPage } from '@/features/webshop/pages/WebshopPage';
-import { CRMPage } from '@/features/crm/pages/CRMPage';
-import { HRMPage } from '@/features/hrm/pages/HRMPage';
-import { PlanningPage } from '@/features/planning/pages/PlanningPage';
-import { ReportsPage } from '@/pages/ReportsPage';
-import { SettingsPage } from '@/features/settings/pages/SettingsPage';
+import { ErrorBoundary } from '@/components/common/ErrorBoundary';
+
+// Lazy load all route components for code splitting
+const DashboardPage = lazy(() => import('@/features/dashboard/pages/DashboardPage').then(m => ({ default: m.DashboardPage })));
+const InventoryPage = lazy(() => import('@/features/inventory/pages/InventoryPage').then(m => ({ default: m.InventoryPage })));
+const POSPage = lazy(() => import('@/features/pos/pages/POSPage').then(m => ({ default: m.POSPage })));
+const WorkOrdersPage = lazy(() => import('@/features/work-orders/pages/WorkOrdersPage').then(m => ({ default: m.WorkOrdersPage })));
+const AccountingPage = lazy(() => import('@/features/accounting/pages/AccountingPage').then(m => ({ default: m.AccountingPage })));
+const BookkeepingPage = lazy(() => import('@/features/bookkeeping/pages/BookkeepingPage').then(m => ({ default: m.BookkeepingPage })));
+const WebshopPage = lazy(() => import('@/features/webshop/pages/WebshopPage').then(m => ({ default: m.WebshopPage })));
+const CRMPage = lazy(() => import('@/features/crm/pages/CRMPage').then(m => ({ default: m.CRMPage })));
+const HRMPage = lazy(() => import('@/features/hrm/pages/HRMPage').then(m => ({ default: m.HRMPage })));
+const PlanningPage = lazy(() => import('@/features/planning/pages/PlanningPage').then(m => ({ default: m.PlanningPage })));
+const ReportsPage = lazy(() => import('@/pages/ReportsPage').then(m => ({ default: m.ReportsPage })));
+const SettingsPage = lazy(() => import('@/features/settings/pages/SettingsPage').then(m => ({ default: m.SettingsPage })));
+
+// Loading spinner component
+const LoadingSpinner = () => (
+  <div className="min-h-screen flex items-center justify-center">
+    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+  </div>
+);
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated, isLoading, user } = useAuth();
@@ -46,46 +57,50 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
 
 const AppContent: React.FC = () => {
   return (
-    <Routes>
-      <Route path="/login" element={<LoginPage />} />
-      <Route
-        path="/"
-        element={
-          <ProtectedRoute>
-            <MainLayout />
-          </ProtectedRoute>
-        }
-      >
-        <Route index element={<DashboardPage />} />
-        <Route path="inventory" element={<InventoryPage />} />
-        <Route path="pos" element={<POSPage />} />
-        <Route path="work-orders" element={<WorkOrdersPage />} />
-        <Route path="accounting" element={<AccountingPage />} />
-        <Route path="bookkeeping" element={<BookkeepingPage />} />
-        <Route path="webshop" element={<WebshopPage />} />
-        <Route path="crm" element={<CRMPage />} />
-        <Route path="hrm" element={<HRMPage />} />
-        <Route path="planning" element={<PlanningPage />} />
-        <Route path="reports" element={<ReportsPage />} />
-        <Route path="settings" element={<SettingsPage />} />
-        
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Route>
-    </Routes>
+    <Suspense fallback={<LoadingSpinner />}>
+      <Routes>
+        <Route path="/login" element={<LoginPage />} />
+        <Route
+          path="/"
+          element={
+            <ProtectedRoute>
+              <MainLayout />
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<DashboardPage />} />
+          <Route path="inventory" element={<InventoryPage />} />
+          <Route path="pos" element={<POSPage />} />
+          <Route path="work-orders" element={<WorkOrdersPage />} />
+          <Route path="accounting" element={<AccountingPage />} />
+          <Route path="bookkeeping" element={<BookkeepingPage />} />
+          <Route path="webshop" element={<WebshopPage />} />
+          <Route path="crm" element={<CRMPage />} />
+          <Route path="hrm" element={<HRMPage />} />
+          <Route path="planning" element={<PlanningPage />} />
+          <Route path="reports" element={<ReportsPage />} />
+          <Route path="settings" element={<SettingsPage />} />
+          
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Route>
+      </Routes>
+    </Suspense>
   );
 };
 
 function App() {
   return (
-    <ThemeProvider>
-      <ToastProvider>
-        <AuthProvider>
-          <BrowserRouter>
-            <AppContent />
-          </BrowserRouter>
-        </AuthProvider>
-      </ToastProvider>
-    </ThemeProvider>
+    <ErrorBoundary>
+      <ThemeProvider>
+        <ToastProvider>
+          <AuthProvider>
+            <BrowserRouter>
+              <AppContent />
+            </BrowserRouter>
+          </AuthProvider>
+        </ToastProvider>
+      </ThemeProvider>
+    </ErrorBoundary>
   );
 }
 

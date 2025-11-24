@@ -53,6 +53,8 @@ export const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onC
         seoTitle: product.seoTitle || '',
         seoDescription: product.seoDescription || '',
         tags: product.tags?.join(', ') || '',
+        createInInventory: false,
+        inventoryCategoryId: '',
       });
     }
   }, [product]);

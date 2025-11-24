@@ -149,7 +149,7 @@ export const ProductSelector: React.FC<ProductSelectorProps> = ({ onAddToCart })
         }}
         onApplyFilters={(filters, categoryId) => {
           setExtendedFilterValues(filters);
-          setSelectedExtendedCategory(categoryId);
+          setSelectedExtendedCategory(categoryId ?? null);
           setShowExtendedFilters(false);
         }}
       />

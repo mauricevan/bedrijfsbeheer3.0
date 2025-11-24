@@ -343,7 +343,7 @@ export const bookkeepingService = {
     let sales0 = 0;
 
     [...filteredInvoices, ...filteredPosSales].forEach(doc => {
-      const items = 'items' in doc ? doc.items : doc.items;
+      const items = ('items' in doc ? (doc as { items: Array<{ total: number; vatRate: number }> }).items : (doc as { items: Array<{ total: number; vatRate: number }> }).items);
       items.forEach(item => {
         const total = item.total;
         if (item.vatRate === 21) {

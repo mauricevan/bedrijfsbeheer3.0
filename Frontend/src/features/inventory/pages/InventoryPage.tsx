@@ -169,7 +169,7 @@ export const InventoryPage: React.FC = () => {
         onClose={() => setShowExtendedFilters(false)}
         onApplyFilters={(filters, categoryId) => {
           setExtendedFilterValues(filters);
-          setSelectedExtendedCategory(categoryId);
+          setSelectedExtendedCategory(categoryId ?? null);
           setShowExtendedFilters(false);
         }}
       />

@@ -503,7 +503,7 @@ export const WebshopPage: React.FC = () => {
         }}
         onApplyFilters={(filters, categoryId) => {
           setExtendedFilterValues(filters);
-          setSelectedExtendedCategory(categoryId);
+          setSelectedExtendedCategory(categoryId ?? null);
           setShowExtendedFilters(false);
         }}
       />
