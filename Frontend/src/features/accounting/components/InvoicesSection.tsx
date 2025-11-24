@@ -1,8 +1,9 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
 import { Receipt, Edit, Trash2 } from 'lucide-react';
 import { Card } from '@/components/common/Card';
 import { Button } from '@/components/common/Button';
 import { EmptyState } from '@/components/common/EmptyState';
+import { WorkflowDetailModal } from './WorkflowDetailModal';
 import type { Invoice } from '../types';
 
 interface InvoicesSectionProps {
@@ -13,6 +14,9 @@ interface InvoicesSectionProps {
   onSend: (invoice: Invoice) => void;
   onConvertToWorkOrder: (invoiceId: string) => void;
   onCreateNew: () => void;
+  onCloneAsQuote?: (invoice: Invoice) => Promise<void>;
+  onCloneAsInvoice?: (invoice: Invoice) => Promise<void>;
+  onCloneAsWorkOrder?: (invoice: Invoice) => Promise<void>;
 }
 
 export const InvoicesSection: React.FC<InvoicesSectionProps> = React.memo(({
@@ -23,7 +27,12 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = React.memo(({
   onSend,
   onConvertToWorkOrder,
   onCreateNew,
+  onCloneAsQuote,
+  onCloneAsInvoice,
+  onCloneAsWorkOrder,
 }) => {
+  const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
+  const [showDetailModal, setShowDetailModal] = useState(false);
   const handleEdit = useCallback((invoice: Invoice) => {
     onEdit(invoice);
   }, [onEdit]);
@@ -62,7 +71,14 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = React.memo(({
           />
         ) : (
           invoices.map(invoice => (
-            <Card key={invoice.id} className="p-4 hover:shadow-md transition-shadow">
+            <Card 
+              key={invoice.id} 
+              className="p-4 hover:shadow-md transition-shadow cursor-pointer"
+              onDoubleClick={() => {
+                setSelectedInvoice(invoice);
+                setShowDetailModal(true);
+              }}
+            >
               <div className="flex justify-between items-start">
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-2">
@@ -140,6 +156,43 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = React.memo(({
           ))
         )}
       </div>
+
+      {/* Detail Modal */}
+      {selectedInvoice && (
+        <WorkflowDetailModal
+          item={selectedInvoice}
+          itemType="invoice"
+          isOpen={showDetailModal}
+          onClose={() => {
+            setShowDetailModal(false);
+            setSelectedInvoice(null);
+          }}
+          onEdit={() => {
+            setShowDetailModal(false);
+            onEdit(selectedInvoice);
+          }}
+          onDelete={async () => {
+            await onDelete(selectedInvoice.id);
+            setShowDetailModal(false);
+            setSelectedInvoice(null);
+          }}
+          onCloneAsQuote={onCloneAsQuote ? async (item) => {
+            await onCloneAsQuote(item as Invoice);
+            setShowDetailModal(false);
+            setSelectedInvoice(null);
+          } : undefined}
+          onCloneAsInvoice={onCloneAsInvoice ? async (item) => {
+            await onCloneAsInvoice(item as Invoice);
+            setShowDetailModal(false);
+            setSelectedInvoice(null);
+          } : undefined}
+          onCloneAsWorkOrder={onCloneAsWorkOrder ? async (item) => {
+            await onCloneAsWorkOrder(item as Invoice);
+            setShowDetailModal(false);
+            setSelectedInvoice(null);
+          } : undefined}
+        />
+      )}
     </div>
   );
 });

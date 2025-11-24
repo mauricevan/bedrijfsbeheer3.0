@@ -88,6 +88,44 @@ export const useAccounting = () => {
     return updated;
   };
 
+  const cloneQuote = async (quoteId: string) => {
+    const cloned = await accountingService.cloneQuote(quoteId);
+    setQuotes(prev => [...prev, cloned]);
+    return cloned;
+  };
+
+  const cloneInvoice = async (invoiceId: string) => {
+    const cloned = await accountingService.cloneInvoice(invoiceId);
+    setInvoices(prev => [...prev, cloned]);
+    return cloned;
+  };
+
+  const cloneAsQuote = async (sourceId: string, sourceType: 'quote' | 'invoice' | 'workorder') => {
+    try {
+      const cloned = await accountingService.cloneAsQuote(sourceId, sourceType);
+      setQuotes(prev => [...prev, cloned]);
+      return cloned;
+    } catch (error) {
+      console.error('Error cloning as quote:', error);
+      // Re-throw with a proper Error object to ensure consistent error handling
+      const errorMessage = error instanceof Error ? error.message : 'Failed to clone as quote';
+      throw new Error(errorMessage);
+    }
+  };
+
+  const cloneAsInvoice = async (sourceId: string, sourceType: 'quote' | 'invoice' | 'workorder') => {
+    try {
+      const cloned = await accountingService.cloneAsInvoice(sourceId, sourceType);
+      setInvoices(prev => [...prev, cloned]);
+      return cloned;
+    } catch (error) {
+      console.error('Error cloning as invoice:', error);
+      // Re-throw with a proper Error object to ensure consistent error handling
+      const errorMessage = error instanceof Error ? error.message : 'Failed to clone as invoice';
+      throw new Error(errorMessage);
+    }
+  };
+
   return {
     quotes,
     invoices,
@@ -103,6 +141,10 @@ export const useAccounting = () => {
     convertInvoiceToWorkOrder,
     updateQuoteStatus,
     updateInvoiceStatus,
+    cloneQuote,
+    cloneInvoice,
+    cloneAsQuote,
+    cloneAsInvoice,
     refresh: fetchData,
   };
 };

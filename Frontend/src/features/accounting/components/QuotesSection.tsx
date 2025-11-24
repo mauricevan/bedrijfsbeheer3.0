@@ -1,8 +1,9 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
 import { FileText, Edit, Trash2 } from 'lucide-react';
 import { Card } from '@/components/common/Card';
 import { Button } from '@/components/common/Button';
 import { EmptyState } from '@/components/common/EmptyState';
+import { WorkflowDetailModal } from './WorkflowDetailModal';
 import type { Quote } from '../types';
 
 interface QuotesSectionProps {
@@ -13,6 +14,9 @@ interface QuotesSectionProps {
   onConvertToInvoice: (quoteId: string) => void;
   onConvertToWorkOrder: (quoteId: string) => void;
   onCreateNew: () => void;
+  onCloneAsQuote?: (quote: Quote) => Promise<void>;
+  onCloneAsInvoice?: (quote: Quote) => Promise<void>;
+  onCloneAsWorkOrder?: (quote: Quote) => Promise<void>;
 }
 
 export const QuotesSection: React.FC<QuotesSectionProps> = React.memo(({
@@ -23,7 +27,12 @@ export const QuotesSection: React.FC<QuotesSectionProps> = React.memo(({
   onConvertToInvoice,
   onConvertToWorkOrder,
   onCreateNew,
+  onCloneAsQuote,
+  onCloneAsInvoice,
+  onCloneAsWorkOrder,
 }) => {
+  const [selectedQuote, setSelectedQuote] = useState<Quote | null>(null);
+  const [showDetailModal, setShowDetailModal] = useState(false);
   const handleEdit = useCallback((quote: Quote) => {
     onEdit(quote);
   }, [onEdit]);
@@ -62,7 +71,14 @@ export const QuotesSection: React.FC<QuotesSectionProps> = React.memo(({
           />
         ) : (
           quotes.map(quote => (
-            <Card key={quote.id} className="p-4 hover:shadow-md transition-shadow">
+            <Card 
+              key={quote.id} 
+              className="p-4 hover:shadow-md transition-shadow cursor-pointer"
+              onDoubleClick={() => {
+                setSelectedQuote(quote);
+                setShowDetailModal(true);
+              }}
+            >
               <div className="flex justify-between items-start">
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-2">
@@ -152,6 +168,43 @@ export const QuotesSection: React.FC<QuotesSectionProps> = React.memo(({
           ))
         )}
       </div>
+
+      {/* Detail Modal */}
+      {selectedQuote && (
+        <WorkflowDetailModal
+          item={selectedQuote}
+          itemType="quote"
+          isOpen={showDetailModal}
+          onClose={() => {
+            setShowDetailModal(false);
+            setSelectedQuote(null);
+          }}
+          onEdit={() => {
+            setShowDetailModal(false);
+            onEdit(selectedQuote);
+          }}
+          onDelete={async () => {
+            await onDelete(selectedQuote.id);
+            setShowDetailModal(false);
+            setSelectedQuote(null);
+          }}
+          onCloneAsQuote={onCloneAsQuote ? async (item) => {
+            await onCloneAsQuote(item as Quote);
+            setShowDetailModal(false);
+            setSelectedQuote(null);
+          } : undefined}
+          onCloneAsInvoice={onCloneAsInvoice ? async (item) => {
+            await onCloneAsInvoice(item as Quote);
+            setShowDetailModal(false);
+            setSelectedQuote(null);
+          } : undefined}
+          onCloneAsWorkOrder={onCloneAsWorkOrder ? async (item) => {
+            await onCloneAsWorkOrder(item as Quote);
+            setShowDetailModal(false);
+            setSelectedQuote(null);
+          } : undefined}
+        />
+      )}
     </div>
   );
 });

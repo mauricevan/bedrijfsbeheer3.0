@@ -56,6 +56,26 @@ export const useWorkOrders = (options?: UseWorkOrdersOptions) => {
     setWorkOrders(prev => prev.filter(wo => wo.id !== id));
   };
 
+  const reopenWorkOrder = async (id: string, reason: string) => {
+    const reopened = await workOrderService.reopen(id, reason, userId, userName);
+    setWorkOrders(prev => prev.map(wo => wo.id === id ? reopened : wo));
+    return reopened;
+  };
+
+  const archiveWorkOrder = async (id: string, archiveReason?: string) => {
+    const archived = await workOrderService.archive(id, archiveReason, userId, userName);
+    setWorkOrders(prev => prev.map(wo => wo.id === id ? archived : wo));
+    return archived;
+  };
+
+  const checkAutoArchive = async () => {
+    return await workOrderService.checkAutoArchive();
+  };
+
+  const getWorkOrdersNeedingAttention = useCallback(() => {
+    return workOrderService.getWorkOrdersNeedingAttention();
+  }, []);
+
   const getByStatus = useCallback((status: WorkOrderStatus) => {
     return workOrders.filter(wo => wo.status === status).sort((a, b) => a.sortIndex - b.sortIndex);
   }, [workOrders]);
@@ -67,6 +87,10 @@ export const useWorkOrders = (options?: UseWorkOrdersOptions) => {
     updateWorkOrder,
     updateStatus,
     deleteWorkOrder,
+    reopenWorkOrder,
+    archiveWorkOrder,
+    checkAutoArchive,
+    getWorkOrdersNeedingAttention,
     getByStatus,
     refresh: fetchWorkOrders,
   };

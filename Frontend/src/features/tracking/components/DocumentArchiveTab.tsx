@@ -5,15 +5,26 @@ import { Button } from '@/components/common/Button';
 import { getAllDocumentsForArchive, filterAllDocuments } from '../services/archiveService';
 import type { ArchiveFilter, ArchivedDocument } from '../types/tracking.types';
 import { useAuth } from '@/features/auth/hooks/useAuth';
+import { useAccounting } from '@/features/accounting/hooks/useAccounting';
+import { useWorkOrders } from '@/features/work-orders/hooks/useWorkOrders';
+import { useHRM } from '@/features/hrm/hooks/useHRM';
+import { useToast } from '@/context/ToastContext';
+import { WorkflowDetailModal } from '@/features/accounting/components/WorkflowDetailModal';
 import { Search, Filter, X, FileText, Receipt, Wrench, Eye, Archive } from 'lucide-react';
 
 export const DocumentArchiveTab: React.FC = () => {
   const { user } = useAuth();
+  const { cloneAsQuote, cloneAsInvoice } = useAccounting();
+  const { createWorkOrder } = useWorkOrders({ userId: user?.id, userName: user?.name });
+  const { employees } = useHRM();
+  const { showToast } = useToast();
   const [allDocuments, setAllDocuments] = useState<ArchivedDocument[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [filter, setFilter] = useState<ArchiveFilter>({});
   const [showFilters, setShowFilters] = useState(false);
   const [selectedArchive, setSelectedArchive] = useState<string | null>(null);
+  const [selectedDocument, setSelectedDocument] = useState<any>(null);
+  const [showDetailModal, setShowDetailModal] = useState(false);
 
   useEffect(() => {
     const loadDocuments = async () => {
@@ -212,7 +223,13 @@ export const DocumentArchiveTab: React.FC = () => {
                     return (
                       <tr
                         key={archive.id}
-                        className={`border-b border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 ${isArchived ? 'opacity-75' : ''}`}
+                        className={`border-b border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer ${isArchived ? 'opacity-75' : ''}`}
+                        onDoubleClick={() => {
+                          // Convert archived document to the appropriate type
+                          const doc = archive.documentData as any;
+                          setSelectedDocument(doc);
+                          setShowDetailModal(true);
+                        }}
                       >
                         <td className="py-3 px-4">
                           {isArchived ? (
@@ -370,7 +387,84 @@ export const DocumentArchiveTab: React.FC = () => {
               </div>
             );
           })()}
-        </Card>
+          </Card>
+      )}
+
+      {/* Detail Modal */}
+      {selectedDocument && (
+        <WorkflowDetailModal
+          item={selectedDocument}
+          itemType={selectedDocument.invoiceNumber ? 'invoice' : selectedDocument.quoteNumber ? 'quote' : 'workorder'}
+          isOpen={showDetailModal}
+          onClose={() => {
+            setShowDetailModal(false);
+            setSelectedDocument(null);
+          }}
+          onCloneAsQuote={async (item) => {
+            try {
+              const doc = item as any;
+              if (doc.invoiceNumber) {
+                await cloneAsQuote(doc.id, 'invoice');
+              } else if (doc.quoteNumber) {
+                await cloneAsQuote(doc.id, 'quote');
+              } else {
+                await cloneAsQuote(doc.id, 'workorder');
+              }
+              showToast({ type: 'success', message: 'Offerte gekloond en aangemaakt!' });
+              setShowDetailModal(false);
+              setSelectedDocument(null);
+            } catch (error) {
+              showToast({ type: 'error', message: 'Fout bij klonen. Probeer opnieuw.' });
+            }
+          }}
+          onCloneAsInvoice={async (item) => {
+            try {
+              const doc = item as any;
+              if (doc.invoiceNumber) {
+                await cloneAsInvoice(doc.id, 'invoice');
+              } else if (doc.quoteNumber) {
+                await cloneAsInvoice(doc.id, 'quote');
+              } else {
+                await cloneAsInvoice(doc.id, 'workorder');
+              }
+              showToast({ type: 'success', message: 'Factuur gekloond en aangemaakt!' });
+              setShowDetailModal(false);
+              setSelectedDocument(null);
+            } catch (error) {
+              showToast({ type: 'error', message: 'Fout bij klonen. Probeer opnieuw.' });
+            }
+          }}
+          onCloneAsWorkOrder={async (item) => {
+            try {
+              const doc = item as any;
+              const employeeId = employees[0]?.id || '';
+              if (!employeeId) {
+                showToast({ type: 'error', message: 'Geen medewerker beschikbaar. Voeg eerst een medewerker toe in HRM.' });
+                return;
+              }
+              await createWorkOrder({
+                title: `${doc.title || 'Werkorder'} (Kopie)`,
+                description: doc.description || doc.notes || '',
+                status: 'todo',
+                assignedTo: employeeId,
+                customerId: doc.customerId,
+                location: doc.location,
+                scheduledDate: doc.scheduledDate,
+                materials: doc.materials || [],
+                estimatedHours: doc.estimatedHours || 0,
+                hoursSpent: 0,
+                estimatedCost: doc.total || doc.estimatedCost || 0,
+                notes: doc.notes,
+                sortIndex: 0,
+              });
+              showToast({ type: 'success', message: 'Werkorder gekloond en aangemaakt!' });
+              setShowDetailModal(false);
+              setSelectedDocument(null);
+            } catch (error) {
+              showToast({ type: 'error', message: 'Fout bij klonen. Probeer opnieuw.' });
+            }
+          }}
+        />
       )}
     </div>
   );

@@ -8,12 +8,20 @@ import { useAccounting } from '@/features/accounting/hooks/useAccounting';
 import { useToast } from '@/context/ToastContext';
 import { JournalEntryForm } from '../components/JournalEntryForm';
 import { JournalEntryDetailModal } from '../components/JournalEntryDetailModal';
+import { WorkflowDetailModal } from '@/features/accounting/components/WorkflowDetailModal';
 import { EmptyState } from '../components/EmptyState';
 import type { JournalEntry } from '../types/bookkeeping.types';
+import type { Invoice } from '@/features/accounting/types';
+import { useWorkOrders } from '@/features/work-orders/hooks/useWorkOrders';
+import { useHRM } from '@/features/hrm/hooks/useHRM';
+import { useAuth } from '@/features/auth/hooks/useAuth';
 
 export const BookkeepingPage: React.FC = () => {
   const { ledgerAccounts, journalEntries, posSales, customerDossiers, isLoading, getVatReport, createManualJournalEntry } = useBookkeeping();
-  const { invoices } = useAccounting();
+  const { invoices, cloneAsQuote, cloneAsInvoice } = useAccounting();
+  const { user } = useAuth();
+  const { employees } = useHRM();
+  const { createWorkOrder } = useWorkOrders({ userId: user?.id, userName: user?.name });
   const { showToast } = useToast();
   
   const [activeTab, setActiveTab] = useState<'ledger' | 'journal' | 'vat' | 'invoices' | 'pos' | 'dossiers'>('ledger');
@@ -21,6 +29,8 @@ export const BookkeepingPage: React.FC = () => {
   const [vatReport, setVatReport] = useState<any>(null);
   const [showJournalEntryForm, setShowJournalEntryForm] = useState(false);
   const [selectedJournalEntry, setSelectedJournalEntry] = useState<JournalEntry | null>(null);
+  const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
+  const [showInvoiceDetailModal, setShowInvoiceDetailModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
@@ -419,7 +429,14 @@ export const BookkeepingPage: React.FC = () => {
             ) : (
               <div className="space-y-2">
                 {filteredInvoices.map(invoice => (
-                  <Card key={invoice.id} className="p-4">
+                  <Card 
+                    key={invoice.id} 
+                    className="p-4 cursor-pointer hover:shadow-md transition-shadow"
+                    onDoubleClick={() => {
+                      setSelectedInvoice(invoice);
+                      setShowInvoiceDetailModal(true);
+                    }}
+                  >
                     <div className="flex justify-between items-center">
                       <div>
                         <h4 className="font-semibold text-slate-900 dark:text-white">{invoice.invoiceNumber}</h4>
@@ -549,6 +566,63 @@ export const BookkeepingPage: React.FC = () => {
         <JournalEntryDetailModal
           entry={selectedJournalEntry}
           onClose={() => setSelectedJournalEntry(null)}
+        />
+      )}
+
+      {/* Invoice Detail Modal */}
+      {selectedInvoice && (
+        <WorkflowDetailModal
+          item={selectedInvoice}
+          itemType="invoice"
+          isOpen={showInvoiceDetailModal}
+          onClose={() => {
+            setShowInvoiceDetailModal(false);
+            setSelectedInvoice(null);
+          }}
+          onCloneAsQuote={async (item) => {
+            await cloneAsQuote((item as Invoice).id, 'invoice');
+            setShowInvoiceDetailModal(false);
+            setSelectedInvoice(null);
+          }}
+          onCloneAsInvoice={async (item) => {
+            await cloneAsInvoice((item as Invoice).id, 'invoice');
+            setShowInvoiceDetailModal(false);
+            setSelectedInvoice(null);
+          }}
+          onCloneAsWorkOrder={async (item) => {
+            const invoice = item as Invoice;
+            const employeeId = employees[0]?.id || '';
+            if (!employeeId) {
+              showToast({ type: 'error', message: 'Geen medewerker beschikbaar. Voeg eerst een medewerker toe in HRM.' });
+              return;
+            }
+            const clonedInvoice = await cloneAsInvoice(invoice.id, 'invoice');
+            // Create work order from cloned invoice
+            await createWorkOrder({
+              title: `Werkorder voor ${clonedInvoice.customerName}`,
+              description: clonedInvoice.notes || 'Werkorder gegenereerd vanuit gekloonde factuur',
+              status: 'todo',
+              assignedTo: employeeId,
+              customerId: clonedInvoice.customerId,
+              location: clonedInvoice.location,
+              scheduledDate: clonedInvoice.scheduledDate,
+              materials: clonedInvoice.items.map(item => ({
+                inventoryItemId: item.inventoryItemId || '',
+                name: item.description,
+                quantity: item.quantity,
+                unit: 'stuks',
+              })).filter(m => m.inventoryItemId),
+              estimatedHours: clonedInvoice.labor?.reduce((sum, l) => sum + l.hours, 0) || 0,
+              hoursSpent: 0,
+              estimatedCost: clonedInvoice.total,
+              notes: clonedInvoice.notes,
+              invoiceId: clonedInvoice.id,
+              sortIndex: 0,
+            }, 'invoice');
+            showToast({ type: 'success', message: 'Werkorder gekloond en aangemaakt!' });
+            setShowInvoiceDetailModal(false);
+            setSelectedInvoice(null);
+          }}
         />
       )}
     </div>

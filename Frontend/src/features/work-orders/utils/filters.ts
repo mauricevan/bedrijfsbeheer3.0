@@ -99,16 +99,32 @@ export const filterWorkOrdersByDateRange = (
 
 /**
  * Get work orders grouped by status
+ * Excludes archived work orders from completed section
  */
 export const groupWorkOrdersByStatus = (
   workOrders: WorkOrder[]
 ): Record<WorkOrderStatus, WorkOrder[]> => {
   return {
-    todo: workOrders.filter((wo) => wo.status === 'todo'),
-    pending: workOrders.filter((wo) => wo.status === 'pending'),
-    in_progress: workOrders.filter((wo) => wo.status === 'in_progress'),
-    completed: workOrders.filter((wo) => wo.status === 'completed'),
+    todo: workOrders.filter((wo) => wo.status === 'todo' && !wo.isArchived),
+    pending: workOrders.filter((wo) => wo.status === 'pending' && !wo.isArchived),
+    in_progress: workOrders.filter((wo) => wo.status === 'in_progress' && !wo.isArchived),
+    completed: workOrders.filter((wo) => wo.status === 'completed' && !wo.isArchived),
   };
+};
+
+/**
+ * Check if work order needs attention (completed >48h without invoice)
+ */
+export const workOrderNeedsAttention = (workOrder: WorkOrder): boolean => {
+  if (workOrder.status !== 'completed' || workOrder.isArchived || !workOrder.completedDate) {
+    return false;
+  }
+  
+  const now = Date.now();
+  const fortyEightHoursAgo = now - (48 * 60 * 60 * 1000);
+  const completedTime = new Date(workOrder.completedDate).getTime();
+  
+  return completedTime < fortyEightHoursAgo && !workOrder.invoiceId;
 };
 
 /**

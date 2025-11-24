@@ -384,6 +384,186 @@ export const accountingService = {
     return { invoice, workOrderId };
   },
 
+  // Convert completed work order to invoice (Poka-Yoke #2 - Automatic Invoice Creation)
+  convertWorkOrderToInvoice: async (workOrderId: string, providedWorkOrder?: any): Promise<Invoice | null> => {
+    // Import work order service dynamically to avoid circular dependency
+    const { workOrderService } = await import('@/features/work-orders/services/workOrderService');
+    // Use provided work order if available (to avoid fetching stale data), otherwise fetch it
+    const workOrder = providedWorkOrder || await workOrderService.getById(workOrderId);
+    if (!workOrder) throw new Error('Work order not found');
+
+    // Check if invoice already exists (Poka-Yoke #5 - Duplicate Prevention)
+    if (workOrder.invoiceId) {
+      const existingInvoice = INVOICES.find(i => i.id === workOrder.invoiceId);
+      if (existingInvoice) {
+        // Update existing invoice with actual hours/materials
+        return await accountingService.updateInvoiceFromWorkOrder(existingInvoice.id, workOrderId);
+      }
+    }
+
+    // Check if work order is completed
+    if (workOrder.status !== 'completed') {
+      throw new Error('Work order must be completed before creating invoice');
+    }
+
+    // Validate required fields
+    if (!workOrder.customerId) {
+      throw new Error('Work order must have a customer assigned');
+    }
+
+    // Create invoice from work order
+    const userInfo = getUserInfo();
+    const generalNumber = getNextGeneralNumber();
+    const invoiceNumber = getNextFactuurNumber();
+    const now = new Date().toISOString();
+    const dueDate = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(); // 14 days default
+
+    // Convert materials to line items
+    const items: LineItem[] = workOrder.materials?.map((material, idx) => ({
+      id: `item-${Date.now()}-${idx}`,
+      description: material.name,
+      quantity: material.quantity,
+      unitPrice: 0, // Will need to get from inventory
+      vatRate: 21, // Default VAT rate
+      discount: 0,
+      total: 0, // Will need to calculate
+      inventoryItemId: material.inventoryItemId,
+    })) || [];
+
+    // Convert hours to labor items
+    const labor: LaborItem[] = workOrder.hoursSpent > 0 ? [{
+      id: `labor-${Date.now()}`,
+      description: 'Uren gewerkt',
+      hours: workOrder.hoursSpent,
+      hourlyRate: workOrder.estimatedCost / (workOrder.estimatedHours || workOrder.hoursSpent || 1), // Calculate rate
+      total: workOrder.hoursSpent * (workOrder.estimatedCost / (workOrder.estimatedHours || workOrder.hoursSpent || 1)),
+    }] : [];
+
+    // Calculate totals
+    const itemsSubtotal = items.reduce((sum, item) => sum + item.total, 0);
+    const laborSubtotal = labor.reduce((sum, l) => sum + l.total, 0);
+    const subtotal = itemsSubtotal + laborSubtotal || workOrder.estimatedCost;
+    const totalVat = subtotal * 0.21; // Default 21% VAT
+    const total = subtotal + totalVat;
+
+    const newInvoice: Invoice = {
+      id: `invoice-${Date.now()}`,
+      generalNumber,
+      invoiceNumber,
+      customerId: workOrder.customerId,
+      customerName: workOrder.customerName || '',
+      customerEmail: undefined,
+      status: 'draft',
+      items,
+      labor: labor.length > 0 ? labor : undefined,
+      subtotal,
+      totalVat,
+      total,
+      issueDate: now,
+      dueDate,
+      paymentTerms: '14 dagen',
+      notes: workOrder.notes || `Factuur gegenereerd vanuit werkorder ${workOrder.workOrderNumber}`,
+      location: workOrder.location,
+      scheduledDate: workOrder.scheduledDate,
+      createdAt: now,
+      updatedAt: now,
+      workOrderId: workOrder.id,
+      quoteId: workOrder.quoteId,
+      reminders: {
+        reminder1Date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+        reminder2Date: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
+      },
+      journey: [
+        createJourneyEntry('created', userInfo.userId, userInfo.userName, 'Created', `Factuur ${invoiceNumber} automatisch aangemaakt vanuit werkorder ${workOrder.workOrderNumber}`, { generalNumber, invoiceNumber, workOrderId: workOrder.id })
+      ],
+      createdBy: userInfo.userId,
+      createdByName: userInfo.userName,
+    };
+
+    INVOICES.push(newInvoice);
+    saveInvoices();
+
+    // Update work order with invoice ID
+    await workOrderService.update(workOrderId, { invoiceId: newInvoice.id }, userInfo.userId, userInfo.userName);
+
+    // Update quote status if linked (Poka-Yoke #9)
+    if (workOrder.quoteId) {
+      const quote = QUOTES.find(q => q.id === workOrder.quoteId);
+      if (quote) {
+        await accountingService.updateQuote(workOrder.quoteId, { 
+          status: 'invoiced',
+          invoiceId: newInvoice.id,
+        });
+      }
+    }
+
+    // Log activity
+    logActivityHelper(
+      'factuur_auto_created',
+      'factuur',
+      newInvoice.id,
+      'created',
+      `Factuur ${invoiceNumber} automatisch aangemaakt vanuit werkorder ${workOrder.workOrderNumber}`,
+      userInfo.userId,
+      userInfo.userName,
+      userInfo.userEmail,
+      `Factuur ${invoiceNumber}`,
+      undefined,
+      { generalNumber, invoiceNumber, workOrderId: workOrder.id, autoCreated: true }
+    );
+
+    return newInvoice;
+  },
+
+  // Update existing invoice with work order data
+  updateInvoiceFromWorkOrder: async (invoiceId: string, workOrderId: string): Promise<Invoice> => {
+    const invoice = INVOICES.find(i => i.id === invoiceId);
+    if (!invoice) throw new Error('Invoice not found');
+
+    const { workOrderService } = await import('@/features/work-orders/services/workOrderService');
+    const workOrder = await workOrderService.getById(workOrderId);
+    if (!workOrder) throw new Error('Work order not found');
+
+    const userInfo = getUserInfo();
+
+    // Update labor with actual hours
+    const updatedLabor: LaborItem[] = invoice.labor?.map(l => ({
+      ...l,
+      hours: workOrder.hoursSpent || l.hours,
+      total: (workOrder.hoursSpent || l.hours) * l.hourlyRate,
+    })) || [];
+
+    // Recalculate totals
+    const itemsSubtotal = invoice.items.reduce((sum, item) => sum + item.total, 0);
+    const laborSubtotal = updatedLabor.reduce((sum, l) => sum + l.total, 0);
+    const subtotal = itemsSubtotal + laborSubtotal;
+    const totalVat = subtotal * 0.21;
+    const total = subtotal + totalVat;
+
+    const updated: Invoice = {
+      ...invoice,
+      labor: updatedLabor.length > 0 ? updatedLabor : undefined,
+      subtotal,
+      totalVat,
+      total,
+      updatedAt: new Date().toISOString(),
+      journey: addJourneyEntry(invoice.journey || [], createJourneyEntry(
+        'updated',
+        userInfo.userId,
+        userInfo.userName,
+        'Updated',
+        `Factuur bijgewerkt met werkelijke uren (${workOrder.hoursSpent}u) van werkorder ${workOrder.workOrderNumber}`,
+        { workOrderId: workOrder.id, hoursSpent: workOrder.hoursSpent }
+      )),
+    };
+
+    const index = INVOICES.findIndex(i => i.id === invoiceId);
+    INVOICES[index] = updated;
+    saveInvoices();
+
+    return updated;
+  },
+
   updateQuoteStatus: async (id: string, status: Quote['status']): Promise<Quote> => {
     const updates: Partial<Quote> = { status };
     if (status === 'sent') {
@@ -403,5 +583,339 @@ export const accountingService = {
       updates.paidDate = new Date().toISOString();
     }
     return accountingService.updateInvoice(id, updates);
+  },
+
+  // Clone functionality
+  cloneQuote: async (quoteId: string): Promise<Quote> => {
+    const quote = QUOTES.find(q => q.id === quoteId);
+    if (!quote) throw new Error('Quote not found');
+
+    const userInfo = getUserInfo();
+    const generalNumber = getNextGeneralNumber();
+    const quoteNumber = getNextOfferteNumber();
+    const now = new Date().toISOString();
+    
+    const clonedQuote: Quote = {
+      ...quote,
+      id: `quote-${Date.now()}`,
+      generalNumber,
+      quoteNumber,
+      status: 'draft',
+      createdAt: now,
+      updatedAt: now,
+      sentAt: undefined,
+      acceptedAt: undefined,
+      workOrderId: undefined,
+      createdBy: userInfo.userId,
+      createdByName: userInfo.userName,
+      journey: [
+        createJourneyEntry('created', userInfo.userId, userInfo.userName, 'Cloned', `Offerte ${quoteNumber} gekloond van ${quote.quoteNumber}`, { generalNumber, quoteNumber, clonedFrom: quote.id })
+      ],
+    };
+    
+    QUOTES.push(clonedQuote);
+    saveQuotes();
+    
+    logActivityHelper(
+      'offerte_cloned',
+      'offerte',
+      clonedQuote.id,
+      'created',
+      `Offerte ${quoteNumber} gekloond van ${quote.quoteNumber}`,
+      userInfo.userId,
+      userInfo.userName,
+      userInfo.userEmail,
+      `Offerte ${quoteNumber}`,
+      undefined,
+      { generalNumber, quoteNumber, clonedFrom: quote.id }
+    );
+    
+    return clonedQuote;
+  },
+
+  cloneInvoice: async (invoiceId: string): Promise<Invoice> => {
+    const invoice = INVOICES.find(i => i.id === invoiceId);
+    if (!invoice) throw new Error('Invoice not found');
+
+    const userInfo = getUserInfo();
+    const generalNumber = getNextGeneralNumber();
+    const invoiceNumber = getNextFactuurNumber();
+    const now = new Date().toISOString();
+    const dueDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+    
+    const clonedInvoice: Invoice = {
+      ...invoice,
+      id: `invoice-${Date.now()}`,
+      generalNumber,
+      invoiceNumber,
+      status: 'draft',
+      issueDate: now,
+      dueDate,
+      createdAt: now,
+      updatedAt: now,
+      sentAt: undefined,
+      paidAt: undefined,
+      paidDate: undefined,
+      workOrderId: undefined,
+      quoteId: undefined,
+      createdBy: userInfo.userId,
+      createdByName: userInfo.userName,
+      journey: [
+        createJourneyEntry('created', userInfo.userId, userInfo.userName, 'Cloned', `Factuur ${invoiceNumber} gekloond van ${invoice.invoiceNumber}`, { generalNumber, invoiceNumber, clonedFrom: invoice.id })
+      ],
+    };
+    
+    INVOICES.push(clonedInvoice);
+    saveInvoices();
+    
+    logActivityHelper(
+      'factuur_cloned',
+      'factuur',
+      clonedInvoice.id,
+      'created',
+      `Factuur ${invoiceNumber} gekloond van ${invoice.invoiceNumber}`,
+      userInfo.userId,
+      userInfo.userName,
+      userInfo.userEmail,
+      `Factuur ${invoiceNumber}`,
+      undefined,
+      { generalNumber, invoiceNumber, clonedFrom: invoice.id }
+    );
+    
+    return clonedInvoice;
+  },
+
+  cloneAsQuote: async (sourceId: string, sourceType: 'quote' | 'invoice' | 'workorder'): Promise<Quote> => {
+    if (sourceType === 'quote') {
+      return accountingService.cloneQuote(sourceId);
+    } else if (sourceType === 'invoice') {
+      const invoice = INVOICES.find(i => i.id === sourceId);
+      if (!invoice) throw new Error('Invoice not found');
+
+      const userInfo = getUserInfo();
+      const generalNumber = getNextGeneralNumber();
+      const quoteNumber = getNextOfferteNumber();
+      const now = new Date().toISOString();
+      const validUntil = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+      
+      const newQuote: Quote = {
+        id: `quote-${Date.now()}`,
+        generalNumber,
+        quoteNumber,
+        customerId: invoice.customerId,
+        customerName: invoice.customerName,
+        customerEmail: invoice.customerEmail,
+        status: 'draft',
+        items: invoice.items,
+        labor: invoice.labor,
+        subtotal: invoice.subtotal,
+        totalVat: invoice.totalVat,
+        total: invoice.total,
+        validUntil,
+        notes: invoice.notes,
+        location: invoice.location,
+        scheduledDate: invoice.scheduledDate,
+        createdAt: now,
+        updatedAt: now,
+        createdBy: userInfo.userId,
+        createdByName: userInfo.userName,
+        journey: [
+          createJourneyEntry('created', userInfo.userId, userInfo.userName, 'Cloned', `Offerte ${quoteNumber} gekloond van factuur ${invoice.invoiceNumber}`, { generalNumber, quoteNumber, clonedFrom: invoice.id })
+        ],
+      };
+      
+      QUOTES.push(newQuote);
+      saveQuotes();
+      
+      logActivityHelper(
+        'offerte_cloned',
+        'offerte',
+        newQuote.id,
+        'created',
+        `Offerte ${quoteNumber} gekloond van factuur ${invoice.invoiceNumber}`,
+        userInfo.userId,
+        userInfo.userName,
+        userInfo.userEmail,
+        `Offerte ${quoteNumber}`,
+        undefined,
+        { generalNumber, quoteNumber, clonedFrom: invoice.id }
+      );
+      
+      return newQuote;
+    } else {
+      // From work order - would need work order service
+      throw new Error('Cloning from work order not yet implemented');
+    }
+  },
+
+  cloneAsInvoice: async (sourceId: string, sourceType: 'quote' | 'invoice' | 'workorder'): Promise<Invoice> => {
+    if (sourceType === 'invoice') {
+      return accountingService.cloneInvoice(sourceId);
+    } else if (sourceType === 'quote') {
+      const quote = QUOTES.find(q => q.id === sourceId);
+      if (!quote) throw new Error('Quote not found');
+
+      const userInfo = getUserInfo();
+      const generalNumber = getNextGeneralNumber();
+      const invoiceNumber = getNextFactuurNumber();
+      const now = new Date().toISOString();
+      const dueDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+      
+      const newInvoice: Invoice = {
+        id: `invoice-${Date.now()}`,
+        generalNumber,
+        invoiceNumber,
+        customerId: quote.customerId,
+        customerName: quote.customerName,
+        customerEmail: quote.customerEmail,
+        status: 'draft',
+        items: quote.items,
+        labor: quote.labor,
+        subtotal: quote.subtotal,
+        totalVat: quote.totalVat,
+        total: quote.total,
+        issueDate: now,
+        dueDate,
+        notes: quote.notes,
+        location: quote.location,
+        scheduledDate: quote.scheduledDate,
+        createdAt: now,
+        updatedAt: now,
+        quoteId: quote.id,
+        createdBy: userInfo.userId,
+        createdByName: userInfo.userName,
+        journey: [
+          createJourneyEntry('created', userInfo.userId, userInfo.userName, 'Cloned', `Factuur ${invoiceNumber} gekloond van offerte ${quote.quoteNumber}`, { generalNumber, invoiceNumber, clonedFrom: quote.id })
+        ],
+      };
+      
+      INVOICES.push(newInvoice);
+      saveInvoices();
+      
+      logActivityHelper(
+        'factuur_cloned',
+        'factuur',
+        newInvoice.id,
+        'created',
+        `Factuur ${invoiceNumber} gekloond van offerte ${quote.quoteNumber}`,
+        userInfo.userId,
+        userInfo.userName,
+        userInfo.userEmail,
+        `Factuur ${invoiceNumber}`,
+        undefined,
+        { generalNumber, invoiceNumber, clonedFrom: quote.id }
+      );
+      
+      return newInvoice;
+    } else {
+      // From work order
+      try {
+        const { workOrderService } = await import('@/features/work-orders/services/workOrderService');
+        const workOrder = await workOrderService.getById(sourceId);
+        if (!workOrder) {
+          throw new Error('Work order not found');
+        }
+
+        const userInfo = getUserInfo();
+        const generalNumber = getNextGeneralNumber();
+        const invoiceNumber = getNextFactuurNumber();
+        const now = new Date().toISOString();
+        const dueDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+
+        // Validate required fields
+        if (!workOrder.customerId) {
+          throw new Error('Work order must have a customer assigned');
+        }
+
+        // Convert materials to line items
+        const items: LineItem[] = workOrder.materials?.map((material, idx) => ({
+          id: `item-${Date.now()}-${idx}`,
+          description: material.name,
+          quantity: material.quantity,
+          unitPrice: 0, // Will need to get from inventory
+          vatRate: 21, // Default VAT rate
+          discount: 0,
+          total: 0, // Will need to calculate
+          inventoryItemId: material.inventoryItemId,
+        })) || [];
+
+        // Convert hours to labor items
+        const hoursToUse = workOrder.hoursSpent > 0 ? workOrder.hoursSpent : workOrder.estimatedHours;
+        const labor: LaborItem[] = hoursToUse > 0 ? [{
+          id: `labor-${Date.now()}`,
+          description: 'Uren gewerkt',
+          hours: hoursToUse,
+          hourlyRate: workOrder.estimatedCost / (workOrder.estimatedHours || hoursToUse || 1),
+          total: hoursToUse * (workOrder.estimatedCost / (workOrder.estimatedHours || hoursToUse || 1)),
+        }] : [];
+
+        // Calculate totals
+        const itemsSubtotal = items.reduce((sum, item) => sum + item.total, 0);
+        const laborSubtotal = labor.reduce((sum, l) => sum + l.total, 0);
+        const subtotal = itemsSubtotal + laborSubtotal || workOrder.estimatedCost;
+        const totalVat = subtotal * 0.21; // Default 21% VAT
+        const total = subtotal + totalVat;
+
+        const newInvoice: Invoice = {
+          id: `invoice-${Date.now()}`,
+          generalNumber,
+          invoiceNumber,
+          customerId: workOrder.customerId,
+          customerName: workOrder.customerName || '',
+          customerEmail: undefined,
+          status: 'draft',
+          items,
+          labor: labor.length > 0 ? labor : undefined,
+          subtotal,
+          totalVat,
+          total,
+          issueDate: now,
+          dueDate,
+          paymentTerms: '14 dagen',
+          notes: workOrder.notes || `Factuur gekloond van werkorder ${workOrder.workOrderNumber}`,
+          location: workOrder.location,
+          scheduledDate: workOrder.scheduledDate,
+          createdAt: now,
+          updatedAt: now,
+          workOrderId: workOrder.id,
+          quoteId: workOrder.quoteId,
+          reminders: {
+            reminder1Date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+            reminder2Date: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
+          },
+          journey: [
+            createJourneyEntry('created', userInfo.userId, userInfo.userName, 'Cloned', `Factuur ${invoiceNumber} gekloond van werkorder ${workOrder.workOrderNumber}`, { generalNumber, invoiceNumber, clonedFrom: workOrder.id })
+          ],
+          createdBy: userInfo.userId,
+          createdByName: userInfo.userName,
+        };
+
+        INVOICES.push(newInvoice);
+        saveInvoices();
+
+        logActivityHelper(
+          'factuur_cloned',
+          'factuur',
+          newInvoice.id,
+          'created',
+          `Factuur ${invoiceNumber} gekloond van werkorder ${workOrder.workOrderNumber}`,
+          userInfo.userId,
+          userInfo.userName,
+          userInfo.userEmail,
+          `Factuur ${invoiceNumber}`,
+          undefined,
+          { generalNumber, invoiceNumber, clonedFrom: workOrder.id }
+        );
+
+        return newInvoice;
+      } catch (error) {
+        console.error('Error cloning work order as invoice:', error);
+        // Ensure we always throw a proper Error object
+        if (error instanceof Error) {
+          throw error;
+        }
+        throw new Error(typeof error === 'string' ? error : 'Failed to clone work order as invoice');
+      }
+    }
   },
 };

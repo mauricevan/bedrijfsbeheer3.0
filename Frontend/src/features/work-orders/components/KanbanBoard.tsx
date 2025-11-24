@@ -16,6 +16,7 @@ import { CSS } from '@dnd-kit/utilities';
 import type { WorkOrder, WorkOrderStatus } from '../types';
 import { Card } from '@/components/common/Card';
 import { cn } from '@/utils/cn';
+import { workOrderNeedsAttention } from '../utils/filters';
 
 type ViewMode = 'extended' | 'compact';
 
@@ -76,6 +77,8 @@ const WorkOrderCard: React.FC<{
     opacity: isDragging ? 0.5 : 1,
   };
 
+  const needsAttention = workOrderNeedsAttention(order);
+
   return (
     <div 
       ref={setNodeRef} 
@@ -90,16 +93,25 @@ const WorkOrderCard: React.FC<{
       <Card
         className={cn(
           "cursor-pointer hover:shadow-md transition-all duration-300 w-full",
-          isCompact ? "p-2" : "p-4 flex flex-col"
+          isCompact ? "p-2" : "p-4 flex flex-col",
+          needsAttention && "border-2 border-red-500 bg-red-50 dark:bg-red-900/20"
         )}
         onClick={onClick}
       >
-        <h4 className={cn(
-          "font-medium text-slate-900 dark:text-white",
-          isCompact ? "text-sm mb-1 line-clamp-2" : "mb-2"
-        )}>
-          {order.title}
-        </h4>
+        <div className="flex items-start justify-between gap-2 mb-2">
+          <h4 className={cn(
+            "font-medium text-slate-900 dark:text-white",
+            isCompact ? "text-sm line-clamp-2" : ""
+          )}>
+            {order.title}
+          </h4>
+          {needsAttention && (
+            <div className="flex items-center gap-1 px-2 py-0.5 bg-red-100 dark:bg-red-900/30 rounded text-xs text-red-700 dark:text-red-300 font-medium flex-shrink-0">
+              <AlertCircle className="h-3 w-3" />
+              Factuur vereist
+            </div>
+          )}
+        </div>
         
         {!isCompact && (
           <div className="flex flex-col min-h-[280px]">

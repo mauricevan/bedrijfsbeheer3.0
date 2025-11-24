@@ -27,6 +27,8 @@ export const AccountingPage: React.FC = () => {
     convertInvoiceToWorkOrder,
     updateQuoteStatus,
     updateInvoiceStatus,
+    cloneAsQuote,
+    cloneAsInvoice,
   } = useAccounting();
   
   const { user } = useAuth();
@@ -243,6 +245,84 @@ export const AccountingPage: React.FC = () => {
     await updateInvoiceStatus(invoiceId, status);
   };
 
+  const handleCloneQuoteAsQuote = async (quote: Quote) => {
+    await cloneAsQuote(quote.id, 'quote');
+  };
+
+  const handleCloneQuoteAsInvoice = async (quote: Quote) => {
+    await cloneAsInvoice(quote.id, 'quote');
+  };
+
+  const handleCloneQuoteAsWorkOrder = async (quote: Quote) => {
+    const employeeId = employees[0]?.id || '';
+    if (!employeeId) {
+      alert('Geen medewerker beschikbaar. Voeg eerst een medewerker toe in HRM.');
+      return;
+    }
+    const clonedQuote = await cloneAsQuote(quote.id, 'quote');
+    const { workOrderId } = await convertQuoteToWorkOrder(clonedQuote.id, employeeId);
+    await createWorkOrder({
+      title: `Werkorder voor ${clonedQuote.customerName}`,
+      description: clonedQuote.notes || 'Werkorder gegenereerd vanuit gekloonde offerte',
+      status: 'todo',
+      assignedTo: employeeId,
+      customerId: clonedQuote.customerId,
+      location: clonedQuote.location,
+      scheduledDate: clonedQuote.scheduledDate,
+      materials: clonedQuote.items.map(item => ({
+        inventoryItemId: item.inventoryItemId || '',
+        name: item.description,
+        quantity: item.quantity,
+        unit: 'stuks',
+      })).filter(m => m.inventoryItemId),
+      estimatedHours: clonedQuote.labor?.reduce((sum, l) => sum + l.hours, 0) || 0,
+      hoursSpent: 0,
+      estimatedCost: clonedQuote.total,
+      notes: clonedQuote.notes,
+      quoteId: clonedQuote.id,
+      sortIndex: 0,
+    }, 'quote');
+  };
+
+  const handleCloneInvoiceAsQuote = async (invoice: Invoice) => {
+    await cloneAsQuote(invoice.id, 'invoice');
+  };
+
+  const handleCloneInvoiceAsInvoice = async (invoice: Invoice) => {
+    await cloneAsInvoice(invoice.id, 'invoice');
+  };
+
+  const handleCloneInvoiceAsWorkOrder = async (invoice: Invoice) => {
+    const employeeId = employees[0]?.id || '';
+    if (!employeeId) {
+      alert('Geen medewerker beschikbaar. Voeg eerst een medewerker toe in HRM.');
+      return;
+    }
+    const clonedInvoice = await cloneAsInvoice(invoice.id, 'invoice');
+    const { workOrderId } = await convertInvoiceToWorkOrder(clonedInvoice.id, employeeId);
+    await createWorkOrder({
+      title: `Werkorder voor ${clonedInvoice.customerName}`,
+      description: clonedInvoice.notes || 'Werkorder gegenereerd vanuit gekloonde factuur',
+      status: 'todo',
+      assignedTo: employeeId,
+      customerId: clonedInvoice.customerId,
+      location: clonedInvoice.location,
+      scheduledDate: clonedInvoice.scheduledDate,
+      materials: clonedInvoice.items.map(item => ({
+        inventoryItemId: item.inventoryItemId || '',
+        name: item.description,
+        quantity: item.quantity,
+        unit: 'stuks',
+      })).filter(m => m.inventoryItemId),
+      estimatedHours: clonedInvoice.labor?.reduce((sum, l) => sum + l.hours, 0) || 0,
+      hoursSpent: 0,
+      estimatedCost: clonedInvoice.total,
+      notes: clonedInvoice.notes,
+      invoiceId: clonedInvoice.id,
+      sortIndex: 0,
+    }, 'invoice');
+  };
+
   const handleMetricClick = (metric: string) => {
     // Navigate to appropriate view based on metric
     switch (metric) {
@@ -370,6 +450,9 @@ export const AccountingPage: React.FC = () => {
             setEditingQuote(null);
             setShowQuoteModal(true);
           }}
+          onCloneAsQuote={handleCloneQuoteAsQuote}
+          onCloneAsInvoice={handleCloneQuoteAsInvoice}
+          onCloneAsWorkOrder={handleCloneQuoteAsWorkOrder}
         />
       )}
 
@@ -386,6 +469,9 @@ export const AccountingPage: React.FC = () => {
             setEditingInvoice(null);
             setShowInvoiceModal(true);
           }}
+          onCloneAsQuote={handleCloneInvoiceAsQuote}
+          onCloneAsInvoice={handleCloneInvoiceAsInvoice}
+          onCloneAsWorkOrder={handleCloneInvoiceAsWorkOrder}
         />
       )}
 

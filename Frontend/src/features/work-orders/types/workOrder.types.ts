@@ -10,7 +10,8 @@ export type WorkOrderHistoryActionType =
   | 'reassigned'
   | 'material_updated'
   | 'hours_updated'
-  | 'deleted';
+  | 'deleted'
+  | 'archived';
 
 export interface WorkOrderHistoryEntry {
   id: string;
@@ -62,6 +63,12 @@ export interface WorkOrder {
   journey?: import('../tracking/types/tracking.types').DocumentJourneyEntry[];
   createdBy?: string;
   createdByName?: string;
+  // Archive fields
+  isArchived?: boolean;
+  archivedAt?: string;
+  archivedBy?: string;
+  archivedByName?: string;
+  archiveReason?: string; // Required comment when archiving without invoice
 }
 
 export type WorkOrderFilter = {
