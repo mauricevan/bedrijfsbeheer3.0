@@ -6,7 +6,6 @@
 import React, { useMemo } from 'react';
 import { Clock } from 'lucide-react';
 import { KanbanBoard } from './KanbanBoard';
-import { WorkOrderList } from './WorkOrderList';
 import type { WorkOrder, WorkOrderStatus } from '../types';
 import { calculateTotalHours, getStatusCounts } from '../utils/workboard';
 import { cn } from '@/utils/cn';
@@ -28,13 +27,6 @@ const STATUS_LABELS: Record<WorkOrderStatus, { label: string; emoji: string }> =
   pending: { label: 'In Wacht', emoji: '👆' },
   in_progress: { label: 'Bezig', emoji: '👆' },
   completed: { label: 'Afgerond', emoji: '👆' },
-};
-
-const EMPTY_MESSAGES: Record<WorkOrderStatus, string> = {
-  todo: 'Geen taken om te starten',
-  pending: 'Geen taken in wacht',
-  in_progress: 'Geen actieve taken',
-  completed: 'Geen afgeronde taken',
 };
 
 export const Workboard: React.FC<WorkboardProps> = ({
@@ -105,24 +97,12 @@ export const Workboard: React.FC<WorkboardProps> = ({
       </div>
 
       {/* Board Content */}
-      {viewMode === 'extended' ? (
-        <KanbanBoard
-          workOrders={filteredWorkOrders}
-          onCardClick={onCardClick}
-          onStatusChange={onStatusChange}
-        />
-      ) : (
-        filteredWorkOrders.length === 0 ? (
-          <div className="text-center py-12 text-slate-500 dark:text-slate-400">
-            {selectedStatus ? EMPTY_MESSAGES[selectedStatus] : 'Geen werkorders gevonden'}
-          </div>
-        ) : (
-          <WorkOrderList
-            workOrders={filteredWorkOrders}
-            onCardClick={onCardClick}
-          />
-        )
-      )}
+      <KanbanBoard
+        workOrders={filteredWorkOrders}
+        onCardClick={onCardClick}
+        onStatusChange={onStatusChange}
+        viewMode={viewMode}
+      />
     </div>
   );
 };

@@ -1,11 +1,13 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Settings, Building2, Users, Shield, Database, Bell, BarChart3 } from 'lucide-react';
+import { Settings, Building2, Users, Shield, Database, Bell, BarChart3, Activity, Archive } from 'lucide-react';
 import { Card } from '@/components/common/Card';
 import { Input } from '@/components/common/Input';
 import { Button } from '@/components/common/Button';
 import { storage } from '@/utils/storage';
 import { buildAnalyticsDashboard, clearAnalytics, type AnalyticsDashboard } from '@/utils/analytics';
 import { getModulesConfig, toggleModule, type ModuleConfig } from '@/utils/moduleConfig';
+import { ActivityTrackingTab } from '@/features/tracking/components/ActivityTrackingTab';
+import { DocumentArchiveTab } from '@/features/tracking/components/DocumentArchiveTab';
 
 const SETTINGS_KEY = 'bedrijfsbeheer_settings';
 
@@ -39,7 +41,7 @@ export const SettingsPage: React.FC = () => {
   const [settings, setSettings] = useState<AppSettings>(
     storage.get<AppSettings>(SETTINGS_KEY, DEFAULT_SETTINGS)
   );
-  const [activeTab, setActiveTab] = useState<'company' | 'vat' | 'users' | 'modules' | 'notifications' | 'analytics' | 'database'>('company');
+  const [activeTab, setActiveTab] = useState<'company' | 'vat' | 'users' | 'modules' | 'notifications' | 'analytics' | 'database' | 'activity' | 'archive'>('company');
   const [analyticsPeriod, setAnalyticsPeriod] = useState<AnalyticsDashboard['period']>('month');
   const [isSaving, setIsSaving] = useState(false);
   const [modules, setModules] = useState<ModuleConfig[]>(getModulesConfig());
@@ -207,6 +209,28 @@ export const SettingsPage: React.FC = () => {
               >
                 <Database className="h-5 w-5" />
                 <span>Database</span>
+              </button>
+              <button
+                onClick={() => setActiveTab('activity')}
+                className={`w-full flex items-center gap-3 px-4 py-2 rounded-lg text-left transition-colors ${
+                  activeTab === 'activity'
+                    ? 'bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                }`}
+              >
+                <Activity className="h-5 w-5" />
+                <span>Activiteit Tracking</span>
+              </button>
+              <button
+                onClick={() => setActiveTab('archive')}
+                className={`w-full flex items-center gap-3 px-4 py-2 rounded-lg text-left transition-colors ${
+                  activeTab === 'archive'
+                    ? 'bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                }`}
+              >
+                <Archive className="h-5 w-5" />
+                <span>Document Archief</span>
               </button>
             </nav>
           </Card>
@@ -537,6 +561,14 @@ export const SettingsPage: React.FC = () => {
                   </Card>
                 )}
               </div>
+            )}
+
+            {activeTab === 'activity' && (
+              <ActivityTrackingTab />
+            )}
+
+            {activeTab === 'archive' && (
+              <DocumentArchiveTab />
             )}
 
             {activeTab === 'database' && (

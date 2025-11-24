@@ -9,6 +9,7 @@ import { QuoteForm, InvoiceForm, InvoiceValidationModal, AccountingDashboard, Qu
 import type { Quote, Invoice } from '../types';
 import { useWorkOrders } from '@/features/work-orders/hooks/useWorkOrders';
 import { useHRM } from '@/features/hrm/hooks/useHRM';
+import { useAuth } from '@/features/auth/hooks/useAuth';
 
 export const AccountingPage: React.FC = () => {
   const {
@@ -28,7 +29,11 @@ export const AccountingPage: React.FC = () => {
     updateInvoiceStatus,
   } = useAccounting();
   
-  const { createWorkOrder } = useWorkOrders();
+  const { user } = useAuth();
+  const { createWorkOrder } = useWorkOrders({
+    userId: user?.id,
+    userName: user?.name,
+  });
   const { employees } = useHRM();
   
   const [showQuoteModal, setShowQuoteModal] = useState(false);
@@ -162,7 +167,7 @@ export const AccountingPage: React.FC = () => {
       notes: quote.notes,
       quoteId: quote.id,
       sortIndex: 0,
-    });
+    }, 'quote');
     
     alert(`Werkorder ${workOrderId} aangemaakt!`);
     setItemToConvert(null);
@@ -206,7 +211,7 @@ export const AccountingPage: React.FC = () => {
       notes: invoice.notes,
       invoiceId: invoice.id,
       sortIndex: 0,
-    });
+    }, 'invoice');
     
     alert(`Werkorder ${workOrderId} aangemaakt!`);
     setItemToConvert(null);

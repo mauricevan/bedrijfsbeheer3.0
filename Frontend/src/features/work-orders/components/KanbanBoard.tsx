@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { Clock, User, MapPin } from 'lucide-react';
+import { Clock, User, MapPin, Calendar, Package, Euro, FileText, AlertCircle } from 'lucide-react';
 import {
   DndContext,
   DragOverlay,
   PointerSensor,
   useSensor,
   useSensors,
+  useDroppable,
   type DragEndEvent,
   type DragStartEvent,
 } from '@dnd-kit/core';
@@ -16,10 +17,13 @@ import type { WorkOrder, WorkOrderStatus } from '../types';
 import { Card } from '@/components/common/Card';
 import { cn } from '@/utils/cn';
 
+type ViewMode = 'extended' | 'compact';
+
 type KanbanBoardProps = {
   workOrders: WorkOrder[];
   onCardClick: (workOrder: WorkOrder) => void;
   onStatusChange: (id: string, newStatus: WorkOrderStatus) => void;
+  viewMode: ViewMode;
 };
 
 const STATUS_CONFIG: Record<WorkOrderStatus, { label: string; color: string }> = {
@@ -29,11 +33,35 @@ const STATUS_CONFIG: Record<WorkOrderStatus, { label: string; color: string }> =
   completed: { label: 'Completed', color: 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-300' },
 };
 
+// Droppable column component
+const DroppableColumn: React.FC<{
+  id: WorkOrderStatus;
+  children: React.ReactNode;
+  className?: string;
+}> = ({ id, children, className }) => {
+  const { setNodeRef, isOver } = useDroppable({
+    id,
+  });
+
+  return (
+    <div
+      ref={setNodeRef}
+      className={cn(
+        className,
+        isOver && 'ring-2 ring-indigo-500 ring-offset-2'
+      )}
+    >
+      {children}
+    </div>
+  );
+};
+
 const WorkOrderCard: React.FC<{
   order: WorkOrder;
   onClick: () => void;
   isDragging?: boolean;
-}> = ({ order, onClick, isDragging }) => {
+  isCompact?: boolean;
+}> = ({ order, onClick, isDragging, isCompact = false }) => {
   const {
     attributes,
     listeners,
@@ -49,37 +77,163 @@ const WorkOrderCard: React.FC<{
   };
 
   return (
-    <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
+    <div 
+      ref={setNodeRef} 
+      style={style} 
+      {...attributes} 
+      {...listeners}
+      className={cn(
+        "transition-all duration-300 ease-out w-full",
+        !isCompact && "flex-shrink-0"
+      )}
+    >
       <Card
-        className="p-3 cursor-pointer hover:shadow-md transition-shadow"
+        className={cn(
+          "cursor-pointer hover:shadow-md transition-all duration-300 w-full",
+          isCompact ? "p-2" : "p-4 flex flex-col"
+        )}
         onClick={onClick}
       >
-        <h4 className="font-medium text-slate-900 dark:text-white mb-2 line-clamp-2">
+        <h4 className={cn(
+          "font-medium text-slate-900 dark:text-white",
+          isCompact ? "text-sm mb-1 line-clamp-2" : "mb-2"
+        )}>
           {order.title}
         </h4>
         
-        {order.assignedToName && (
-          <div className="flex items-center text-xs text-slate-600 dark:text-slate-400 mb-1">
-            <User className="h-3 w-3 mr-1" />
-            {order.assignedToName}
-          </div>
-        )}
-        
-        {order.location && (
-          <div className="flex items-center text-xs text-slate-600 dark:text-slate-400 mb-1">
-            <MapPin className="h-3 w-3 mr-1" />
-            {order.location}
-          </div>
-        )}
-        
-        <div className="flex items-center text-xs text-slate-600 dark:text-slate-400 mt-2">
-          <Clock className="h-3 w-3 mr-1" />
-          {order.hoursSpent}h / {order.estimatedHours}h
-        </div>
+        {!isCompact && (
+          <div className="flex flex-col min-h-[280px]">
+            {/* Description */}
+            {order.description && (
+              <p className="text-sm text-slate-600 dark:text-slate-400 mb-4 line-clamp-4">
+                {order.description}
+              </p>
+            )}
+            
+            {/* Main Info Grid */}
+            <div className="space-y-2 mb-4 flex-1">
+              {order.assignedToName && (
+                <div className="flex items-center text-sm text-slate-700 dark:text-slate-300">
+                  <User className="h-4 w-4 mr-2 flex-shrink-0 text-slate-500 dark:text-slate-400" />
+                  <span className="truncate font-medium">{order.assignedToName}</span>
+                </div>
+              )}
+              
+              {order.location && (
+                <div className="flex items-center text-sm text-slate-700 dark:text-slate-300">
+                  <MapPin className="h-4 w-4 mr-2 flex-shrink-0 text-slate-500 dark:text-slate-400" />
+                  <span className="truncate">{order.location}</span>
+                </div>
+              )}
 
-        {order.customerName && (
-          <div className="mt-2 text-xs text-indigo-600 dark:text-indigo-400">
-            {order.customerName}
+              {order.scheduledDate && (
+                <div className="flex items-center text-sm text-slate-700 dark:text-slate-300">
+                  <Calendar className="h-4 w-4 mr-2 flex-shrink-0 text-slate-500 dark:text-slate-400" />
+                  <span>
+                    {new Date(order.scheduledDate).toLocaleDateString('nl-NL', {
+                      day: 'numeric',
+                      month: 'short',
+                      year: 'numeric'
+                    })}
+                  </span>
+                </div>
+              )}
+
+              {order.customerName && (
+                <div className="flex items-center text-sm text-indigo-600 dark:text-indigo-400 font-medium">
+                  <User className="h-4 w-4 mr-2 flex-shrink-0" />
+                  <span className="truncate">{order.customerName}</span>
+                </div>
+              )}
+
+              {/* Materials */}
+              {order.materials && order.materials.length > 0 && (
+                <div className="flex items-start text-sm text-slate-700 dark:text-slate-300">
+                  <Package className="h-4 w-4 mr-2 flex-shrink-0 text-slate-500 dark:text-slate-400 mt-0.5" />
+                  <div className="flex-1">
+                    <div className="font-medium mb-1">Materialen:</div>
+                    <div className="space-y-1">
+                      {order.materials.slice(0, 2).map((material, idx) => (
+                        <div key={idx} className="text-xs">
+                          {material.quantity} {material.unit} {material.name}
+                        </div>
+                      ))}
+                      {order.materials.length > 2 && (
+                        <div className="text-xs text-slate-500 dark:text-slate-400">
+                          +{order.materials.length - 2} meer
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Pending Reason */}
+              {order.status === 'pending' && order.pendingReason && (
+                <div className="flex items-start text-sm text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 p-2 rounded">
+                  <AlertCircle className="h-4 w-4 mr-2 flex-shrink-0 mt-0.5" />
+                  <span className="text-xs">{order.pendingReason}</span>
+                </div>
+              )}
+
+              {/* Notes */}
+              {order.notes && (
+                <div className="flex items-start text-sm text-slate-600 dark:text-slate-400">
+                  <FileText className="h-4 w-4 mr-2 flex-shrink-0 text-slate-500 dark:text-slate-400 mt-0.5" />
+                  <span className="text-xs line-clamp-2">{order.notes}</span>
+                </div>
+              )}
+            </div>
+            
+            {/* Bottom Section */}
+            <div className="mt-auto pt-3 border-t border-slate-200 dark:border-slate-700 space-y-2">
+              {/* Hours Progress */}
+              <div className="space-y-1">
+                <div className="flex items-center justify-between text-xs text-slate-600 dark:text-slate-400">
+                  <div className="flex items-center">
+                    <Clock className="h-3 w-3 mr-1" />
+                    <span>{order.hoursSpent}h / {order.estimatedHours}h</span>
+                  </div>
+                  {order.estimatedHours > 0 && (
+                    <span className="text-slate-500 dark:text-slate-400">
+                      {Math.round((order.hoursSpent / order.estimatedHours) * 100)}%
+                    </span>
+                  )}
+                </div>
+                {order.estimatedHours > 0 && (
+                  <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-1.5">
+                    <div
+                      className={cn(
+                        "h-1.5 rounded-full transition-all",
+                        order.hoursSpent > order.estimatedHours
+                          ? "bg-red-500"
+                          : order.hoursSpent / order.estimatedHours > 0.8
+                          ? "bg-amber-500"
+                          : "bg-blue-500"
+                      )}
+                      style={{
+                        width: `${Math.min((order.hoursSpent / order.estimatedHours) * 100, 100)}%`
+                      }}
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* Estimated Cost */}
+              {order.estimatedCost > 0 && (
+                <div className="flex items-center text-xs text-slate-600 dark:text-slate-400">
+                  <Euro className="h-3 w-3 mr-1" />
+                  <span>€{order.estimatedCost.toFixed(2)}</span>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+        
+        {isCompact && (
+          <div className="flex items-center text-xs text-slate-600 dark:text-slate-400 mt-1">
+            <Clock className="h-3 w-3 mr-1" />
+            {order.hoursSpent}h / {order.estimatedHours}h
           </div>
         )}
       </Card>
@@ -91,6 +245,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
   workOrders,
   onCardClick,
   onStatusChange,
+  viewMode,
 }) => {
   const [activeId, setActiveId] = useState<string | null>(null);
   const statuses: WorkOrderStatus[] = ['todo', 'pending', 'in_progress', 'completed'];
@@ -120,9 +275,26 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
     }
 
     const activeOrder = workOrders.find(wo => wo.id === active.id);
-    const overStatus = over.id as WorkOrderStatus;
+    if (!activeOrder) {
+      setActiveId(null);
+      return;
+    }
 
-    if (activeOrder && activeOrder.status !== overStatus) {
+    // Check if over.id is a status (dropped on column) or a card ID (dropped on another card)
+    let overStatus: WorkOrderStatus | null = null;
+    
+    // If over.id is a status, use it directly
+    if (statuses.includes(over.id as WorkOrderStatus)) {
+      overStatus = over.id as WorkOrderStatus;
+    } else {
+      // If over.id is a card ID, find which status that card belongs to
+      const overOrder = workOrders.find(wo => wo.id === over.id);
+      if (overOrder) {
+        overStatus = overOrder.status;
+      }
+    }
+
+    if (overStatus && activeOrder.status !== overStatus) {
       onStatusChange(activeOrder.id, overStatus);
     }
 
@@ -143,7 +315,11 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
           const config = STATUS_CONFIG[status];
 
           return (
-            <div key={status} className="flex flex-col">
+            <DroppableColumn
+              key={status}
+              id={status}
+              className="flex flex-col"
+            >
               <div className={cn(
                 'p-3 rounded-t-lg border-2 font-semibold text-sm',
                 config.color
@@ -157,25 +333,28 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
               </div>
 
               <SortableContext
-                id={status}
                 items={orders.map(o => o.id)}
                 strategy={verticalListSortingStrategy}
               >
                 <div
-                  className="flex-1 bg-slate-50 dark:bg-slate-900/50 p-2 rounded-b-lg border-x-2 border-b-2 border-slate-200 dark:border-slate-700 space-y-2 min-h-[400px]"
+                  className={cn(
+                    "flex-1 bg-slate-50 dark:bg-slate-900/50 p-2 rounded-b-lg border-x-2 border-b-2 border-slate-200 dark:border-slate-700 min-h-[400px]",
+                    viewMode === 'extended' ? "space-y-2 overflow-y-auto" : "space-y-2"
+                  )}
                   data-status={status}
                 >
-                  {orders.map(order => (
+                  {orders.map((order, index) => (
                     <WorkOrderCard
                       key={order.id}
                       order={order}
                       onClick={() => onCardClick(order)}
                       isDragging={activeId === order.id}
+                      isCompact={viewMode === 'compact'}
                     />
                   ))}
                 </div>
               </SortableContext>
-            </div>
+            </DroppableColumn>
           );
         })}
       </div>
@@ -185,6 +364,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
           <WorkOrderCard
             order={activeOrder}
             onClick={() => {}}
+            isCompact={viewMode === 'compact'}
           />
         )}
       </DragOverlay>

@@ -20,7 +20,10 @@ import type { WorkOrder, WorkOrderStatus } from '../types';
 
 export const WorkOrdersPage: React.FC = () => {
   const { user } = useAuth();
-  const { workOrders, isLoading, createWorkOrder, updateWorkOrder, deleteWorkOrder, updateStatus } = useWorkOrders();
+  const { workOrders, isLoading, createWorkOrder, updateWorkOrder, deleteWorkOrder, updateStatus } = useWorkOrders({
+    userId: user?.id,
+    userName: user?.name,
+  });
   const { employees } = useHRM();
   
   const {
@@ -114,7 +117,7 @@ export const WorkOrdersPage: React.FC = () => {
       </div>
 
       {/* Workboard */}
-      {filteredWorkOrders.length === 0 ? (
+      {workOrders.length === 0 ? (
         <EmptyState
           icon={ClipboardList}
           title="Geen werkorders gevonden"

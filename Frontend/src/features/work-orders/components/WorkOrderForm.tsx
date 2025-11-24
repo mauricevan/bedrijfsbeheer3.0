@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { Plus, Trash2, X } from 'lucide-react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { Plus, Trash2, X, Search } from 'lucide-react';
 import { Input } from '@/components/common/Input';
 import { Button } from '@/components/common/Button';
+import { Combobox } from '@/components/common/Combobox';
 import type { WorkOrder, WorkOrderMaterial } from '../types';
 import { useCRM } from '@/features/crm/hooks/useCRM';
 import { useInventory } from '@/features/inventory/hooks/useInventory';
@@ -16,7 +17,7 @@ interface WorkOrderFormProps {
 
 export const WorkOrderForm: React.FC<WorkOrderFormProps> = ({ workOrder, onSubmit, onCancel, isLoading }) => {
   const { customers } = useCRM();
-  const { items: inventoryItems } = useInventory();
+  const { items: inventoryItems, categories, suppliers } = useInventory();
   const { employees } = useHRM();
   
   const [formData, setFormData] = useState({
@@ -34,6 +35,92 @@ export const WorkOrderForm: React.FC<WorkOrderFormProps> = ({ workOrder, onSubmi
   });
   const [materials, setMaterials] = useState<WorkOrderMaterial[]>([]);
   const [showInventorySelector, setShowInventorySelector] = useState(false);
+  const [materialSearchTerm, setMaterialSearchTerm] = useState('');
+  const [materialCategoryFilter, setMaterialCategoryFilter] = useState('');
+  const [materialSupplierFilter, setMaterialSupplierFilter] = useState('');
+  const [materialLocationFilter, setMaterialLocationFilter] = useState('');
+  const [materialStockFilter, setMaterialStockFilter] = useState<'all' | 'in_stock' | 'low_stock' | 'out_of_stock'>('all');
+
+  // Convert customers to Combobox options
+  const customerOptions = useMemo(() => 
+    customers.map(customer => ({
+      value: customer.id,
+      label: customer.name,
+      subtitle: customer.email || customer.company,
+    })), [customers]
+  );
+
+  // Convert employees to Combobox options
+  const employeeOptions = useMemo(() =>
+    employees.map(emp => ({
+      value: emp.id,
+      label: emp.name,
+      subtitle: emp.email,
+    })), [employees]
+  );
+
+  // Get unique locations from inventory items
+  const uniqueLocations = useMemo(() => {
+    const locations = inventoryItems
+      .map(item => item.location)
+      .filter((loc): loc is string => !!loc);
+    return Array.from(new Set(locations)).sort();
+  }, [inventoryItems]);
+
+  // Filter inventory items for material selector
+  const filteredInventoryItems = useMemo(() => {
+    let filtered = inventoryItems;
+
+    // Search filter
+    if (materialSearchTerm) {
+      const search = materialSearchTerm.toLowerCase();
+      filtered = filtered.filter(item =>
+        item.name.toLowerCase().includes(search) ||
+        item.sku?.toLowerCase().includes(search) ||
+        item.supplierSku?.toLowerCase().includes(search) ||
+        item.customSku?.toLowerCase().includes(search)
+      );
+    }
+
+    // Category filter
+    if (materialCategoryFilter) {
+      filtered = filtered.filter(item => item.categoryId === materialCategoryFilter);
+    }
+
+    // Supplier filter
+    if (materialSupplierFilter) {
+      filtered = filtered.filter(item => item.supplierId === materialSupplierFilter);
+    }
+
+    // Location filter
+    if (materialLocationFilter) {
+      filtered = filtered.filter(item => item.location === materialLocationFilter);
+    }
+
+    // Stock status filter
+    if (materialStockFilter !== 'all') {
+      filtered = filtered.filter(item => {
+        if (materialStockFilter === 'in_stock') {
+          return item.quantity > item.reorderLevel;
+        } else if (materialStockFilter === 'low_stock') {
+          return item.quantity > 0 && item.quantity <= item.reorderLevel;
+        } else if (materialStockFilter === 'out_of_stock') {
+          return item.quantity === 0;
+        }
+        return true;
+      });
+    }
+
+    return filtered;
+  }, [inventoryItems, materialSearchTerm, materialCategoryFilter, materialSupplierFilter, materialLocationFilter, materialStockFilter]);
+
+  const resetMaterialFilters = () => {
+    setMaterialSearchTerm('');
+    setMaterialCategoryFilter('');
+    setMaterialSupplierFilter('');
+    setMaterialLocationFilter('');
+    setMaterialStockFilter('all');
+  };
 
   useEffect(() => {
     if (workOrder) {
@@ -145,31 +232,25 @@ export const WorkOrderForm: React.FC<WorkOrderFormProps> = ({ workOrder, onSubmi
           <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
             Toegewezen aan
           </label>
-          <select
+          <Combobox
+            options={employeeOptions}
             value={formData.assignedTo}
-            onChange={(e) => setFormData({ ...formData, assignedTo: e.target.value })}
-            className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
-          >
-            <option value="">Selecteer medewerker</option>
-            {employees.map(emp => (
-              <option key={emp.id} value={emp.id}>{emp.name}</option>
-            ))}
-          </select>
+            onChange={(value) => setFormData({ ...formData, assignedTo: value })}
+            placeholder="Selecteer medewerker"
+            searchPlaceholder="Zoek medewerker..."
+          />
         </div>
         <div>
           <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
             Klant
           </label>
-          <select
+          <Combobox
+            options={customerOptions}
             value={formData.customerId}
-            onChange={(e) => setFormData({ ...formData, customerId: e.target.value })}
-            className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
-          >
-            <option value="">Selecteer klant</option>
-            {customers.map(customer => (
-              <option key={customer.id} value={customer.id}>{customer.name}</option>
-            ))}
-          </select>
+            onChange={(value) => setFormData({ ...formData, customerId: value })}
+            placeholder="Selecteer klant"
+            searchPlaceholder="Zoek klant..."
+          />
         </div>
         <div>
           <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
@@ -260,28 +341,161 @@ export const WorkOrderForm: React.FC<WorkOrderFormProps> = ({ workOrder, onSubmi
         </div>
 
         {showInventorySelector && (
-          <div className="mb-4 p-4 border border-slate-200 dark:border-slate-700 rounded-lg bg-slate-50 dark:bg-slate-800 max-h-60 overflow-y-auto">
-            <div className="flex justify-between items-center mb-2">
+          <div className="mb-4 p-4 border border-slate-200 dark:border-slate-700 rounded-lg bg-slate-50 dark:bg-slate-800">
+            <div className="flex justify-between items-center mb-3">
               <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Selecteer uit voorraad</span>
               <button
                 type="button"
-                onClick={() => setShowInventorySelector(false)}
+                onClick={() => {
+                  setShowInventorySelector(false);
+                  resetMaterialFilters();
+                }}
                 className="text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
               >
                 <X className="h-4 w-4" />
               </button>
             </div>
-            <div className="space-y-1">
-              {inventoryItems.map(item => (
-                <button
-                  key={item.id}
-                  type="button"
-                  onClick={() => addInventoryItem(item)}
-                  className="w-full text-left px-3 py-2 hover:bg-slate-200 dark:hover:bg-slate-700 rounded text-sm"
+
+            {/* Search Input */}
+            <div className="mb-3 relative">
+              <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
+              <input
+                type="text"
+                value={materialSearchTerm}
+                onChange={(e) => setMaterialSearchTerm(e.target.value)}
+                placeholder="Zoek op naam, SKU..."
+                className="w-full pl-8 pr-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+            </div>
+
+            {/* Filter Row */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2 mb-3">
+              {/* Category Filter */}
+              <div>
+                <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">
+                  Categorie
+                </label>
+                <select
+                  value={materialCategoryFilter}
+                  onChange={(e) => setMaterialCategoryFilter(e.target.value)}
+                  className="w-full px-2 py-1.5 text-sm border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 >
-                  {item.name} - {item.quantity} {item.unit} beschikbaar
+                  <option value="">Alle categorieën</option>
+                  {categories.map(cat => (
+                    <option key={cat.id} value={cat.id}>{cat.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Supplier Filter */}
+              <div>
+                <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">
+                  Leverancier
+                </label>
+                <select
+                  value={materialSupplierFilter}
+                  onChange={(e) => setMaterialSupplierFilter(e.target.value)}
+                  className="w-full px-2 py-1.5 text-sm border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                >
+                  <option value="">Alle leveranciers</option>
+                  {suppliers.map(supplier => (
+                    <option key={supplier.id} value={supplier.id}>{supplier.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Location Filter */}
+              <div>
+                <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">
+                  Locatie
+                </label>
+                <select
+                  value={materialLocationFilter}
+                  onChange={(e) => setMaterialLocationFilter(e.target.value)}
+                  className="w-full px-2 py-1.5 text-sm border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                >
+                  <option value="">Alle locaties</option>
+                  {uniqueLocations.map(location => (
+                    <option key={location} value={location}>{location}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Stock Status Filter */}
+              <div>
+                <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">
+                  Voorraadstatus
+                </label>
+                <select
+                  value={materialStockFilter}
+                  onChange={(e) => setMaterialStockFilter(e.target.value as typeof materialStockFilter)}
+                  className="w-full px-2 py-1.5 text-sm border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                >
+                  <option value="all">Alle</option>
+                  <option value="in_stock">Op voorraad</option>
+                  <option value="low_stock">Lage voorraad</option>
+                  <option value="out_of_stock">Niet op voorraad</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Clear Filters Button */}
+            {(materialCategoryFilter || materialSupplierFilter || materialLocationFilter || materialStockFilter !== 'all' || materialSearchTerm) && (
+              <div className="mb-3">
+                <button
+                  type="button"
+                  onClick={resetMaterialFilters}
+                  className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline"
+                >
+                  Filters wissen
                 </button>
-              ))}
+              </div>
+            )}
+
+            {/* Results Count */}
+            <div className="mb-2 text-xs text-slate-500 dark:text-slate-400">
+              {filteredInventoryItems.length} {filteredInventoryItems.length === 1 ? 'materiaal' : 'materialen'} gevonden
+            </div>
+
+            {/* Filtered Items List */}
+            <div className="max-h-60 overflow-y-auto space-y-1">
+              {filteredInventoryItems.length === 0 ? (
+                <div className="px-3 py-4 text-sm text-slate-500 dark:text-slate-400 text-center">
+                  Geen materialen gevonden. Pas de filters aan.
+                </div>
+              ) : (
+                filteredInventoryItems.map(item => {
+                  const category = categories.find(c => c.id === item.categoryId);
+                  const supplier = suppliers.find(s => s.id === item.supplierId);
+                  const isLowStock = item.quantity > 0 && item.quantity <= item.reorderLevel;
+                  const isOutOfStock = item.quantity === 0;
+
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => {
+                        addInventoryItem(item);
+                        resetMaterialFilters();
+                      }}
+                      className="w-full text-left px-3 py-2 hover:bg-slate-200 dark:hover:bg-slate-700 rounded text-sm border border-transparent hover:border-slate-300 dark:hover:border-slate-600"
+                    >
+                      <div className="font-medium">{item.name}</div>
+                      <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                        <div className="flex flex-wrap gap-2">
+                          <span className={isOutOfStock ? 'text-red-600 dark:text-red-400' : isLowStock ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'}>
+                            {item.quantity} {item.unit} beschikbaar
+                          </span>
+                          {item.sku && <span>• SKU: {item.sku}</span>}
+                          {category && <span>• {category.name}</span>}
+                          {supplier && <span>• {supplier.name}</span>}
+                          {item.location && <span>• Locatie: {item.location}</span>}
+                        </div>
+                      </div>
+                    </button>
+                  );
+                })
+              )}
             </div>
           </div>
         )}

@@ -2,7 +2,13 @@ import { useState, useEffect, useCallback } from 'react';
 import type { WorkOrder, WorkOrderStatus } from '../types';
 import { workOrderService } from '../services';
 
-export const useWorkOrders = () => {
+interface UseWorkOrdersOptions {
+  userId?: string;
+  userName?: string;
+}
+
+export const useWorkOrders = (options?: UseWorkOrdersOptions) => {
+  const { userId = 'system', userName = 'System' } = options || {};
   const [workOrders, setWorkOrders] = useState<WorkOrder[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -22,14 +28,17 @@ export const useWorkOrders = () => {
     fetchWorkOrders();
   }, [fetchWorkOrders]);
 
-  const createWorkOrder = async (data: Omit<WorkOrder, 'id' | 'createdAt' | 'updatedAt'>) => {
-    const newOrder = await workOrderService.create(data);
+  const createWorkOrder = async (
+    data: Omit<WorkOrder, 'id' | 'createdAt' | 'updatedAt' | 'history'>,
+    sourceType?: 'quote' | 'invoice' | 'manual'
+  ) => {
+    const newOrder = await workOrderService.create(data, userId, userName, sourceType);
     setWorkOrders(prev => [...prev, newOrder]);
     return newOrder;
   };
 
   const updateWorkOrder = async (id: string, updates: Partial<WorkOrder>) => {
-    const updated = await workOrderService.update(id, updates);
+    const updated = await workOrderService.update(id, updates, userId, userName);
     setWorkOrders(prev => prev.map(wo => wo.id === id ? updated : wo));
     return updated;
   };
@@ -43,7 +52,7 @@ export const useWorkOrders = () => {
   };
 
   const deleteWorkOrder = async (id: string) => {
-    await workOrderService.delete(id);
+    await workOrderService.delete(id, userId, userName);
     setWorkOrders(prev => prev.filter(wo => wo.id !== id));
   };
 

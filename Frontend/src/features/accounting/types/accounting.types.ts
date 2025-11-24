@@ -22,7 +22,8 @@ export interface LaborItem {
 
 export interface Quote {
   id: string;
-  quoteNumber: string;
+  generalNumber: string; // e.g., "2024-0001"
+  quoteNumber: string; // e.g., "O-2024-0001"
   customerId: string;
   customerName: string;
   customerEmail?: string;
@@ -41,11 +42,15 @@ export interface Quote {
   sentAt?: string;
   acceptedAt?: string;
   workOrderId?: string;
+  journey?: import('../tracking/types/tracking.types').DocumentJourneyEntry[];
+  createdBy?: string;
+  createdByName?: string;
 }
 
 export interface Invoice {
   id: string;
-  invoiceNumber: string;
+  generalNumber: string; // e.g., "2024-0001"
+  invoiceNumber: string; // e.g., "F-2024-0001"
   customerId: string;
   customerName: string;
   customerEmail?: string;
@@ -74,4 +79,7 @@ export interface Invoice {
     reminder2Date?: string;
     reminder2Sent?: boolean;
   };
+  journey?: import('../tracking/types/tracking.types').DocumentJourneyEntry[];
+  createdBy?: string;
+  createdByName?: string;
 }

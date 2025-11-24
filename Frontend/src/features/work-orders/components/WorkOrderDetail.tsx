@@ -1,8 +1,8 @@
 import React from 'react';
-import { Calendar, MapPin, User, DollarSign, Clock, Package, FileText } from 'lucide-react';
+import { Calendar, MapPin, User, DollarSign, Clock, Package, FileText, History, CheckCircle, ArrowRight, UserPlus, RefreshCw, Edit, Trash2, FileCheck } from 'lucide-react';
 import { Modal } from '@/components/common/Modal';
 import { Button } from '@/components/common/Button';
-import type { WorkOrder } from '../types';
+import type { WorkOrder, WorkOrderHistoryEntry } from '../types';
 
 interface WorkOrderDetailProps {
   workOrder: WorkOrder | null;
@@ -33,6 +33,54 @@ export const WorkOrderDetail: React.FC<WorkOrderDetailProps> = ({
     pending: 'In Afwachting',
     in_progress: 'Bezig',
     completed: 'Voltooid',
+  };
+
+  const actionTypeLabels: Record<WorkOrderHistoryEntry['actionType'], string> = {
+    created: 'Aangemaakt',
+    converted: 'Geconverteerd',
+    assigned: 'Toegewezen',
+    reassigned: 'Herverdeeld',
+    status_changed: 'Status gewijzigd',
+    updated: 'Bijgewerkt',
+    completed: 'Voltooid',
+    material_updated: 'Materialen bijgewerkt',
+    hours_updated: 'Uren bijgewerkt',
+    deleted: 'Verwijderd',
+  };
+
+  const actionTypeIcons: Record<WorkOrderHistoryEntry['actionType'], React.ReactNode> = {
+    created: <FileCheck className="h-4 w-4" />,
+    converted: <RefreshCw className="h-4 w-4" />,
+    assigned: <UserPlus className="h-4 w-4" />,
+    reassigned: <UserPlus className="h-4 w-4" />,
+    status_changed: <ArrowRight className="h-4 w-4" />,
+    updated: <Edit className="h-4 w-4" />,
+    completed: <CheckCircle className="h-4 w-4" />,
+    material_updated: <Package className="h-4 w-4" />,
+    hours_updated: <Clock className="h-4 w-4" />,
+    deleted: <Trash2 className="h-4 w-4" />,
+  };
+
+  const formatHistoryTimestamp = (timestamp: string) => {
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 1) return 'Zojuist';
+    if (diffMins < 60) return `${diffMins} minuten geleden`;
+    if (diffHours < 24) return `${diffHours} uur geleden`;
+    if (diffDays < 7) return `${diffDays} dagen geleden`;
+    
+    return date.toLocaleDateString('nl-NL', {
+      day: 'numeric',
+      month: 'short',
+      year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined,
+      hour: '2-digit',
+      minute: '2-digit',
+    });
   };
 
   return (
@@ -196,6 +244,76 @@ export const WorkOrderDetail: React.FC<WorkOrderDetailProps> = ({
                   <p className="text-sm text-slate-600 dark:text-slate-400">Factuur ID: {workOrder.invoiceId}</p>
                 </div>
               )}
+            </div>
+          </div>
+        )}
+
+        {/* History Timeline */}
+        {workOrder.history && workOrder.history.length > 0 && (
+          <div>
+            <h3 className="font-semibold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
+              <History className="h-5 w-5" />
+              Geschiedenis & Audit Trail
+            </h3>
+            <div className="relative">
+              {/* Timeline line */}
+              <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-slate-200 dark:bg-slate-700" />
+              
+              <div className="space-y-4">
+                {[...workOrder.history].reverse().map((entry, index) => (
+                  <div key={entry.id} className="relative flex gap-4">
+                    {/* Timeline dot */}
+                    <div className="relative z-10 flex-shrink-0 w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900 border-2 border-indigo-500 dark:border-indigo-400 flex items-center justify-center">
+                      <div className="text-indigo-600 dark:text-indigo-300">
+                        {actionTypeIcons[entry.actionType]}
+                      </div>
+                    </div>
+                    
+                    {/* Content */}
+                    <div className="flex-1 pb-4">
+                      <div className="p-3 border border-slate-200 dark:border-slate-700 rounded-lg bg-slate-50 dark:bg-slate-800">
+                        <div className="flex items-start justify-between mb-1">
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium text-slate-900 dark:text-white">
+                              {actionTypeLabels[entry.actionType]}
+                            </span>
+                            {entry.fromStatus && entry.toStatus && (
+                              <span className="text-xs text-slate-500 dark:text-slate-400">
+                                {statusLabels[entry.fromStatus]} → {statusLabels[entry.toStatus]}
+                              </span>
+                            )}
+                          </div>
+                          <span className="text-xs text-slate-500 dark:text-slate-400">
+                            {formatHistoryTimestamp(entry.timestamp)}
+                          </span>
+                        </div>
+                        
+                        {entry.details && (
+                          <p className="text-sm text-slate-600 dark:text-slate-400 mb-1">
+                            {entry.details}
+                          </p>
+                        )}
+                        
+                        <div className="flex items-center gap-2 mt-2">
+                          <User className="h-3 w-3 text-slate-400" />
+                          <span className="text-xs text-slate-500 dark:text-slate-400">
+                            {entry.performedByName || entry.performedBy}
+                          </span>
+                          <span className="text-xs text-slate-400">•</span>
+                          <span className="text-xs text-slate-500 dark:text-slate-400">
+                            {new Date(entry.timestamp).toLocaleString('nl-NL', {
+                              day: 'numeric',
+                              month: 'short',
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            })}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         )}
