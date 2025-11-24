@@ -5,7 +5,7 @@ import path from 'path'
 
 // https://vite.dev/config/
 export default defineConfig({
-  base: '/bedrijfsbeheer3.0/',
+  base: '/bedrijfsbeheer/',
   plugins: [
     react(),
     tailwindcss(),
