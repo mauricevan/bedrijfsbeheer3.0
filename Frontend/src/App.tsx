@@ -132,7 +132,7 @@ function App() {
       <ThemeProvider>
         <ToastProvider>
           <AuthProvider>
-            <BrowserRouter>
+            <BrowserRouter basename="/bedrijfsbeheer">
               <AppContent />
             </BrowserRouter>
           </AuthProvider>
