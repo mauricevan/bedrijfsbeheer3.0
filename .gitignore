@@ -24,6 +24,9 @@ lerna-debug.log*
 .env.local
 .env.*.local
 *.local
+.env.development.local
+.env.test.local
+.env.production.local
 
 # Editor directories and files
 .vscode/*
@@ -35,6 +38,9 @@ lerna-debug.log*
 *.njsproj
 *.sln
 *.sw?
+*.swp
+*.swo
+*~
 
 # OS files
 Thumbs.db
@@ -55,3 +61,20 @@ ENV/
 *.sqlite
 *.sqlite3
 
+# Testing
+/coverage
+
+# Production build
+/dist
+/build
+
+# Misc
+.pnp
+.pnp.js
+
+# Electron
+/out
+
+# Lock files (keep package-lock.json but ignore others)
+yarn.lock
+pnpm-lock.yaml
