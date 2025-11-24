@@ -1,8 +1,19 @@
 @import "tailwindcss";
 
 @theme {
-  --color-primary: var(--color-indigo-600);
-  --color-primary-hover: var(--color-indigo-700);
+  --color-primary-50: #f0f6ff;
+  --color-primary-100: #e0ecff;
+  --color-primary-200: #b8d6ff;
+  --color-primary-300: #7ab1ff;
+  --color-primary-400: #3385ff;
+  --color-primary-500: #005eff;
+  --color-primary-600: #004bd6;
+  --color-primary-700: #003ba8;
+  --color-primary-800: #003185;
+  --color-primary-900: #002b6e;
+  
+  --color-primary: var(--color-primary-600);
+  --color-primary-hover: var(--color-primary-700);
   --color-secondary: var(--color-violet-600);
   --color-accent: var(--color-emerald-500);
   
@@ -75,4 +86,60 @@ body {
 
 .animate-foldIn {
   animation: foldIn 0.3s ease-out both;
+}
+
+/* Reveal Animation Classes */
+.reveal-hidden {
+  opacity: 0;
+  transform: translateY(40px);
+  transition: opacity 1s cubic-bezier(0.2, 0.8, 0.2, 1), transform 1s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.reveal-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Additional Animation Classes */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.8s ease-out forwards;
+}
+
+.animate-fade-in {
+  animation: fadeIn 1s ease-out forwards;
+}
+
+.animate-scroll {
+  animation: scroll 40s linear infinite;
+}
+
+/* Utility Classes */
+.perspective-1000 {
+  perspective: 1000px;
+}
+
+.bg-grid-slate {
+  background-size: 40px 40px;
+  background-image: linear-gradient(to right, #e2e8f0 1px, transparent 1px),
+                    linear-gradient(to bottom, #e2e8f0 1px, transparent 1px);
 }

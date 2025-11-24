@@ -3,10 +3,20 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider } from '@/context/ThemeContext';
 import { ToastProvider } from '@/context/ToastContext';
 import { AuthProvider, useAuth } from '@/features/auth/hooks/useAuth';
-import { LoginPage } from '@/features/auth/pages/LoginPage';
 import { MainLayout } from '@/layouts/MainLayout';
+import { PublicLayout } from '@/layouts/PublicLayout';
 import { AnalyticsTracker } from '@/components/AnalyticsTracker';
 import { ErrorBoundary } from '@/components/common/ErrorBoundary';
+
+// Landing pages (public)
+import { Home } from '@/pages/landing/Home';
+import { Services } from '@/pages/landing/Services';
+import { ServiceDetail } from '@/pages/landing/ServiceDetail';
+import { ProductPage } from '@/pages/landing/ProductPage';
+import { OrderPage } from '@/pages/landing/OrderPage';
+import { About } from '@/pages/landing/About';
+import { Contact } from '@/pages/landing/Contact';
+import { LoginPage } from '@/pages/landing/LoginPage';
 
 // Lazy load all route components for code splitting
 const DashboardPage = lazy(() => import('@/features/dashboard/pages/DashboardPage').then(m => ({ default: m.DashboardPage })));
@@ -59,9 +69,23 @@ const AppContent: React.FC = () => {
   return (
     <Suspense fallback={<LoadingSpinner />}>
       <Routes>
+        {/* Public Routes */}
+        <Route element={<PublicLayout />}>
+          <Route path="/" element={<Home />} />
+          <Route path="/services" element={<Services />} />
+          <Route path="/services/:slug" element={<ServiceDetail />} />
+          <Route path="/products/:id" element={<ProductPage />} />
+          <Route path="/bestellen" element={<OrderPage />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/contact" element={<Contact />} />
+        </Route>
+        
+        {/* Login (standalone, no layout) */}
         <Route path="/login" element={<LoginPage />} />
+        
+        {/* Protected Dashboard Routes */}
         <Route
-          path="/"
+          path="/dashboard"
           element={
             <ProtectedRoute>
               <MainLayout />
@@ -80,9 +104,23 @@ const AppContent: React.FC = () => {
           <Route path="planning" element={<PlanningPage />} />
           <Route path="reports" element={<ReportsPage />} />
           <Route path="settings" element={<SettingsPage />} />
-          
-          <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
+        
+        {/* Redirect old dashboard routes */}
+        <Route path="/inventory" element={<Navigate to="/dashboard/inventory" replace />} />
+        <Route path="/pos" element={<Navigate to="/dashboard/pos" replace />} />
+        <Route path="/work-orders" element={<Navigate to="/dashboard/work-orders" replace />} />
+        <Route path="/accounting" element={<Navigate to="/dashboard/accounting" replace />} />
+        <Route path="/bookkeeping" element={<Navigate to="/dashboard/bookkeeping" replace />} />
+        <Route path="/webshop" element={<Navigate to="/dashboard/webshop" replace />} />
+        <Route path="/crm" element={<Navigate to="/dashboard/crm" replace />} />
+        <Route path="/hrm" element={<Navigate to="/dashboard/hrm" replace />} />
+        <Route path="/planning" element={<Navigate to="/dashboard/planning" replace />} />
+        <Route path="/reports" element={<Navigate to="/dashboard/reports" replace />} />
+        <Route path="/settings" element={<Navigate to="/dashboard/settings" replace />} />
+        
+        {/* Catch all - redirect to home */}
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Suspense>
   );
