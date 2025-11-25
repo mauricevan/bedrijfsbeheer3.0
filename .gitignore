@@ -78,3 +78,12 @@ ENV/
 # Lock files (keep package-lock.json but ignore others)
 yarn.lock
 pnpm-lock.yaml
+
+# Documentation build outputs (if any)
+docs/_build/
+docs/.vuepress/dist/
+
+# Temporary files
+*.tmp
+*.temp
+.cache/

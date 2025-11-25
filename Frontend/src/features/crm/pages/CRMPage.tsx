@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Users, Plus, TrendingUp, CheckSquare, Search } from 'lucide-react';
+import { Users, Plus, TrendingUp, CheckSquare, Search, BarChart3, FileText } from 'lucide-react';
 import { Card } from '@/components/common/Card';
 import { Button } from '@/components/common/Button';
 import { Modal } from '@/components/common/Modal';
@@ -18,10 +18,14 @@ import {
   TaskList,
   TaskForm,
 } from '../components';
+import { CustomerDetailView } from '../components/dashboard/CustomerDetailView';
+import { LeadAnalytics } from '../components/analytics';
+import { DocumentList, DocumentUpload } from '../components/documents';
 import type { 
   Customer, Lead, Interaction, Task,
   CreateCustomerInput, CreateLeadInput, CreateInteractionInput, CreateTaskInput
 } from '../types/crm.types';
+
 
 export const CRMPage: React.FC = () => {
   const {
@@ -46,7 +50,10 @@ export const CRMPage: React.FC = () => {
   } = useCRM();
   const { showToast } = useToast();
 
-  const [activeTab, setActiveTab] = useState<'customers' | 'leads' | 'interactions' | 'tasks'>('customers');
+  const [activeTab, setActiveTab] = useState<'customers' | 'leads' | 'interactions' | 'tasks' | 'analytics' | 'documents'>('customers');
+  const [showDocumentUploadModal, setShowDocumentUploadModal] = useState(false);
+  const [documentCustomerId, setDocumentCustomerId] = useState<string | undefined>(undefined);
+  const [documentLeadId, setDocumentLeadId] = useState<string | undefined>(undefined);
   const [showCustomerModal, setShowCustomerModal] = useState(false);
   const [showLeadModal, setShowLeadModal] = useState(false);
   const [showInteractionModal, setShowInteractionModal] = useState(false);
@@ -63,6 +70,8 @@ export const CRMPage: React.FC = () => {
   const [showConvertLeadConfirm, setShowConvertLeadConfirm] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<string | null>(null);
   const [leadToConvert, setLeadToConvert] = useState<string | null>(null);
+  const [viewingCustomerId, setViewingCustomerId] = useState<string | null>(null);
+
 
   // Statistics
   const activeLeads = leads.filter(l => l.status !== 'won' && l.status !== 'lost').length;
@@ -260,6 +269,20 @@ export const CRMPage: React.FC = () => {
     }
   };
 
+  const handleViewCustomerDetails = (customerId: string) => {
+    setViewingCustomerId(customerId);
+  };
+
+  // If viewing customer details, show detail view
+  if (viewingCustomerId) {
+    return (
+      <CustomerDetailView
+        customerId={viewingCustomerId}
+        onBack={() => setViewingCustomerId(null)}
+      />
+    );
+  }
+
   if (isLoading) {
     return <SkeletonList count={6} showAvatar={true} showActions={true} />;
   }
@@ -389,6 +412,32 @@ export const CRMPage: React.FC = () => {
             >
               Taken ({tasks.length})
             </button>
+            <button
+              onClick={() => setActiveTab('analytics')}
+              className={`px-4 py-2 font-medium transition-colors ${
+                activeTab === 'analytics'
+                  ? 'text-indigo-600 dark:text-indigo-400 border-b-2 border-indigo-600'
+                  : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <BarChart3 className="h-4 w-4" />
+                Analytics
+              </div>
+            </button>
+            <button
+              onClick={() => setActiveTab('documents')}
+              className={`px-4 py-2 font-medium transition-colors ${
+                activeTab === 'documents'
+                  ? 'text-indigo-600 dark:text-indigo-400 border-b-2 border-indigo-600'
+                  : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <FileText className="h-4 w-4" />
+                Documenten
+              </div>
+            </button>
           </div>
           <div className="flex-1 max-w-md">
             <Input
@@ -405,8 +454,10 @@ export const CRMPage: React.FC = () => {
             customers={filteredCustomers}
             onEdit={handleEditCustomer}
             onDelete={handleDeleteCustomer}
+            onViewDetails={handleViewCustomerDetails}
           />
         )}
+
 
         {activeTab === 'leads' && (
           <LeadPipeline
@@ -432,6 +483,40 @@ export const CRMPage: React.FC = () => {
             onDelete={handleDeleteTask}
             onToggleStatus={handleToggleTaskStatus}
           />
+        )}
+
+        {activeTab === 'analytics' && (
+          <LeadAnalytics />
+        )}
+
+        {activeTab === 'documents' && (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
+                  Documenten
+                </h3>
+                <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+                  Beheer alle CRM documenten
+                </p>
+              </div>
+              <Button
+                leftIcon={<Plus className="h-4 w-4" />}
+                onClick={() => {
+                  setDocumentCustomerId(undefined);
+                  setDocumentLeadId(undefined);
+                  setShowDocumentUploadModal(true);
+                }}
+              >
+                Document Uploaden
+              </Button>
+            </div>
+            <DocumentList
+              onUpdate={() => {
+                // Refresh if needed
+              }}
+            />
+          </div>
         )}
       </div>
 
@@ -585,6 +670,34 @@ export const CRMPage: React.FC = () => {
         cancelText="Annuleren"
         type="info"
       />
+
+      {/* Document Upload Modal */}
+      <Modal
+        isOpen={showDocumentUploadModal}
+        onClose={() => {
+          setShowDocumentUploadModal(false);
+          setDocumentCustomerId(undefined);
+          setDocumentLeadId(undefined);
+        }}
+        title="Document Uploaden"
+        className="max-w-2xl"
+      >
+        <DocumentUpload
+          customerId={documentCustomerId}
+          leadId={documentLeadId}
+          onSuccess={() => {
+            setShowDocumentUploadModal(false);
+            setDocumentCustomerId(undefined);
+            setDocumentLeadId(undefined);
+            showToast('Document succesvol geüpload', 'success');
+          }}
+          onCancel={() => {
+            setShowDocumentUploadModal(false);
+            setDocumentCustomerId(undefined);
+            setDocumentLeadId(undefined);
+          }}
+        />
+      </Modal>
     </div>
   );
 };

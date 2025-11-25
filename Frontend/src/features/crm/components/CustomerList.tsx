@@ -1,5 +1,5 @@
 import React from 'react';
-import { Edit, Trash2, Mail, Phone, Building2, Users } from 'lucide-react';
+import { Edit, Trash2, Mail, Phone, Building2, Users, Eye } from 'lucide-react';
 import { Card } from '@/components/common/Card';
 import { EmptyState } from '@/components/common/EmptyState';
 import type { Customer } from '../types/crm.types';
@@ -8,9 +8,11 @@ interface CustomerListProps {
   customers: Customer[];
   onEdit: (customer: Customer) => void;
   onDelete: (id: string) => void;
+  onViewDetails?: (customerId: string) => void;
 }
 
-export const CustomerList: React.FC<CustomerListProps> = ({ customers, onEdit, onDelete }) => {
+
+export const CustomerList: React.FC<CustomerListProps> = ({ customers, onEdit, onDelete, onViewDetails }) => {
   if (customers.length === 0) {
     return (
       <EmptyState
@@ -43,9 +45,19 @@ export const CustomerList: React.FC<CustomerListProps> = ({ customers, onEdit, o
               )}
             </div>
             <div className="flex gap-2">
+              {onViewDetails && (
+                <button
+                  onClick={() => onViewDetails(customer.id)}
+                  className="p-1 text-slate-500 hover:text-blue-600 dark:hover:text-blue-400"
+                  title="Details bekijken"
+                >
+                  <Eye className="h-4 w-4" />
+                </button>
+              )}
               <button
                 onClick={() => onEdit(customer)}
                 className="p-1 text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400"
+
               >
                 <Edit className="h-4 w-4" />
               </button>
