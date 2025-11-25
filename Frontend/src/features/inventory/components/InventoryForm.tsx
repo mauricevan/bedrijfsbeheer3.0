@@ -27,6 +27,8 @@ export const InventoryForm: React.FC<InventoryFormProps> = ({
   const [formData, setFormData] = useState({
     name: initialData?.name || '',
     sku: initialData?.sku || '',
+    supplierSku: initialData?.supplierSku || '',
+    customSku: initialData?.customSku || '',
     categoryId: initialData?.categoryId || '',
     quantity: initialData?.quantity || 0,
     reorderLevel: initialData?.reorderLevel || 5,
@@ -49,9 +51,15 @@ export const InventoryForm: React.FC<InventoryFormProps> = ({
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
+    // Convert empty strings to undefined for optional fields
+    const optionalFields = ['supplierSku', 'customSku', 'supplierId'];
+    const processedValue = type === 'number' 
+      ? parseFloat(value) 
+      : (optionalFields.includes(name) && value === '' ? undefined : value);
+    
     setFormData(prev => ({
       ...prev,
-      [name]: type === 'number' ? parseFloat(value) : value
+      [name]: processedValue
     }));
   };
 
@@ -187,7 +195,7 @@ export const InventoryForm: React.FC<InventoryFormProps> = ({
           placeholder="Product name"
         />
         <Input
-          label="SKU"
+          label="SKU (Auto-generated)"
           name="sku"
           value={formData.sku}
           onChange={handleChange}
@@ -197,9 +205,27 @@ export const InventoryForm: React.FC<InventoryFormProps> = ({
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Input
+          label="SKU (Leverancier)"
+          name="supplierSku"
+          value={formData.supplierSku}
+          onChange={handleChange}
+          placeholder="Supplier SKU (optional)"
+        />
+        <Input
+          label="SKU (Aangepast)"
+          name="customSku"
+          value={formData.customSku}
+          onChange={handleChange}
+          placeholder="Custom SKU (optional)"
+        />
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-1">
-          <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Category</label>
+          <label htmlFor="categoryId" className="text-sm font-medium text-slate-700 dark:text-slate-300">Category</label>
           <select
+            id="categoryId"
             name="categoryId"
             value={formData.categoryId}
             onChange={handleChange}
@@ -213,8 +239,9 @@ export const InventoryForm: React.FC<InventoryFormProps> = ({
           </select>
         </div>
         <div className="space-y-1">
-          <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Supplier</label>
+          <label htmlFor="supplierId" className="text-sm font-medium text-slate-700 dark:text-slate-300">Supplier</label>
           <select
+            id="supplierId"
             name="supplierId"
             value={formData.supplierId}
             onChange={handleChange}
