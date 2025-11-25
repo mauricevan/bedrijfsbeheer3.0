@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ArrowLeft, TrendingUp, TrendingDown, Minus, DollarSign, FileText, Calendar, User } from 'lucide-react';
+import { ArrowLeft, TrendingUp, TrendingDown, Minus, DollarSign, FileText, Calendar, User, StickyNote } from 'lucide-react';
 import { Button } from '@/components/common/Button';
 import { customerDashboardService } from '../../services/customerDashboardService';
 import type { CustomerDashboard } from '../../types/crm.types';
@@ -205,6 +205,21 @@ export const CustomerDetailView: React.FC<CustomerDetailViewProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Customer Notes */}
+      {customer.notes && (
+        <div className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-700">
+          <div className="flex items-center gap-2 mb-4">
+            <StickyNote className="h-5 w-5 text-slate-500 dark:text-slate-400" />
+            <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Notities</h3>
+          </div>
+          <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">
+            <p className="text-sm text-slate-700 dark:text-slate-300 whitespace-pre-wrap">
+              {customer.notes}
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Recent Documents */}
       <div className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-700">
