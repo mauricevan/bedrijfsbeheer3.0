@@ -6,6 +6,8 @@ import { Button } from '@/components/common/Button';
 import { Card } from '@/components/common/Card';
 import { ExtendedSearchFilters } from '@/components/ExtendedSearchFilters';
 import { applyExtendedFilters } from '@/features/inventory/utils/filters';
+import { useInventoryWarningDisplay } from '@/hooks/useInventoryWarningDisplay';
+import { InventoryWarningModal } from '@/components/common/InventoryWarningModal';
 import type { CartItem } from '../types';
 
 type ProductSelectorProps = {
@@ -19,6 +21,15 @@ export const ProductSelector: React.FC<ProductSelectorProps> = ({ onAddToCart })
   const [showExtendedFilters, setShowExtendedFilters] = useState(false);
   const [extendedFilterValues, setExtendedFilterValues] = useState<Record<string, any>>({});
   const [selectedExtendedCategory, setSelectedExtendedCategory] = useState<string | null>(null);
+  const [pendingItem, setPendingItem] = useState<typeof items[0] | null>(null);
+  
+  const {
+    checkAndShowWarning,
+    showModal,
+    warningNote,
+    itemName,
+    acknowledgeWarning,
+  } = useInventoryWarningDisplay();
 
   const filteredItems = useMemo(() => {
     let result = items.filter(item => {
@@ -55,15 +66,41 @@ export const ProductSelector: React.FC<ProductSelectorProps> = ({ onAddToCart })
     return result;
   }, [items, search, selectedCategory, extendedFilterValues, selectedExtendedCategory]);
 
-  const handleAddToCart = (item: typeof items[0]) => {
-    onAddToCart({
-      inventoryItemId: item.id,
-      name: item.name,
-      quantity: 1,
-      pricePerUnit: item.salePrice,
-      vatRate: item.vatRate,
-      discount: 0,
-    });
+  const handleAddToCart = async (item: typeof items[0]) => {
+    // Check for warning first
+    const hasWarning = await checkAndShowWarning(item.id);
+    
+    if (hasWarning) {
+      // Store the item to add after warning is acknowledged
+      setPendingItem(item);
+    } else {
+      // No warning, add directly to cart
+      onAddToCart({
+        inventoryItemId: item.id,
+        name: item.name,
+        quantity: 1,
+        pricePerUnit: item.salePrice,
+        vatRate: item.vatRate,
+        discount: 0,
+      });
+    }
+  };
+
+  const handleAcknowledgeWarning = () => {
+    acknowledgeWarning();
+    
+    // Add pending item to cart after warning is acknowledged
+    if (pendingItem) {
+      onAddToCart({
+        inventoryItemId: pendingItem.id,
+        name: pendingItem.name,
+        quantity: 1,
+        pricePerUnit: pendingItem.salePrice,
+        vatRate: pendingItem.vatRate,
+        discount: 0,
+      });
+      setPendingItem(null);
+    }
   };
 
   if (isLoading) {
@@ -153,6 +190,16 @@ export const ProductSelector: React.FC<ProductSelectorProps> = ({ onAddToCart })
           setShowExtendedFilters(false);
         }}
       />
+
+      {/* Inventory Warning Modal */}
+      {warningNote && itemName && (
+        <InventoryWarningModal
+          isOpen={showModal}
+          onAcknowledge={handleAcknowledgeWarning}
+          itemName={itemName}
+          warningNote={warningNote}
+        />
+      )}
     </div>
   );
 };

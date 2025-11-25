@@ -7,6 +7,8 @@ import { CustomerWarningIndicator } from '@/components/common/CustomerWarningInd
 import { CustomerWarningModal } from '@/components/common/CustomerWarningModal';
 import { useCustomerWarningDisplay } from '@/hooks/useCustomerWarningDisplay';
 import { customerWarningService } from '@/features/crm/services/customerWarningService';
+import { useInventoryWarningDisplay } from '@/hooks/useInventoryWarningDisplay';
+import { InventoryWarningModal } from '@/components/common/InventoryWarningModal';
 import type { WorkOrder, WorkOrderMaterial, CreateWorkOrderInput } from '../types';
 import type { InventoryItem } from '@/features/inventory/types/inventory.types';
 import { useCRM } from '@/features/crm/hooks/useCRM';
@@ -31,7 +33,15 @@ export const WorkOrderForm: React.FC<WorkOrderFormProps> = ({ workOrder, onSubmi
     customerId: warningCustomerId,
     acknowledgeWarning,
   } = useCustomerWarningDisplay();
+  const {
+    checkAndShowWarning: checkInventoryWarning,
+    showModal: showInventoryWarningModal,
+    warningNote: inventoryWarningNote,
+    itemName: inventoryItemName,
+    acknowledgeWarning: acknowledgeInventoryWarning,
+  } = useInventoryWarningDisplay();
   const [hasWarnings, setHasWarnings] = useState(false);
+  const [pendingInventoryItem, setPendingInventoryItem] = useState<InventoryItem | null>(null);
   
   const [formData, setFormData] = useState({
     title: '',
@@ -187,15 +197,41 @@ export const WorkOrderForm: React.FC<WorkOrderFormProps> = ({ workOrder, onSubmi
     setMaterials(items => items.filter((_, i) => i !== index));
   };
 
-  const addInventoryItem = (inventoryItem: InventoryItem) => {
-    const newMaterial: WorkOrderMaterial = {
-      inventoryItemId: inventoryItem.id,
-      name: inventoryItem.name,
-      quantity: 1,
-      unit: inventoryItem.unit || 'stuks',
-    };
-    setMaterials([...materials, newMaterial]);
-    setShowInventorySelector(false);
+  const addInventoryItem = async (inventoryItem: InventoryItem) => {
+    // Check for inventory warning first
+    const hasWarning = await checkInventoryWarning(inventoryItem.id);
+    
+    if (hasWarning) {
+      // Store the item to add after warning is acknowledged
+      setPendingInventoryItem(inventoryItem);
+    } else {
+      // No warning, add directly
+      const newMaterial: WorkOrderMaterial = {
+        inventoryItemId: inventoryItem.id,
+        name: inventoryItem.name,
+        quantity: 1,
+        unit: inventoryItem.unit || 'stuks',
+      };
+      setMaterials([...materials, newMaterial]);
+      setShowInventorySelector(false);
+    }
+  };
+
+  const handleAcknowledgeInventoryWarning = () => {
+    acknowledgeInventoryWarning();
+    
+    // Add pending item after warning is acknowledged
+    if (pendingInventoryItem) {
+      const newMaterial: WorkOrderMaterial = {
+        inventoryItemId: pendingInventoryItem.id,
+        name: pendingInventoryItem.name,
+        quantity: 1,
+        unit: pendingInventoryItem.unit || 'stuks',
+      };
+      setMaterials([...materials, newMaterial]);
+      setShowInventorySelector(false);
+      setPendingInventoryItem(null);
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -605,6 +641,14 @@ export const WorkOrderForm: React.FC<WorkOrderFormProps> = ({ workOrder, onSubmi
           onAcknowledge={acknowledgeWarning}
           customerName={customers.find(c => c.id === warningCustomerId)?.name || 'Onbekende klant'}
           warningNotes={warningNotes}
+        />
+      )}
+      {inventoryWarningNote && inventoryItemName && (
+        <InventoryWarningModal
+          isOpen={showInventoryWarningModal}
+          onAcknowledge={handleAcknowledgeInventoryWarning}
+          itemName={inventoryItemName}
+          warningNote={inventoryWarningNote}
         />
       )}
     </form>

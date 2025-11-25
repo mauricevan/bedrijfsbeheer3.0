@@ -3,13 +3,15 @@
  * Enhanced list view with multiple SKU types, quick adjustments, and BTW info
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Edit, Trash2, AlertTriangle, Link as LinkIcon, Package } from 'lucide-react';
 import type { InventoryItem, Category } from '../types';
 import { Button } from '@/components/common/Button';
 import { EmptyState } from '@/components/common/EmptyState';
 import { cn } from '@/utils/cn';
 import { calculateMargin, calculatePriceInclBTW } from '../utils/btw';
+import { useInventoryWarningDisplay } from '@/hooks/useInventoryWarningDisplay';
+import { InventoryWarningModal } from '@/components/common/InventoryWarningModal';
 
 type InventoryListProps = {
   items: InventoryItem[];
@@ -28,6 +30,37 @@ export const InventoryList: React.FC<InventoryListProps> = ({
   onQuickAdjust,
   isLoading
 }) => {
+  const [pendingEditItem, setPendingEditItem] = useState<InventoryItem | null>(null);
+  const {
+    checkAndShowWarning,
+    showModal,
+    warningNote,
+    itemName,
+    acknowledgeWarning,
+  } = useInventoryWarningDisplay();
+
+  const handleEdit = async (item: InventoryItem) => {
+    // Check for warning first
+    const hasWarning = await checkAndShowWarning(item.id);
+    
+    if (hasWarning) {
+      // Store the item to edit after warning is acknowledged
+      setPendingEditItem(item);
+    } else {
+      // No warning, edit directly
+      onEdit(item);
+    }
+  };
+
+  const handleAcknowledgeWarning = () => {
+    acknowledgeWarning();
+    
+    // Edit pending item after warning is acknowledged
+    if (pendingEditItem) {
+      onEdit(pendingEditItem);
+      setPendingEditItem(null);
+    }
+  };
   if (isLoading) {
     return (
       <div className="flex justify-center p-8">
@@ -91,10 +124,28 @@ export const InventoryList: React.FC<InventoryListProps> = ({
             const priceInclBTW = calculatePriceInclBTW(item.salePrice, item.vatRate);
             const isLowStock = item.quantity <= item.reorderLevel;
 
+            const hasWarning = !!(item.warningNote && item.warningEnabled !== false);
+            const hasDisabledWarning = !!(item.warningNote && item.warningEnabled === false);
+
             return (
               <tr key={item.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
                 <td className="px-4 py-3">
-                  <div className="font-medium text-slate-900 dark:text-white">{item.name}</div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium text-slate-900 dark:text-white">{item.name}</span>
+                    {hasWarning && (
+                      <AlertTriangle 
+                        className="h-4 w-4 text-red-600 dark:text-red-400" 
+                        fill="currentColor"
+                        title="Dit artikel heeft een waarschuwing"
+                      />
+                    )}
+                    {hasDisabledWarning && (
+                      <AlertTriangle 
+                        className="h-4 w-4 text-slate-400 dark:text-slate-500" 
+                        title="Waarschuwing uitgeschakeld"
+                      />
+                    )}
+                  </div>
                 </td>
                 <td className="px-4 py-3 text-slate-700 dark:text-slate-300">{item.sku}</td>
                 <td className="px-4 py-3 text-slate-500 dark:text-slate-400">
@@ -176,7 +227,7 @@ export const InventoryList: React.FC<InventoryListProps> = ({
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => onEdit(item)}
+                      onClick={() => handleEdit(item)}
                       className="h-8 w-8 p-0"
                       title="Bewerken"
                     >
@@ -216,6 +267,16 @@ export const InventoryList: React.FC<InventoryListProps> = ({
           })}
         </tbody>
       </table>
+
+      {/* Inventory Warning Modal */}
+      {warningNote && itemName && (
+        <InventoryWarningModal
+          isOpen={showModal}
+          onAcknowledge={handleAcknowledgeWarning}
+          itemName={itemName}
+          warningNote={warningNote}
+        />
+      )}
     </div>
   );
 };

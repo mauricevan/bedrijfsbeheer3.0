@@ -4,6 +4,7 @@ import { Button } from '@/components/common/Button';
 import { Input } from '@/components/common/Input';
 import { defaultCategoryFilters } from '@/components/ExtendedSearchFilters';
 import type { Filter, DropdownFilter, CheckboxFilter, ColorFilter } from '@/components/ExtendedSearchFilters';
+import { useAuth } from '@/features/auth/hooks/useAuth';
 
 import type { CreateInventoryItemInput } from '../types';
 
@@ -24,6 +25,9 @@ export const InventoryForm: React.FC<InventoryFormProps> = ({
   onCancel,
   isLoading
 }) => {
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'admin';
+
   const [formData, setFormData] = useState({
     name: initialData?.name || '',
     sku: initialData?.sku || '',
@@ -38,6 +42,8 @@ export const InventoryForm: React.FC<InventoryFormProps> = ({
     vatRate: initialData?.vatRate || 21,
     supplierId: initialData?.supplierId || '',
     webshopSync: initialData?.webshopSync || false,
+    warningNote: initialData?.warningNote || '',
+    warningEnabled: initialData?.warningEnabled !== undefined ? initialData.warningEnabled : (initialData?.warningNote ? true : undefined),
     filterData: initialData?.filterData || {} as Record<string, any>,
   });
 
@@ -49,18 +55,33 @@ export const InventoryForm: React.FC<InventoryFormProps> = ({
     return filters.filter(f => f.type !== 'priceRange');
   }, [formData.categoryId]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
     // Convert empty strings to undefined for optional fields
-    const optionalFields = ['supplierSku', 'customSku', 'supplierId'];
-    const processedValue = type === 'number' 
-      ? parseFloat(value) 
-      : (optionalFields.includes(name) && value === '' ? undefined : value);
+    const optionalFields = ['supplierSku', 'customSku', 'supplierId', 'warningNote'];
+    let processedValue: any;
     
-    setFormData(prev => ({
-      ...prev,
-      [name]: processedValue
-    }));
+    if (type === 'checkbox') {
+      processedValue = (e.target as HTMLInputElement).checked;
+    } else if (type === 'number') {
+      processedValue = parseFloat(value);
+    } else {
+      processedValue = (optionalFields.includes(name) && value === '' ? undefined : value);
+    }
+    
+    setFormData(prev => {
+      const updated = {
+        ...prev,
+        [name]: processedValue
+      };
+      
+      // If warningNote is cleared, also clear warningEnabled
+      if (name === 'warningNote' && !value) {
+        updated.warningEnabled = undefined;
+      }
+      
+      return updated;
+    });
   };
 
   const handleFilterChange = (filterId: string, value: string | number | boolean | string[] | undefined) => {
@@ -75,7 +96,16 @@ export const InventoryForm: React.FC<InventoryFormProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await onSubmit(formData);
+    // Convert empty strings to undefined for optional fields
+    const submitData = {
+      ...formData,
+      supplierSku: formData.supplierSku || undefined,
+      customSku: formData.customSku || undefined,
+      supplierId: formData.supplierId || undefined,
+      warningNote: formData.warningNote || undefined,
+      warningEnabled: formData.warningNote ? (formData.warningEnabled !== false ? true : false) : undefined,
+    };
+    await onSubmit(submitData);
   };
 
   const renderFilterField = (filter: Filter) => {
@@ -325,6 +355,51 @@ export const InventoryForm: React.FC<InventoryFormProps> = ({
           onChange={handleChange}
           required
         />
+      </div>
+
+      {/* Warning Note Section */}
+      <div className="border-t border-slate-200 dark:border-slate-700 pt-4">
+        <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
+          Waarschuwing
+        </h3>
+        <div className="space-y-4">
+          <div>
+            <label htmlFor="warningNote" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+              Waarschuwingsnotitie
+            </label>
+            <textarea
+              id="warningNote"
+              name="warningNote"
+              value={formData.warningNote}
+              onChange={handleChange}
+              rows={3}
+              placeholder="Bijv. 'Vergeet verzendkosten niet' of 'Controleer compatibiliteit'"
+              className="flex w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+            />
+            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+              Deze waarschuwing wordt getoond wanneer dit artikel wordt geselecteerd in het ERP systeem
+            </p>
+          </div>
+          
+          {formData.warningNote && isAdmin && (
+            <div className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="warningEnabled"
+                name="warningEnabled"
+                checked={formData.warningEnabled !== false}
+                onChange={handleChange}
+                className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+              />
+              <label htmlFor="warningEnabled" className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                Waarschuwing weergeven bij klikken
+              </label>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                (Uitgeschakeld: notitie blijft behouden maar waarschuwing wordt niet getoond)
+              </p>
+            </div>
+          )}
+        </div>
       </div>
 
       <div className="flex justify-end gap-3 pt-4">

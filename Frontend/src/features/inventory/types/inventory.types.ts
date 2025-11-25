@@ -44,6 +44,10 @@ export interface InventoryItem {
   webshopSync: boolean;
   posAlert?: string;
   
+  // Warning Note
+  warningNote?: string;
+  warningEnabled?: boolean; // Defaults to true if warningNote exists
+  
   // Filter Data (category-specific attributes for extended search)
   filterData?: Record<string, any>;
   

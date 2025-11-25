@@ -4,6 +4,8 @@ import { Button } from '@/components/common/Button';
 import type { WebshopProduct, WebshopCategory, CreateWebshopProductInput } from '../types/webshop.types';
 import { useInventory } from '@/features/inventory/hooks/useInventory';
 import { defaultCategories } from '@/components/ExtendedSearchFilters';
+import { useInventoryWarningDisplay } from '@/hooks/useInventoryWarningDisplay';
+import { InventoryWarningModal } from '@/components/common/InventoryWarningModal';
 
 interface ProductFormProps {
   product?: WebshopProduct | null;
@@ -15,6 +17,15 @@ interface ProductFormProps {
 
 export const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel, isLoading }) => {
   const { items: inventoryItems, categories: inventoryCategories } = useInventory();
+  const {
+    checkAndShowWarning,
+    showModal,
+    warningNote,
+    itemName,
+    acknowledgeWarning,
+  } = useInventoryWarningDisplay();
+  const [pendingInventoryItemId, setPendingInventoryItemId] = useState<string>('');
+  
   // Use the same categories as inventory and extended search (defaultCategories from ExtendedSearchFilters)
   const availableCategories = defaultCategories.map(cat => ({ id: cat.id, name: cat.name }));
   const [formData, setFormData] = useState({
@@ -202,7 +213,25 @@ export const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onC
           </label>
           <select
             value={formData.inventoryItemId}
-            onChange={(e) => setFormData({ ...formData, inventoryItemId: e.target.value })}
+            onChange={async (e) => {
+              const selectedItemId = e.target.value;
+              
+              if (selectedItemId) {
+                // Check for warning first
+                const hasWarning = await checkAndShowWarning(selectedItemId);
+                
+                if (hasWarning) {
+                  // Store the item ID to set after warning is acknowledged
+                  setPendingInventoryItemId(selectedItemId);
+                } else {
+                  // No warning, set directly
+                  setFormData({ ...formData, inventoryItemId: selectedItemId });
+                }
+              } else {
+                // No item selected
+                setFormData({ ...formData, inventoryItemId: '' });
+              }
+            }}
             className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
             disabled={formData.createInInventory}
           >
@@ -255,6 +284,23 @@ export const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onC
           {product ? 'Bijwerken' : 'Aanmaken'}
         </Button>
       </div>
+
+      {/* Inventory Warning Modal */}
+      {warningNote && itemName && (
+        <InventoryWarningModal
+          isOpen={showModal}
+          onAcknowledge={() => {
+            acknowledgeWarning();
+            // Set pending inventory item ID after warning is acknowledged
+            if (pendingInventoryItemId) {
+              setFormData({ ...formData, inventoryItemId: pendingInventoryItemId });
+              setPendingInventoryItemId('');
+            }
+          }}
+          itemName={itemName}
+          warningNote={warningNote}
+        />
+      )}
     </form>
   );
 };

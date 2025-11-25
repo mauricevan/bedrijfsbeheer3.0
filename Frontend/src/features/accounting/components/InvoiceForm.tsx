@@ -6,6 +6,8 @@ import { CustomerWarningIndicator } from '@/components/common/CustomerWarningInd
 import { CustomerWarningModal } from '@/components/common/CustomerWarningModal';
 import { useCustomerWarningDisplay } from '@/hooks/useCustomerWarningDisplay';
 import { customerWarningService } from '@/features/crm/services/customerWarningService';
+import { useInventoryWarningDisplay } from '@/hooks/useInventoryWarningDisplay';
+import { InventoryWarningModal } from '@/components/common/InventoryWarningModal';
 import type { Invoice, LineItem, LaborItem, CreateInvoiceInput } from '../types';
 import type { InventoryItem } from '@/features/inventory/types/inventory.types';
 import { useCRM } from '@/features/crm/hooks/useCRM';
@@ -28,7 +30,15 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onSubmit, onC
     customerId: warningCustomerId,
     acknowledgeWarning,
   } = useCustomerWarningDisplay();
+  const {
+    checkAndShowWarning: checkInventoryWarning,
+    showModal: showInventoryWarningModal,
+    warningNote: inventoryWarningNote,
+    itemName: inventoryItemName,
+    acknowledgeWarning: acknowledgeInventoryWarning,
+  } = useInventoryWarningDisplay();
   const [hasWarnings, setHasWarnings] = useState(false);
+  const [pendingInventoryItem, setPendingInventoryItem] = useState<InventoryItem | null>(null);
   
   const [formData, setFormData] = useState({
     customerId: '',
@@ -142,19 +152,49 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onSubmit, onC
     setLaborItems(items => items.filter(item => item.id !== id));
   };
 
-  const addInventoryItem = (inventoryItem: InventoryItem) => {
-    const newItem: LineItem = {
-      id: `item-${Date.now()}`,
-      description: inventoryItem.name,
-      quantity: 1,
-      unitPrice: inventoryItem.salePrice,
-      vatRate: inventoryItem.vatRate as 0 | 9 | 21,
-      discount: 0,
-      total: inventoryItem.salePrice,
-      inventoryItemId: inventoryItem.id,
-    };
-    setLineItems([...lineItems, newItem]);
-    setShowInventorySelector(false);
+  const addInventoryItem = async (inventoryItem: InventoryItem) => {
+    // Check for inventory warning first
+    const hasWarning = await checkInventoryWarning(inventoryItem.id);
+    
+    if (hasWarning) {
+      // Store the item to add after warning is acknowledged
+      setPendingInventoryItem(inventoryItem);
+    } else {
+      // No warning, add directly
+      const newItem: LineItem = {
+        id: `item-${Date.now()}`,
+        description: inventoryItem.name,
+        quantity: 1,
+        unitPrice: inventoryItem.salePrice,
+        vatRate: inventoryItem.vatRate as 0 | 9 | 21,
+        discount: 0,
+        total: inventoryItem.salePrice,
+        inventoryItemId: inventoryItem.id,
+      };
+      setLineItems([...lineItems, newItem]);
+      setShowInventorySelector(false);
+    }
+  };
+
+  const handleAcknowledgeInventoryWarning = () => {
+    acknowledgeInventoryWarning();
+    
+    // Add pending item after warning is acknowledged
+    if (pendingInventoryItem) {
+      const newItem: LineItem = {
+        id: `item-${Date.now()}`,
+        description: pendingInventoryItem.name,
+        quantity: 1,
+        unitPrice: pendingInventoryItem.salePrice,
+        vatRate: pendingInventoryItem.vatRate as 0 | 9 | 21,
+        discount: 0,
+        total: pendingInventoryItem.salePrice,
+        inventoryItemId: pendingInventoryItem.id,
+      };
+      setLineItems([...lineItems, newItem]);
+      setShowInventorySelector(false);
+      setPendingInventoryItem(null);
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -493,6 +533,14 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onSubmit, onC
           onAcknowledge={acknowledgeWarning}
           customerName={customers.find(c => c.id === warningCustomerId)?.name || 'Onbekende klant'}
           warningNotes={warningNotes}
+        />
+      )}
+      {inventoryWarningNote && inventoryItemName && (
+        <InventoryWarningModal
+          isOpen={showInventoryWarningModal}
+          onAcknowledge={handleAcknowledgeInventoryWarning}
+          itemName={inventoryItemName}
+          warningNote={inventoryWarningNote}
         />
       )}
     </form>

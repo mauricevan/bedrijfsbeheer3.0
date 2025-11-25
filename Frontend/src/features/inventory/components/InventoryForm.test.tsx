@@ -1,7 +1,9 @@
-import { describe, it, expect, vi } from 'vitest';
+import React from 'react';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { InventoryForm } from './InventoryForm';
+import { AuthProvider } from '@/features/auth/hooks/useAuth';
 import type { Category, Supplier } from '../types';
 
 const mockCategories: Category[] = [
@@ -14,6 +16,11 @@ const mockSuppliers: Supplier[] = [
   { id: '2', name: 'OfficeGiant', leadTimeDays: 5 },
 ];
 
+// Helper to wrap component with AuthProvider
+const renderWithAuth = (ui: React.ReactElement) => {
+  return render(<AuthProvider>{ui}</AuthProvider>);
+};
+
 describe('InventoryForm', () => {
   const mockOnSubmit = vi.fn();
   const mockOnCancel = vi.fn();
@@ -23,7 +30,7 @@ describe('InventoryForm', () => {
   });
 
   it('renders all form fields including supplierSku and customSku', () => {
-    render(
+    renderWithAuth(
       <InventoryForm
         categories={mockCategories}
         suppliers={mockSuppliers}
@@ -42,7 +49,7 @@ describe('InventoryForm', () => {
 
   it('allows entering supplierSku and customSku values', async () => {
     const user = userEvent.setup();
-    render(
+    renderWithAuth(
       <InventoryForm
         categories={mockCategories}
         suppliers={mockSuppliers}
@@ -63,7 +70,7 @@ describe('InventoryForm', () => {
 
   it('submits form data including supplierSku and customSku', async () => {
     const user = userEvent.setup();
-    render(
+    renderWithAuth(
       <InventoryForm
         categories={mockCategories}
         suppliers={mockSuppliers}
@@ -97,7 +104,7 @@ describe('InventoryForm', () => {
 
   it('submits undefined for empty supplierSku and customSku fields', async () => {
     const user = userEvent.setup();
-    render(
+    renderWithAuth(
       <InventoryForm
         categories={mockCategories}
         suppliers={mockSuppliers}
@@ -144,7 +151,7 @@ describe('InventoryForm', () => {
       updatedAt: new Date().toISOString(),
     };
 
-    render(
+    renderWithAuth(
       <InventoryForm
         initialData={initialData}
         categories={mockCategories}
