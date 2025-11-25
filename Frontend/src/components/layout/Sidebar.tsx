@@ -14,7 +14,8 @@ import {
   Briefcase,
   BookOpen,
   Store,
-  MessageCircle
+  MessageCircle,
+  ShieldCheck
 } from 'lucide-react';
 import { cn } from '@/utils/cn';
 import { EmployeeProfile } from './EmployeeProfile';
@@ -33,6 +34,7 @@ const navItems = [
   { icon: BarChart3, label: 'Reports', to: '/reports' },
   { icon: Store, label: 'Webshop', to: '/webshop' },
   { icon: MessageCircle, label: 'Chat', to: '/dashboard/chat' },
+  { icon: ShieldCheck, label: 'Data Quality', to: '/dashboard/data-quality' },
   { icon: Settings, label: 'Settings', to: '/settings' },
 ];
 

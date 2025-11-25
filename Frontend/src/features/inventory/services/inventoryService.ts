@@ -1,5 +1,6 @@
 import type { InventoryItem, Category, Supplier } from '../types';
 import { storage, STORAGE_KEYS } from '@/utils/storage';
+import { checkUniqueConstraints, findPotentialDuplicates } from '@/features/data-quality/services/fuzzyMatching';
 
 // Mock Data
 const MOCK_CATEGORIES: Category[] = [
@@ -351,7 +352,8 @@ const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 export const inventoryService = {
   getItems: async (): Promise<InventoryItem[]> => {
     await delay(800);
-    return [...MOCK_INVENTORY];
+    // Filter out soft-deleted records by default
+    return MOCK_INVENTORY.filter(i => !i.isDeleted && !i.is_deleted);
   },
 
   getCategories: async (): Promise<Category[]> => {
@@ -366,6 +368,21 @@ export const inventoryService = {
 
   createItem: async (item: Omit<InventoryItem, 'id' | 'createdAt' | 'updatedAt'>): Promise<InventoryItem> => {
     await delay(1000);
+    
+    // Check for unique constraint violations (SKU)
+    const uniqueCheck = await checkUniqueConstraints('inventory', item as any);
+    if (uniqueCheck.violated) {
+      const conflict = uniqueCheck.conflicts[0];
+      throw new Error(`Unieke constraint overtreding: ${conflict.field} "${conflict.value}" bestaat al (record: ${conflict.existingRecordId})`);
+    }
+    
+    // Check for potential duplicates
+    const potentialDuplicates = await findPotentialDuplicates('inventory', item as any, 0.85);
+    if (potentialDuplicates.length > 0) {
+      const duplicateWarning = `Waarschuwing: Mogelijk duplicaat gevonden (${potentialDuplicates.length} match(es) met score ≥85%). Duplicaten: ${potentialDuplicates.map(d => d.recordId).join(', ')}`;
+      console.warn(duplicateWarning);
+    }
+    
     const newItem: InventoryItem = {
       ...item,
       id: Math.random().toString(36).substr(2, 9),
@@ -387,6 +404,21 @@ export const inventoryService = {
       ...updates,
       updatedAt: new Date().toISOString(),
     };
+    
+    // Check for unique constraint violations (excluding current record)
+    const uniqueCheck = await checkUniqueConstraints('inventory', updatedItem as any, id);
+    if (uniqueCheck.violated) {
+      const conflict = uniqueCheck.conflicts[0];
+      throw new Error(`Unieke constraint overtreding: ${conflict.field} "${conflict.value}" bestaat al (record: ${conflict.existingRecordId})`);
+    }
+    
+    // Check for potential duplicates
+    const potentialDuplicates = await findPotentialDuplicates('inventory', updatedItem as any, 0.85);
+    if (potentialDuplicates.length > 0 && !potentialDuplicates.some(d => d.recordId === id)) {
+      const duplicateWarning = `Waarschuwing: Mogelijk duplicaat gevonden na update (${potentialDuplicates.length} match(es)). Duplicaten: ${potentialDuplicates.map(d => d.recordId).join(', ')}`;
+      console.warn(duplicateWarning);
+    }
+    
     MOCK_INVENTORY[index] = updatedItem;
     saveInventory();
     return updatedItem;
@@ -395,9 +427,16 @@ export const inventoryService = {
   deleteItem: async (id: string): Promise<void> => {
     await delay(800);
     const index = MOCK_INVENTORY.findIndex(i => i.id === id);
-    if (index !== -1) {
-      MOCK_INVENTORY.splice(index, 1);
-      saveInventory();
-    }
+    if (index === -1) throw new Error('Item not found');
+    
+    // Soft delete instead of hard delete
+    MOCK_INVENTORY[index] = {
+      ...MOCK_INVENTORY[index],
+      isDeleted: true,
+      is_deleted: true,
+      deletedAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    saveInventory();
   }
 };

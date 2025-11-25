@@ -32,6 +32,7 @@ const PlanningPage = lazy(() => import('@/features/planning/pages/PlanningPage')
 const ReportsPage = lazy(() => import('@/pages/ReportsPage').then(m => ({ default: m.ReportsPage })));
 const SettingsPage = lazy(() => import('@/features/settings/pages/SettingsPage').then(m => ({ default: m.SettingsPage })));
 const ChatPage = lazy(() => import('@/features/chat/pages/ChatPage').then(m => ({ default: m.ChatPage })));
+const DataQualityPage = lazy(() => import('@/features/data-quality/pages/DataQualityPage').then(m => ({ default: m.DataQualityPage })));
 
 // Loading spinner component
 const LoadingSpinner = () => (
@@ -106,6 +107,7 @@ const AppContent: React.FC = () => {
           <Route path="reports" element={<ReportsPage />} />
           <Route path="chat" element={<ChatPage />} />
           <Route path="settings" element={<SettingsPage />} />
+          <Route path="data-quality" element={<DataQualityPage />} />
         </Route>
         
         {/* Redirect old dashboard routes */}
@@ -121,6 +123,7 @@ const AppContent: React.FC = () => {
         <Route path="/reports" element={<Navigate to="/dashboard/reports" replace />} />
         <Route path="/chat" element={<Navigate to="/dashboard/chat" replace />} />
         <Route path="/settings" element={<Navigate to="/dashboard/settings" replace />} />
+        <Route path="/data-quality" element={<Navigate to="/dashboard/data-quality" replace />} />
         
         {/* Catch all - redirect to home */}
         <Route path="*" element={<Navigate to="/" replace />} />

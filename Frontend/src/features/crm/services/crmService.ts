@@ -1,5 +1,6 @@
 import type { Customer, Lead, Interaction, Task } from '../types/crm.types';
 import { storage } from '@/utils/storage';
+import { checkUniqueConstraints, findPotentialDuplicates } from '@/features/data-quality/services/fuzzyMatching';
 
 const CUSTOMERS_KEY = 'bedrijfsbeheer_customers';
 const LEADS_KEY = 'bedrijfsbeheer_leads';
@@ -60,11 +61,28 @@ export const crmService = {
   // Customers
   getCustomers: async (): Promise<Customer[]> => {
     await delay(500);
-    return [...CUSTOMERS];
+    // Filter out soft-deleted records by default
+    return CUSTOMERS.filter(c => !c.isDeleted && !c.is_deleted);
   },
 
   createCustomer: async (data: Omit<Customer, 'id' | 'createdAt' | 'updatedAt'>): Promise<Customer> => {
     await delay(800);
+    
+    // Check for unique constraint violations
+    const uniqueCheck = await checkUniqueConstraints('customer', data as any);
+    if (uniqueCheck.violated) {
+      const conflict = uniqueCheck.conflicts[0];
+      throw new Error(`Unieke constraint overtreding: ${conflict.field} "${conflict.value}" bestaat al (record: ${conflict.existingRecordId})`);
+    }
+    
+    // Check for potential duplicates (fuzzy matching)
+    const potentialDuplicates = await findPotentialDuplicates('customer', data as any, 0.85);
+    if (potentialDuplicates.length > 0) {
+      const duplicateWarning = `Waarschuwing: Mogelijk duplicaat gevonden (${potentialDuplicates.length} match(es) met score ≥85%). Duplicaten: ${potentialDuplicates.map(d => d.recordId).join(', ')}`;
+      console.warn(duplicateWarning);
+      // Don't throw, but log warning - user can proceed if they want
+    }
+    
     const newCustomer: Customer = {
       ...data,
       id: `cust-${Date.now()}`,
@@ -86,6 +104,21 @@ export const crmService = {
       ...updates,
       updatedAt: new Date().toISOString(),
     };
+    
+    // Check for unique constraint violations (excluding current record)
+    const uniqueCheck = await checkUniqueConstraints('customer', updated as any, id);
+    if (uniqueCheck.violated) {
+      const conflict = uniqueCheck.conflicts[0];
+      throw new Error(`Unieke constraint overtreding: ${conflict.field} "${conflict.value}" bestaat al (record: ${conflict.existingRecordId})`);
+    }
+    
+    // Check for potential duplicates
+    const potentialDuplicates = await findPotentialDuplicates('customer', updated as any, 0.85);
+    if (potentialDuplicates.length > 0 && !potentialDuplicates.some(d => d.recordId === id)) {
+      const duplicateWarning = `Waarschuwing: Mogelijk duplicaat gevonden na update (${potentialDuplicates.length} match(es)). Duplicaten: ${potentialDuplicates.map(d => d.recordId).join(', ')}`;
+      console.warn(duplicateWarning);
+    }
+    
     CUSTOMERS[index] = updated;
     saveCustomers();
     return updated;
@@ -93,7 +126,17 @@ export const crmService = {
 
   deleteCustomer: async (id: string): Promise<void> => {
     await delay(500);
-    CUSTOMERS = CUSTOMERS.filter(c => c.id !== id);
+    // Soft delete instead of hard delete
+    const index = CUSTOMERS.findIndex(c => c.id === id);
+    if (index === -1) throw new Error('Customer not found');
+    
+    CUSTOMERS[index] = {
+      ...CUSTOMERS[index],
+      isDeleted: true,
+      is_deleted: true,
+      deletedAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
     saveCustomers();
   },
 
