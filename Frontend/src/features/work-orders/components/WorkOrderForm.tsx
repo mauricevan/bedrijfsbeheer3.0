@@ -3,14 +3,15 @@ import { Plus, Trash2, X, Search } from 'lucide-react';
 import { Input } from '@/components/common/Input';
 import { Button } from '@/components/common/Button';
 import { Combobox } from '@/components/common/Combobox';
-import type { WorkOrder, WorkOrderMaterial } from '../types';
+import type { WorkOrder, WorkOrderMaterial, CreateWorkOrderInput } from '../types';
+import type { InventoryItem } from '@/features/inventory/types/inventory.types';
 import { useCRM } from '@/features/crm/hooks/useCRM';
 import { useInventory } from '@/features/inventory/hooks/useInventory';
 import { useHRM } from '@/features/hrm/hooks/useHRM';
 
 interface WorkOrderFormProps {
   workOrder?: WorkOrder | null;
-  onSubmit: (data: any) => void;
+  onSubmit: (data: CreateWorkOrderInput) => void;
   onCancel: () => void;
   isLoading?: boolean;
 }
@@ -159,7 +160,7 @@ export const WorkOrderForm: React.FC<WorkOrderFormProps> = ({ workOrder, onSubmi
     setMaterials(items => items.filter((_, i) => i !== index));
   };
 
-  const addInventoryItem = (inventoryItem: any) => {
+  const addInventoryItem = (inventoryItem: InventoryItem) => {
     const newMaterial: WorkOrderMaterial = {
       inventoryItemId: inventoryItem.id,
       name: inventoryItem.name,

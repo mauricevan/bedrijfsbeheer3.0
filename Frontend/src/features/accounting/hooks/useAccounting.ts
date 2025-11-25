@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import type { Quote, Invoice } from '../types';
+import type { Quote, Invoice, CreateQuoteInput, UpdateQuoteInput, CreateInvoiceInput, UpdateInvoiceInput } from '../types';
 import { accountingService } from '../services/accountingService';
 
 export const useAccounting = () => {
@@ -27,13 +27,13 @@ export const useAccounting = () => {
     fetchData();
   }, [fetchData]);
 
-  const createQuote = async (data: any) => {
+  const createQuote = async (data: CreateQuoteInput) => {
     const newQuote = await accountingService.createQuote(data);
     setQuotes(prev => [...prev, newQuote]);
     return newQuote;
   };
 
-  const updateQuote = async (id: string, updates: any) => {
+  const updateQuote = async (id: string, updates: UpdateQuoteInput) => {
     const updated = await accountingService.updateQuote(id, updates);
     setQuotes(prev => prev.map(q => q.id === id ? updated : q));
     return updated;
@@ -44,13 +44,13 @@ export const useAccounting = () => {
     setQuotes(prev => prev.filter(q => q.id !== id));
   };
 
-  const createInvoice = async (data: any) => {
+  const createInvoice = async (data: CreateInvoiceInput) => {
     const newInvoice = await accountingService.createInvoice(data);
     setInvoices(prev => [...prev, newInvoice]);
     return newInvoice;
   };
 
-  const updateInvoice = async (id: string, updates: any) => {
+  const updateInvoice = async (id: string, updates: UpdateInvoiceInput) => {
     const updated = await accountingService.updateInvoice(id, updates);
     setInvoices(prev => prev.map(i => i.id === id ? updated : i));
     return updated;

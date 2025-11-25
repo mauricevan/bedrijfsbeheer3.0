@@ -57,3 +57,7 @@ export type InventoryFilter = {
   categoryId?: string;
   lowStock?: boolean;
 };
+
+// Form input types
+export type CreateInventoryItemInput = Omit<InventoryItem, 'id' | 'sku' | 'createdAt' | 'updatedAt'>;
+export type UpdateInventoryItemInput = Partial<Omit<InventoryItem, 'id' | 'sku' | 'createdAt' | 'updatedAt'>>;

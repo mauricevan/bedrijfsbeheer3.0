@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import type { CalendarEvent } from '../types/planning.types';
+import type { CalendarEvent, CreateCalendarEventInput, UpdateCalendarEventInput } from '../types/planning.types';
 import { planningService } from '../services/planningService';
 
 export const usePlanning = () => {
@@ -22,13 +22,13 @@ export const usePlanning = () => {
     fetchEvents();
   }, [fetchEvents]);
 
-  const createEvent = async (data: any) => {
+  const createEvent = async (data: CreateCalendarEventInput) => {
     const newEvent = await planningService.createEvent(data);
     setEvents(prev => [...prev, newEvent]);
     return newEvent;
   };
 
-  const updateEvent = async (id: string, updates: any) => {
+  const updateEvent = async (id: string, updates: UpdateCalendarEventInput) => {
     const updated = await planningService.updateEvent(id, updates);
     setEvents(prev => prev.map(e => e.id === id ? updated : e));
     return updated;

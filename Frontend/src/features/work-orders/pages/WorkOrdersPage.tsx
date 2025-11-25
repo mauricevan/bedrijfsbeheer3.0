@@ -18,6 +18,7 @@ import { Modal } from '@/components/common/Modal';
 import { Button } from '@/components/common/Button';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import { EmptyState } from '@/components/common/EmptyState';
+import type { CreateWorkOrderInput } from '../types';
 import { SkeletonList } from '@/components/common/SkeletonList';
 import { useToast } from '@/context/ToastContext';
 import type { WorkOrder, WorkOrderStatus } from '../types';
@@ -213,7 +214,7 @@ export const WorkOrdersPage: React.FC = () => {
     }
   };
 
-  const handleSubmit = async (data: any) => {
+  const handleSubmit = async (data: CreateWorkOrderInput) => {
     if (editingWorkOrder) {
       await updateWorkOrder(editingWorkOrder.id, data);
     } else {

@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Input } from '@/components/common/Input';
 import { Button } from '@/components/common/Button';
-import type { WebshopCategory } from '../types/webshop.types';
+import type { WebshopCategory, CreateWebshopCategoryInput } from '../types/webshop.types';
 
 interface CategoryFormProps {
   category?: WebshopCategory | null;
   categories: WebshopCategory[];
-  onSubmit: (data: any) => void;
+  onSubmit: (data: CreateWebshopCategoryInput) => void;
   onCancel: () => void;
   isLoading?: boolean;
 }

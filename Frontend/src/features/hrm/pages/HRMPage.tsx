@@ -6,7 +6,7 @@ import { Modal } from '@/components/common/Modal';
 import { Input } from '@/components/common/Input';
 import { useHRM } from '../hooks/useHRM';
 import { EmployeeList, EmployeeForm, EmployeeDossier } from '../components';
-import type { Employee } from '../types/hrm.types';
+import type { Employee, CreateEmployeeInput } from '../types/hrm.types';
 
 export const HRMPage: React.FC = () => {
   const {
@@ -33,7 +33,7 @@ export const HRMPage: React.FC = () => {
     e.role.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleCreateEmployee = async (data: any) => {
+  const handleCreateEmployee = async (data: CreateEmployeeInput) => {
     await createEmployee(data);
     setShowEmployeeModal(false);
     setEditingEmployee(null);
@@ -44,7 +44,7 @@ export const HRMPage: React.FC = () => {
     setShowEmployeeModal(true);
   };
 
-  const handleUpdateEmployee = async (data: any) => {
+  const handleUpdateEmployee = async (data: CreateEmployeeInput) => {
     if (editingEmployee) {
       await updateEmployee(editingEmployee.id, data);
       setShowEmployeeModal(false);
@@ -164,7 +164,13 @@ export const HRMPage: React.FC = () => {
         title="Personeelsdossier"
         className="max-w-4xl"
       >
-        {viewingEmployee && <EmployeeDossier employee={viewingEmployee} />}
+        {viewingEmployee && (
+          <EmployeeDossier 
+            employee={viewingEmployee} 
+            employees={employees}
+            currentUserId="current_user"
+          />
+        )}
       </Modal>
     </div>
   );

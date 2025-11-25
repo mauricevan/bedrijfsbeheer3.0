@@ -4,7 +4,7 @@ import type { Employee, Permission } from '../types/hrm.types';
 
 interface EmployeeGeneralFormProps {
   formData: Partial<Employee>;
-  setFormData: React.Dispatch<React.SetStateAction<any>>;
+  setFormData: React.Dispatch<React.SetStateAction<Partial<Employee>>>;
   permissions: Permission[];
   permissionLabels: Record<Permission, string>;
   onPermissionToggle: (permission: Permission) => void;
@@ -126,7 +126,7 @@ export const EmployeeGeneralForm: React.FC<EmployeeGeneralFormProps> = ({
               type="checkbox"
               checked={formData.isAdmin || false}
               onChange={(e) => {
-                setFormData((prev: any) => ({
+                setFormData((prev) => ({
                   ...prev,
                   isAdmin: e.target.checked,
                   permissions: e.target.checked ? permissions : [],

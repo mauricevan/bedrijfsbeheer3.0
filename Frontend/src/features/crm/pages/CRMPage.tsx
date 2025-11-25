@@ -18,7 +18,10 @@ import {
   TaskList,
   TaskForm,
 } from '../components';
-import type { Customer, Lead, Interaction, Task } from '../types/crm.types';
+import type { 
+  Customer, Lead, Interaction, Task,
+  CreateCustomerInput, CreateLeadInput, CreateInteractionInput, CreateTaskInput
+} from '../types/crm.types';
 
 export const CRMPage: React.FC = () => {
   const {
@@ -95,7 +98,7 @@ export const CRMPage: React.FC = () => {
   );
 
   // Handlers
-  const handleCreateCustomer = async (data: any) => {
+  const handleCreateCustomer = async (data: CreateCustomerInput) => {
     await createCustomer(data);
     showToast('Klant succesvol aangemaakt', 'success');
     setShowCustomerModal(false);
@@ -107,7 +110,7 @@ export const CRMPage: React.FC = () => {
     setShowCustomerModal(true);
   };
 
-  const handleUpdateCustomer = async (data: any) => {
+  const handleUpdateCustomer = async (data: CreateCustomerInput) => {
     if (editingCustomer) {
       await updateCustomer(editingCustomer.id, data);
       showToast('Klant succesvol bijgewerkt', 'success');
@@ -130,7 +133,7 @@ export const CRMPage: React.FC = () => {
     }
   };
 
-  const handleCreateLead = async (data: any) => {
+  const handleCreateLead = async (data: CreateLeadInput) => {
     await createLead(data);
     showToast('Lead succesvol aangemaakt', 'success');
     setShowLeadModal(false);
@@ -142,7 +145,7 @@ export const CRMPage: React.FC = () => {
     setShowLeadModal(true);
   };
 
-  const handleUpdateLead = async (data: any) => {
+  const handleUpdateLead = async (data: CreateLeadInput) => {
     if (editingLead) {
       await updateLead(editingLead.id, data);
       showToast('Lead succesvol bijgewerkt', 'success');
@@ -179,7 +182,7 @@ export const CRMPage: React.FC = () => {
     }
   };
 
-  const handleCreateInteraction = async (data: any) => {
+  const handleCreateInteraction = async (data: CreateInteractionInput) => {
     await createInteraction(data);
     showToast('Interactie succesvol aangemaakt', 'success');
     setShowInteractionModal(false);
@@ -191,7 +194,7 @@ export const CRMPage: React.FC = () => {
     setShowInteractionModal(true);
   };
 
-  const handleUpdateInteraction = async (data: any) => {
+  const handleUpdateInteraction = async (data: CreateInteractionInput) => {
     if (editingInteraction) {
       await updateInteraction(editingInteraction.id, data);
       showToast('Interactie succesvol bijgewerkt', 'success');
@@ -214,7 +217,7 @@ export const CRMPage: React.FC = () => {
     }
   };
 
-  const handleCreateTask = async (data: any) => {
+  const handleCreateTask = async (data: CreateTaskInput) => {
     await createTask(data);
     showToast('Taak succesvol aangemaakt', 'success');
     setShowTaskModal(false);
@@ -226,7 +229,7 @@ export const CRMPage: React.FC = () => {
     setShowTaskModal(true);
   };
 
-  const handleUpdateTask = async (data: any) => {
+  const handleUpdateTask = async (data: CreateTaskInput) => {
     if (editingTask) {
       await updateTask(editingTask.id, data);
       showToast('Taak succesvol bijgewerkt', 'success');

@@ -104,8 +104,8 @@ export const archiveDocument = (
   documentData: Record<string, unknown>,
   generalNumber: string,
   documentNumber: string,
-  journey: any[],
-  activities: any[],
+  journey: import('../types/tracking.types').DocumentJourneyEntry[],
+  activities: import('../types/tracking.types').ActivityLog[],
   archivedBy: string,
   archivedByName: string,
   archiveReason?: string

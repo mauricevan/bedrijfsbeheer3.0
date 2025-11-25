@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Input } from '@/components/common/Input';
 import { Button } from '@/components/common/Button';
-import type { Interaction, Customer, Lead } from '../types/crm.types';
+import type { Interaction, Customer, Lead, CreateInteractionInput } from '../types/crm.types';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 
 interface InteractionFormProps {
@@ -10,7 +10,7 @@ interface InteractionFormProps {
   leadId?: string;
   customers?: Customer[];
   leads?: Lead[];
-  onSubmit: (data: any) => void;
+  onSubmit: (data: CreateInteractionInput) => void;
   onCancel: () => void;
   isLoading?: boolean;
 }

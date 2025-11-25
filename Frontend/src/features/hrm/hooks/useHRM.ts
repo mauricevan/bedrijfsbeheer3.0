@@ -1,5 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
-import type { Employee, EmployeeNote } from '../types/hrm.types';
+import type { 
+  Employee, EmployeeNote,
+  CreateEmployeeInput, UpdateEmployeeInput,
+  CreateEmployeeNoteInput, UpdateEmployeeNoteInput
+} from '../types/hrm.types';
 import { hrmService } from '../services/hrmService';
 
 export const useHRM = () => {
@@ -27,13 +31,13 @@ export const useHRM = () => {
     fetchData();
   }, [fetchData]);
 
-  const createEmployee = async (data: any) => {
+  const createEmployee = async (data: CreateEmployeeInput) => {
     const newEmployee = await hrmService.createEmployee(data);
     setEmployees(prev => [...prev, newEmployee]);
     return newEmployee;
   };
 
-  const updateEmployee = async (id: string, updates: any) => {
+  const updateEmployee = async (id: string, updates: UpdateEmployeeInput) => {
     const updated = await hrmService.updateEmployee(id, updates);
     setEmployees(prev => prev.map(e => e.id === id ? updated : e));
     return updated;
@@ -45,13 +49,13 @@ export const useHRM = () => {
     setNotes(prev => prev.filter(n => n.employeeId !== id));
   };
 
-  const createNote = async (data: any) => {
+  const createNote = async (data: CreateEmployeeNoteInput) => {
     const newNote = await hrmService.createNote(data);
     setNotes(prev => [...prev, newNote]);
     return newNote;
   };
 
-  const updateNote = async (id: string, updates: any) => {
+  const updateNote = async (id: string, updates: UpdateEmployeeNoteInput) => {
     const updated = await hrmService.updateNote(id, updates);
     setNotes(prev => prev.map(n => n.id === id ? updated : n));
     return updated;

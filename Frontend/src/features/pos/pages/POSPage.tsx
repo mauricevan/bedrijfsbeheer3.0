@@ -8,6 +8,7 @@ import { Button } from '@/components/common/Button';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import { useToast } from '@/context/ToastContext';
 import { ShoppingBag, FileText } from 'lucide-react';
+import type { PaymentMethod } from '../types';
 
 export const POSPage: React.FC = () => {
   const {
@@ -36,7 +37,7 @@ export const POSPage: React.FC = () => {
     setIsPaymentModalOpen(true);
   };
 
-  const handlePayment = async (method: any) => {
+  const handlePayment = async (method: PaymentMethod) => {
     try {
       await processPayment(method);
       // Close modal first

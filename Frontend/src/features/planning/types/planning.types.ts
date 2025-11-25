@@ -14,3 +14,7 @@ export interface CalendarEvent {
 
 export type CalendarView = 'day' | 'week' | 'month';
 
+// Form input types
+export type CreateCalendarEventInput = Omit<CalendarEvent, 'id' | 'createdAt' | 'updatedAt'>;
+export type UpdateCalendarEventInput = Partial<Omit<CalendarEvent, 'id' | 'createdAt' | 'updatedAt'>>;
+

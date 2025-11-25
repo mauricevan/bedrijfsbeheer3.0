@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Input } from '@/components/common/Input';
 import { Button } from '@/components/common/Button';
-import type { WebshopProduct } from '../types/webshop.types';
+import type { WebshopProduct, WebshopCategory, CreateWebshopProductInput } from '../types/webshop.types';
 import { useInventory } from '@/features/inventory/hooks/useInventory';
 import { defaultCategories } from '@/components/ExtendedSearchFilters';
 
 interface ProductFormProps {
   product?: WebshopProduct | null;
-  categories: any[];
-  onSubmit: (data: any) => void;
+  categories: WebshopCategory[];
+  onSubmit: (data: CreateWebshopProductInput) => void;
   onCancel: () => void;
   isLoading?: boolean;
 }

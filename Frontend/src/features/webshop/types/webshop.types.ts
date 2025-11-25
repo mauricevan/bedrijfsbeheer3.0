@@ -85,3 +85,10 @@ export interface OrderItem {
   total: number;
 }
 
+// Form input types
+export type CreateWebshopProductInput = Omit<WebshopProduct, 'id' | 'createdAt' | 'updatedAt'>;
+export type UpdateWebshopProductInput = Partial<Omit<WebshopProduct, 'id' | 'createdAt' | 'updatedAt'>>;
+
+export type CreateWebshopCategoryInput = Omit<WebshopCategory, 'id' | 'createdAt' | 'updatedAt'>;
+export type UpdateWebshopCategoryInput = Partial<Omit<WebshopCategory, 'id' | 'createdAt' | 'updatedAt'>>;
+

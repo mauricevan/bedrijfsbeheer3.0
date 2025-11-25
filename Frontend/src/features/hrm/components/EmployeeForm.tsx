@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/common/Button';
-import type { Employee, Permission, PersonalDetails, BankDetails } from '../types/hrm.types';
+import type { Employee, Permission, PersonalDetails, BankDetails, CreateEmployeeInput } from '../types/hrm.types';
 import { EmployeeGeneralForm } from './EmployeeGeneralForm';
 import { EmployeePersonalForm } from './EmployeePersonalForm';
 import { EmployeeContractForm } from './EmployeeContractForm';
@@ -8,7 +8,7 @@ import { EmployeeSalaryForm } from './EmployeeSalaryForm';
 
 interface EmployeeFormProps {
   employee?: Employee | null;
-  onSubmit: (data: any) => void;
+  onSubmit: (data: CreateEmployeeInput) => void;
   onCancel: () => void;
   isLoading?: boolean;
 }

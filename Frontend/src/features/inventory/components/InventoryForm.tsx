@@ -5,11 +5,13 @@ import { Input } from '@/components/common/Input';
 import { defaultCategoryFilters } from '@/components/ExtendedSearchFilters';
 import type { Filter, DropdownFilter, CheckboxFilter, ColorFilter } from '@/components/ExtendedSearchFilters';
 
+import type { CreateInventoryItemInput } from '../types';
+
 type InventoryFormProps = {
   initialData?: Partial<InventoryItem>;
   categories: Category[];
   suppliers: Supplier[];
-  onSubmit: (data: any) => Promise<void>;
+  onSubmit: (data: CreateInventoryItemInput) => Promise<void>;
   onCancel: () => void;
   isLoading?: boolean;
 };
@@ -53,7 +55,7 @@ export const InventoryForm: React.FC<InventoryFormProps> = ({
     }));
   };
 
-  const handleFilterChange = (filterId: string, value: any) => {
+  const handleFilterChange = (filterId: string, value: string | number | boolean | string[] | undefined) => {
     setFormData(prev => ({
       ...prev,
       filterData: {

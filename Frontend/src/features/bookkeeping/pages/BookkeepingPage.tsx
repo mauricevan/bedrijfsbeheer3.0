@@ -10,7 +10,7 @@ import { JournalEntryForm } from '../components/JournalEntryForm';
 import { JournalEntryDetailModal } from '../components/JournalEntryDetailModal';
 import { WorkflowDetailModal } from '@/features/accounting/components/WorkflowDetailModal';
 import { EmptyState } from '../components/EmptyState';
-import type { JournalEntry } from '../types/bookkeeping.types';
+import type { JournalEntry, JournalEntryLine } from '../types/bookkeeping.types';
 import type { Invoice } from '@/features/accounting/types';
 import { useWorkOrders } from '@/features/work-orders/hooks/useWorkOrders';
 import { useHRM } from '@/features/hrm/hooks/useHRM';
@@ -64,7 +64,7 @@ export const BookkeepingPage: React.FC = () => {
   const handleCreateJournalEntry = async (data: {
     date: string;
     description: string;
-    entries: any[];
+    entries: JournalEntryLine[];
   }) => {
     try {
       await createManualJournalEntry(data);

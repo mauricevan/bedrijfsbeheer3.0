@@ -80,7 +80,7 @@ export const EmployeeSalaryForm: React.FC<EmployeeSalaryFormProps> = ({
     });
   };
 
-  const handleUpdateComponent = (id: string, field: keyof SalaryComponent, value: any) => {
+  const handleUpdateComponent = (id: string, field: keyof SalaryComponent, value: string | number | boolean) => {
     setEditForm({
       ...editForm,
       components: editForm.components?.map(c => c.id === id ? { ...c, [field]: value } : c),

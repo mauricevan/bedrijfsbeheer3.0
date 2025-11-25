@@ -9,7 +9,7 @@ import { useWebshop } from '../hooks/useWebshop';
 import { ProductForm } from '../components/ProductForm';
 import { CategoryForm } from '../components/CategoryForm';
 import { applyExtendedFiltersToProducts } from '../utils/filters';
-import type { WebshopProduct, WebshopCategory } from '../types/webshop.types';
+import type { WebshopProduct, WebshopCategory, CreateWebshopProductInput, CreateWebshopCategoryInput } from '../types/webshop.types';
 
 export const WebshopPage: React.FC = () => {
   const {
@@ -95,13 +95,13 @@ export const WebshopPage: React.FC = () => {
     o.status === 'pending' || o.status === 'processing' || o.status === 'shipped'
   ).length;
 
-  const handleCreateProduct = async (data: any) => {
+  const handleCreateProduct = async (data: CreateWebshopProductInput) => {
     await createProduct(data);
     setShowProductModal(false);
     setEditingProduct(null);
   };
 
-  const handleUpdateProduct = async (data: any) => {
+  const handleUpdateProduct = async (data: CreateWebshopProductInput) => {
     if (editingProduct) {
       await updateProduct(editingProduct.id, data);
       setShowProductModal(false);
@@ -118,13 +118,13 @@ export const WebshopPage: React.FC = () => {
     // TODO: Implement delete functionality when deleteProduct is available
   };
 
-  const handleCreateCategory = async (data: any) => {
+  const handleCreateCategory = async (data: CreateWebshopCategoryInput) => {
     await createCategory(data);
     setShowCategoryModal(false);
     setEditingCategory(null);
   };
 
-  const handleUpdateCategory = async (data: any) => {
+  const handleUpdateCategory = async (data: CreateWebshopCategoryInput) => {
     if (editingCategory) {
       await updateCategory(editingCategory.id, data);
       setShowCategoryModal(false);

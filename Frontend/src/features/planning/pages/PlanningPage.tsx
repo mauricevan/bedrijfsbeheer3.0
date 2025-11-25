@@ -7,7 +7,7 @@ import { Input } from '@/components/common/Input';
 import { usePlanning } from '../hooks/usePlanning';
 import { format, startOfWeek, endOfWeek, eachDayOfInterval, isSameDay, addWeeks, subWeeks, startOfMonth, endOfMonth } from 'date-fns';
 import { nl } from 'date-fns/locale';
-import type { CalendarEvent, CalendarView } from '../types/planning.types';
+import type { CalendarEvent, CalendarView, CreateCalendarEventInput } from '../types/planning.types';
 
 export const PlanningPage: React.FC = () => {
   const { events, isLoading, createEvent, updateEvent } = usePlanning();
@@ -28,13 +28,13 @@ export const PlanningPage: React.FC = () => {
     return events.filter(e => isSameDay(new Date(e.start), date));
   };
 
-  const handleCreateEvent = async (data: any) => {
+  const handleCreateEvent = async (data: CreateCalendarEventInput) => {
     await createEvent(data);
     setShowEventModal(false);
     setEditingEvent(null);
   };
 
-  const handleUpdateEvent = async (data: any) => {
+  const handleUpdateEvent = async (data: CreateCalendarEventInput) => {
     if (editingEvent) {
       await updateEvent(editingEvent.id, data);
       setShowEventModal(false);
@@ -247,7 +247,7 @@ export const PlanningPage: React.FC = () => {
 
 const EventForm: React.FC<{
   event?: CalendarEvent | null;
-  onSubmit: (data: any) => Promise<void>;
+  onSubmit: (data: CreateCalendarEventInput) => Promise<void>;
   onCancel: () => void;
 }> = ({ event, onSubmit, onCancel }) => {
   const [formData, setFormData] = useState({

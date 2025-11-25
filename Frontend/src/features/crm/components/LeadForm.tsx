@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Input } from '@/components/common/Input';
 import { Button } from '@/components/common/Button';
-import type { Lead } from '../types/crm.types';
+import type { Lead, CreateLeadInput } from '../types/crm.types';
 
 interface LeadFormProps {
   lead?: Lead | null;
-  onSubmit: (data: any) => void;
+  onSubmit: (data: CreateLeadInput) => void;
   onCancel: () => void;
   isLoading?: boolean;
 }

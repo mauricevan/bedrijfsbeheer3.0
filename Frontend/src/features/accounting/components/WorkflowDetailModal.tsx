@@ -588,7 +588,7 @@ export const WorkflowDetailModal: React.FC<WorkflowDetailModalProps> = ({
   };
 
   const renderJourney = () => {
-    let journey: any[] | undefined;
+    let journey: import('@/features/tracking/types/tracking.types').DocumentJourneyEntry[] | undefined;
     if (itemType === 'quote') {
       journey = (item as Quote).journey;
     } else if (itemType === 'invoice') {

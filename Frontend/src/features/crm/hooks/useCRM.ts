@@ -33,13 +33,13 @@ export const useCRM = () => {
     fetchData();
   }, [fetchData]);
 
-  const createCustomer = async (data: any) => {
+  const createCustomer = async (data: CreateCustomerInput) => {
     const newCustomer = await crmService.createCustomer(data);
     setCustomers(prev => [...prev, newCustomer]);
     return newCustomer;
   };
 
-  const updateCustomer = async (id: string, updates: any) => {
+  const updateCustomer = async (id: string, updates: UpdateCustomerInput) => {
     const updated = await crmService.updateCustomer(id, updates);
     setCustomers(prev => prev.map(c => c.id === id ? updated : c));
     return updated;
@@ -50,13 +50,13 @@ export const useCRM = () => {
     setCustomers(prev => prev.filter(c => c.id !== id));
   };
 
-  const createLead = async (data: any) => {
+  const createLead = async (data: CreateLeadInput) => {
     const newLead = await crmService.createLead(data);
     setLeads(prev => [...prev, newLead]);
     return newLead;
   };
 
-  const updateLead = async (id: string, updates: any) => {
+  const updateLead = async (id: string, updates: UpdateLeadInput) => {
     const updated = await crmService.updateLead(id, updates);
     setLeads(prev => prev.map(l => l.id === id ? updated : l));
     return updated;
@@ -74,13 +74,13 @@ export const useCRM = () => {
     return customer;
   };
 
-  const createInteraction = async (data: any) => {
+  const createInteraction = async (data: CreateInteractionInput) => {
     const newInteraction = await crmService.createInteraction(data);
     setInteractions(prev => [...prev, newInteraction]);
     return newInteraction;
   };
 
-  const updateInteraction = async (id: string, updates: any) => {
+  const updateInteraction = async (id: string, updates: UpdateInteractionInput) => {
     const updated = await crmService.updateInteraction(id, updates);
     setInteractions(prev => prev.map(i => i.id === id ? updated : i));
     return updated;
@@ -91,13 +91,13 @@ export const useCRM = () => {
     setInteractions(prev => prev.filter(i => i.id !== id));
   };
 
-  const createTask = async (data: any) => {
+  const createTask = async (data: CreateTaskInput) => {
     const newTask = await crmService.createTask(data);
     setTasks(prev => [...prev, newTask]);
     return newTask;
   };
 
-  const updateTask = async (id: string, updates: any) => {
+  const updateTask = async (id: string, updates: UpdateTaskInput) => {
     const updated = await crmService.updateTask(id, updates);
     setTasks(prev => prev.map(t => t.id === id ? updated : t));
     return updated;

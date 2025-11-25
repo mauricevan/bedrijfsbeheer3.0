@@ -8,7 +8,7 @@ import { Input } from '@/components/common/Input';
 import { Modal } from '@/components/common/Modal';
 import { ExtendedSearchFilters, defaultCategories as webshopCategories } from '@/components/ExtendedSearchFilters';
 import { filterBySearchTerm, filterByCategory, applyExtendedFilters } from '../utils/filters';
-import type { InventoryItem } from '../types';
+import type { InventoryItem, CreateInventoryItemInput } from '../types';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 
 export const InventoryPage: React.FC = () => {
@@ -71,7 +71,7 @@ export const InventoryPage: React.FC = () => {
     }
   };
 
-  const handleSubmit = async (data: any) => {
+  const handleSubmit = async (data: CreateInventoryItemInput) => {
     setIsSubmitting(true);
     try {
       if (editingItem) {

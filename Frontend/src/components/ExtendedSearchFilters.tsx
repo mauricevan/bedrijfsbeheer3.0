@@ -403,7 +403,7 @@ export const ExtendedSearchFilters: React.FC<ExtendedSearchFiltersProps> = ({
     setSelectedCategory(categoryId);
   };
 
-  const handleFilterChange = (filterId: string, value: any) => {
+  const handleFilterChange = (filterId: string, value: string | number | boolean | string[] | undefined) => {
     setFilterValues((prev) => ({
       ...prev,
       [filterId]: value,

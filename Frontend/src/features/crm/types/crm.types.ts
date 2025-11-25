@@ -68,3 +68,16 @@ export interface Task {
   createdAt: string;
   updatedAt: string;
 }
+
+// Form input types
+export type CreateCustomerInput = Omit<Customer, 'id' | 'createdAt' | 'updatedAt'>;
+export type UpdateCustomerInput = Partial<Omit<Customer, 'id' | 'createdAt' | 'updatedAt'>>;
+
+export type CreateLeadInput = Omit<Lead, 'id' | 'createdAt' | 'updatedAt'>;
+export type UpdateLeadInput = Partial<Omit<Lead, 'id' | 'createdAt' | 'updatedAt'>>;
+
+export type CreateInteractionInput = Omit<Interaction, 'id' | 'createdAt' | 'updatedAt'>;
+export type UpdateInteractionInput = Partial<Omit<Interaction, 'id' | 'createdAt' | 'updatedAt'>>;
+
+export type CreateTaskInput = Omit<Task, 'id' | 'createdAt' | 'updatedAt'>;
+export type UpdateTaskInput = Partial<Omit<Task, 'id' | 'createdAt' | 'updatedAt'>>;

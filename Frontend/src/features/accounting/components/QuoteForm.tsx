@@ -2,13 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { Plus, Trash2, X } from 'lucide-react';
 import { Input } from '@/components/common/Input';
 import { Button } from '@/components/common/Button';
-import type { Quote, LineItem, LaborItem } from '../types';
+import type { Quote, LineItem, LaborItem, CreateQuoteInput } from '../types';
+import type { InventoryItem } from '@/features/inventory/types/inventory.types';
 import { useCRM } from '@/features/crm/hooks/useCRM';
 import { useInventory } from '@/features/inventory/hooks/useInventory';
 
 interface QuoteFormProps {
   quote?: Quote | null;
-  onSubmit: (data: any) => void;
+  onSubmit: (data: CreateQuoteInput) => void;
   onCancel: () => void;
   isLoading?: boolean;
 }
@@ -109,7 +110,7 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({ quote, onSubmit, onCancel,
     setLaborItems(items => items.filter(item => item.id !== id));
   };
 
-  const addInventoryItem = (inventoryItem: any) => {
+  const addInventoryItem = (inventoryItem: InventoryItem) => {
     const newItem: LineItem = {
       id: `item-${Date.now()}`,
       description: inventoryItem.name,

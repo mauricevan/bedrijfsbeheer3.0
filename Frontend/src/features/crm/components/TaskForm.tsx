@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Input } from '@/components/common/Input';
 import { Button } from '@/components/common/Button';
-import type { Task, Customer } from '../types/crm.types';
+import type { Task, Customer, CreateTaskInput } from '../types/crm.types';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 
 interface TaskFormProps {
   task?: Task | null;
   customerId?: string;
   customers?: Customer[];
-  onSubmit: (data: any) => void;
+  onSubmit: (data: CreateTaskInput) => void;
   onCancel: () => void;
   isLoading?: boolean;
 }

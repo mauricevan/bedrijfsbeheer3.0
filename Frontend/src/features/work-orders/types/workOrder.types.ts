@@ -77,3 +77,7 @@ export type WorkOrderFilter = {
   customerId?: string;
   search?: string;
 };
+
+// Form input types
+export type CreateWorkOrderInput = Omit<WorkOrder, 'id' | 'generalNumber' | 'workOrderNumber' | 'createdAt' | 'updatedAt' | 'history' | 'journey'>;
+export type UpdateWorkOrderInput = Partial<Omit<WorkOrder, 'id' | 'generalNumber' | 'workOrderNumber' | 'createdAt' | 'updatedAt' | 'history' | 'journey'>>;

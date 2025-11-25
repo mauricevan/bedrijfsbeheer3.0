@@ -7,20 +7,30 @@ import { format } from 'date-fns';
 import { nl } from 'date-fns/locale';
 import type { Employee } from '../types/hrm.types';
 import { Card } from '@/components/common/Card';
+import { DisciplinaryDossierTab } from './DisciplinaryDossierTab';
+
 
 interface EmployeeDossierProps {
   employee: Employee;
+  employees?: Employee[];
+  currentUserId?: string;
 }
 
-export const EmployeeDossier: React.FC<EmployeeDossierProps> = ({ employee }) => {
-  const [activeTab, setActiveTab] = useState<'overview' | 'personal' | 'contracts' | 'salary'>('overview');
+export const EmployeeDossier: React.FC<EmployeeDossierProps> = ({ 
+  employee, 
+  employees = [],
+  currentUserId = 'current_user'
+}) => {
+  const [activeTab, setActiveTab] = useState<'overview' | 'personal' | 'contracts' | 'salary' | 'disciplinary'>('overview');
 
   const tabs = [
     { id: 'overview', label: 'Overzicht', icon: User },
     { id: 'personal', label: 'Persoonlijk', icon: FileText },
     { id: 'contracts', label: 'Contracten', icon: BriefcaseIcon },
     { id: 'salary', label: 'Salaris', icon: CreditCard },
+    { id: 'disciplinary', label: 'Disciplinair Dossier', icon: AlertCircle },
   ] as const;
+
 
   return (
     <div className="space-y-6">
@@ -277,6 +287,14 @@ export const EmployeeDossier: React.FC<EmployeeDossierProps> = ({ employee }) =>
               </div>
             )}
           </div>
+        )}
+
+        {activeTab === 'disciplinary' && (
+          <DisciplinaryDossierTab
+            employee={employee}
+            employees={employees}
+            currentUserId={currentUserId}
+          />
         )}
       </div>
     </div>

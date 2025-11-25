@@ -83,3 +83,16 @@ export interface Invoice {
   createdBy?: string;
   createdByName?: string;
 }
+
+// Form input types
+export type CreateQuoteInput = Omit<Quote, 'id' | 'generalNumber' | 'quoteNumber' | 'createdAt' | 'updatedAt' | 'status'> & {
+  status?: DocumentStatus;
+};
+
+export type UpdateQuoteInput = Partial<Omit<Quote, 'id' | 'generalNumber' | 'quoteNumber' | 'createdAt' | 'updatedAt'>>;
+
+export type CreateInvoiceInput = Omit<Invoice, 'id' | 'generalNumber' | 'invoiceNumber' | 'createdAt' | 'updatedAt' | 'status'> & {
+  status?: Invoice['status'];
+};
+
+export type UpdateInvoiceInput = Partial<Omit<Invoice, 'id' | 'generalNumber' | 'invoiceNumber' | 'createdAt' | 'updatedAt'>>;

@@ -79,7 +79,7 @@ export const JournalEntryForm: React.FC<JournalEntryFormProps> = ({
     }
   };
 
-  const updateLine = (id: string, field: keyof JournalEntryLine, value: any) => {
+  const updateLine = (id: string, field: keyof JournalEntryLine, value: string | number) => {
     setLines(
       lines.map((line) => {
         if (line.id === id) {

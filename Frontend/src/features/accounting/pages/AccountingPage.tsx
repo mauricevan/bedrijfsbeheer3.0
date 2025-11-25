@@ -6,7 +6,7 @@ import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import { SkeletonList } from '@/components/common/SkeletonList';
 import { useAccounting } from '../hooks/useAccounting';
 import { QuoteForm, InvoiceForm, InvoiceValidationModal, AccountingDashboard, QuotesSection, InvoicesSection } from '../components';
-import type { Quote, Invoice } from '../types';
+import type { Quote, Invoice, CreateQuoteInput, CreateInvoiceInput } from '../types';
 import { useWorkOrders } from '@/features/work-orders/hooks/useWorkOrders';
 import { useHRM } from '@/features/hrm/hooks/useHRM';
 import { useAuth } from '@/features/auth/hooks/useAuth';
@@ -54,13 +54,13 @@ export const AccountingPage: React.FC = () => {
   const [itemToConvert, setItemToConvert] = useState<string | null>(null);
 
 
-  const handleCreateQuote = async (data: any) => {
+  const handleCreateQuote = async (data: CreateQuoteInput) => {
     await createQuote(data);
     setShowQuoteModal(false);
     setEditingQuote(null);
   };
 
-  const handleUpdateQuote = async (data: any) => {
+  const handleUpdateQuote = async (data: CreateQuoteInput) => {
     if (editingQuote) {
       await updateQuote(editingQuote.id, data);
       setShowQuoteModal(false);
@@ -86,13 +86,13 @@ export const AccountingPage: React.FC = () => {
     }
   };
 
-  const handleCreateInvoice = async (data: any) => {
+  const handleCreateInvoice = async (data: CreateInvoiceInput) => {
     await createInvoice(data);
     setShowInvoiceModal(false);
     setEditingInvoice(null);
   };
 
-  const handleUpdateInvoice = async (data: any) => {
+  const handleUpdateInvoice = async (data: CreateInvoiceInput) => {
     if (editingInvoice) {
       await updateInvoice(editingInvoice.id, data);
       setShowInvoiceModal(false);

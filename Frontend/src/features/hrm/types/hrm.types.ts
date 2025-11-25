@@ -98,3 +98,96 @@ export type Permission =
   | 'manage_pos'
   | 'manage_hrm';
 
+// Form input types
+export type CreateEmployeeInput = Omit<Employee, 'id' | 'createdAt' | 'updatedAt'>;
+export type UpdateEmployeeInput = Partial<Omit<Employee, 'id' | 'createdAt' | 'updatedAt'>>;
+
+export type CreateEmployeeNoteInput = Omit<EmployeeNote, 'id' | 'createdAt' | 'updatedAt'>;
+export type UpdateEmployeeNoteInput = Partial<Omit<EmployeeNote, 'id' | 'createdAt' | 'updatedAt'>>;
+
+// Disciplinair Dossier Types
+export type IncidentType = 
+  | 'late_arrival'
+  | 'no_show'
+  | 'inappropriate_behavior'
+  | 'not_following_agreements'
+  | 'safety_violation'
+  | 'policy_violation'
+  | 'performance_issue'
+  | 'other';
+
+export type IncidentSeverity = 'low' | 'medium' | 'high' | 'critical';
+export type IncidentStatus = 'open' | 'in_progress' | 'resolved';
+
+export interface IncidentAttachment {
+  id: string;
+  fileName: string;
+  fileType: string;
+  fileSize: number;
+  url: string;
+  uploadedAt: string;
+}
+
+export interface Incident {
+  id: string;
+  employeeId: string;
+  date: string;
+  time: string;
+  type: IncidentType;
+  severity: IncidentSeverity;
+  description: string;
+  witnesses: string[]; // Array of employee IDs
+  attachments: IncidentAttachment[];
+  createdBy: string; // Employee ID of creator
+  status: IncidentStatus;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type WarningType = 'verbal' | 'written' | 'final';
+
+export interface Warning {
+  id: string;
+  employeeId: string;
+  incidentId?: string; // Optional link to incident
+  type: WarningType;
+  date: string;
+  validUntil?: string;
+  reason: string;
+  fullText: string;
+  signedByEmployee: boolean;
+  employeeSignatureDate?: string;
+  employeeComments?: string;
+  attachments: IncidentAttachment[];
+  createdBy: string; // Employee ID of creator
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ImprovementPlan {
+  id: string;
+  employeeId: string;
+  incidentId?: string;
+  warningId?: string;
+  title: string;
+  description: string;
+  goals: string[];
+  startDate: string;
+  endDate: string;
+  status: 'active' | 'completed' | 'cancelled';
+  progress: number; // 0-100
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Form input types
+export type CreateIncidentInput = Omit<Incident, 'id' | 'createdAt' | 'updatedAt'>;
+export type UpdateIncidentInput = Partial<Omit<Incident, 'id' | 'createdAt' | 'updatedAt'>>;
+
+export type CreateWarningInput = Omit<Warning, 'id' | 'createdAt' | 'updatedAt'>;
+export type UpdateWarningInput = Partial<Omit<Warning, 'id' | 'createdAt' | 'updatedAt'>>;
+
+export type CreateImprovementPlanInput = Omit<ImprovementPlan, 'id' | 'createdAt' | 'updatedAt'>;
+export type UpdateImprovementPlanInput = Partial<Omit<ImprovementPlan, 'id' | 'createdAt' | 'updatedAt'>>;
+

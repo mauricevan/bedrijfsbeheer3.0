@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Input } from '@/components/common/Input';
 import { Button } from '@/components/common/Button';
-import type { Customer } from '../types/crm.types';
+import type { Customer, CreateCustomerInput } from '../types/crm.types';
 
 interface CustomerFormProps {
   customer?: Customer | null;
-  onSubmit: (data: any) => void;
+  onSubmit: (data: CreateCustomerInput) => void;
   onCancel: () => void;
   isLoading?: boolean;
 }

@@ -11,7 +11,7 @@ export const EmployeePersonalForm: React.FC<EmployeePersonalFormProps> = ({
   personalDetails,
   onChange,
 }) => {
-  const handleChange = (field: keyof PersonalDetails, value: any) => {
+  const handleChange = (field: keyof PersonalDetails, value: string | PersonalDetails['emergencyContact']) => {
     onChange({ ...personalDetails, [field]: value });
   };
 
