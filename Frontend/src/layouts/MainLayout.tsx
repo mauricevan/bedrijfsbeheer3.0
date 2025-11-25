@@ -3,6 +3,7 @@ import { Outlet } from 'react-router-dom';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { Header } from '@/components/layout/Header';
 import { FloatingActionButton } from '@/components/common/FloatingActionButton';
+import { ChatWidget } from '@/features/chat/components/ChatWidget';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 
 export const MainLayout: React.FC = () => {
@@ -28,6 +29,7 @@ export const MainLayout: React.FC = () => {
         </main>
       </div>
       <FloatingActionButton />
+      <ChatWidget />
     </div>
   );
 };

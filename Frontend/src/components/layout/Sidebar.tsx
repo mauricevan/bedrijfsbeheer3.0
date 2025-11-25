@@ -13,7 +13,8 @@ import {
   Settings,
   Briefcase,
   BookOpen,
-  Store
+  Store,
+  MessageCircle
 } from 'lucide-react';
 import { cn } from '@/utils/cn';
 import { EmployeeProfile } from './EmployeeProfile';
@@ -31,6 +32,7 @@ const navItems = [
   { icon: Calendar, label: 'Planning', to: '/planning' },
   { icon: BarChart3, label: 'Reports', to: '/reports' },
   { icon: Store, label: 'Webshop', to: '/webshop' },
+  { icon: MessageCircle, label: 'Chat', to: '/dashboard/chat' },
   { icon: Settings, label: 'Settings', to: '/settings' },
 ];
 

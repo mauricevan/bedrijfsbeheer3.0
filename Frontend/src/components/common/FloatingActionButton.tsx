@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, X, FileText, Package, Users, ClipboardList, Calendar } from 'lucide-react';
+import { Plus, X, FileText, Package, Users, ClipboardList, Calendar, Receipt } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 interface QuickAction {
@@ -34,6 +34,16 @@ export const FloatingActionButton: React.FC = () => {
         setIsOpen(false);
       },
       color: 'bg-emerald-600 hover:bg-emerald-700',
+    },
+    {
+      id: 'invoice',
+      label: 'New Invoice',
+      icon: <Receipt className="h-5 w-5" />,
+      onClick: () => {
+        navigate('/accounting');
+        setIsOpen(false);
+      },
+      color: 'bg-teal-600 hover:bg-teal-700',
     },
     {
       id: 'customer',

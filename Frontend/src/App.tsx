@@ -31,6 +31,7 @@ const HRMPage = lazy(() => import('@/features/hrm/pages/HRMPage').then(m => ({ d
 const PlanningPage = lazy(() => import('@/features/planning/pages/PlanningPage').then(m => ({ default: m.PlanningPage })));
 const ReportsPage = lazy(() => import('@/pages/ReportsPage').then(m => ({ default: m.ReportsPage })));
 const SettingsPage = lazy(() => import('@/features/settings/pages/SettingsPage').then(m => ({ default: m.SettingsPage })));
+const ChatPage = lazy(() => import('@/features/chat/pages/ChatPage').then(m => ({ default: m.ChatPage })));
 
 // Loading spinner component
 const LoadingSpinner = () => (
@@ -103,6 +104,7 @@ const AppContent: React.FC = () => {
           <Route path="hrm" element={<HRMPage />} />
           <Route path="planning" element={<PlanningPage />} />
           <Route path="reports" element={<ReportsPage />} />
+          <Route path="chat" element={<ChatPage />} />
           <Route path="settings" element={<SettingsPage />} />
         </Route>
         
@@ -117,6 +119,7 @@ const AppContent: React.FC = () => {
         <Route path="/hrm" element={<Navigate to="/dashboard/hrm" replace />} />
         <Route path="/planning" element={<Navigate to="/dashboard/planning" replace />} />
         <Route path="/reports" element={<Navigate to="/dashboard/reports" replace />} />
+        <Route path="/chat" element={<Navigate to="/dashboard/chat" replace />} />
         <Route path="/settings" element={<Navigate to="/dashboard/settings" replace />} />
         
         {/* Catch all - redirect to home */}
