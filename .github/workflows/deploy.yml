@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - refactor/accounting-module
   workflow_dispatch:
 
 permissions:
