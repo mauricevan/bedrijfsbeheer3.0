@@ -1,8 +1,11 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useEffect } from 'react';
 import { Receipt, Edit, Trash2 } from 'lucide-react';
 import { Card } from '@/components/common/Card';
 import { Button } from '@/components/common/Button';
 import { EmptyState } from '@/components/common/EmptyState';
+import { CustomerWarningIndicator } from '@/components/common/CustomerWarningIndicator';
+import { useCustomerWarningDisplay } from '@/hooks/useCustomerWarningDisplay';
+import { customerWarningService } from '@/features/crm/services/customerWarningService';
 import { WorkflowDetailModal } from './WorkflowDetailModal';
 import type { Invoice } from '../types';
 
@@ -33,6 +36,21 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = React.memo(({
 }) => {
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
+  const [customerWarnings, setCustomerWarnings] = useState<Record<string, boolean>>({});
+  const { checkAndShowWarning } = useCustomerWarningDisplay();
+
+  useEffect(() => {
+    const checkWarnings = async () => {
+      const warnings: Record<string, boolean> = {};
+      for (const invoice of invoices) {
+        if (invoice.customerId) {
+          warnings[invoice.customerId] = await customerWarningService.hasActiveWarnings(invoice.customerId);
+        }
+      }
+      setCustomerWarnings(warnings);
+    };
+    checkWarnings();
+  }, [invoices]);
   const handleEdit = useCallback((invoice: Invoice) => {
     onEdit(invoice);
   }, [onEdit]);
@@ -97,7 +115,15 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = React.memo(({
                        'Concept'}
                     </span>
                   </div>
-                  <p className="text-sm text-slate-600 dark:text-slate-300">{invoice.customerName}</p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm text-slate-600 dark:text-slate-300">{invoice.customerName}</p>
+                    {invoice.customerId && customerWarnings[invoice.customerId] && (
+                      <CustomerWarningIndicator
+                        hasWarnings={true}
+                        onClick={() => invoice.customerId && checkAndShowWarning(invoice.customerId, 'accounting')}
+                      />
+                    )}
+                  </div>
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                     Vervaldatum: {new Date(invoice.dueDate).toLocaleDateString('nl-NL')}
                   </p>

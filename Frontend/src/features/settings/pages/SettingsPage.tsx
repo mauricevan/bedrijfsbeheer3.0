@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Settings, Building2, Users, Shield, Database, Bell, BarChart3, Activity, Archive } from 'lucide-react';
+import { Settings, Building2, Users, Shield, Database, Bell, BarChart3, Activity, Archive, AlertTriangle } from 'lucide-react';
 import { Card } from '@/components/common/Card';
 import { Input } from '@/components/common/Input';
 import { Button } from '@/components/common/Button';
@@ -8,6 +8,9 @@ import { buildAnalyticsDashboard, clearAnalytics, type AnalyticsDashboard } from
 import { getModulesConfig, toggleModule, type ModuleConfig } from '@/utils/moduleConfig';
 import { ActivityTrackingTab } from '@/features/tracking/components/ActivityTrackingTab';
 import { DocumentArchiveTab } from '@/features/tracking/components/DocumentArchiveTab';
+import { warningConfigService, type WarningArea } from '@/features/crm/services/warningConfigService';
+import { getAreaDisplayName } from '@/utils/customerWarnings';
+import { useAuth } from '@/features/auth/hooks/useAuth';
 
 const SETTINGS_KEY = 'bedrijfsbeheer_settings';
 
@@ -41,7 +44,9 @@ export const SettingsPage: React.FC = () => {
   const [settings, setSettings] = useState<AppSettings>(
     storage.get<AppSettings>(SETTINGS_KEY, DEFAULT_SETTINGS)
   );
-  const [activeTab, setActiveTab] = useState<'company' | 'vat' | 'users' | 'modules' | 'notifications' | 'analytics' | 'database' | 'activity' | 'archive'>('company');
+  const [activeTab, setActiveTab] = useState<'company' | 'vat' | 'users' | 'modules' | 'notifications' | 'analytics' | 'database' | 'activity' | 'archive' | 'warnings'>('company');
+  const { user } = useAuth();
+  const [warningConfig, setWarningConfig] = useState(warningConfigService.getWarningConfig());
   const [analyticsPeriod, setAnalyticsPeriod] = useState<AnalyticsDashboard['period']>('month');
   const [isSaving, setIsSaving] = useState(false);
   const [modules, setModules] = useState<ModuleConfig[]>(getModulesConfig());
@@ -232,6 +237,19 @@ export const SettingsPage: React.FC = () => {
                 <Archive className="h-5 w-5" />
                 <span>Document Archief</span>
               </button>
+              {user?.role === 'admin' && (
+                <button
+                  onClick={() => setActiveTab('warnings')}
+                  className={`w-full flex items-center gap-3 px-4 py-2 rounded-lg text-left transition-colors ${
+                    activeTab === 'warnings'
+                      ? 'bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300'
+                      : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                  }`}
+                >
+                  <AlertTriangle className="h-5 w-5" />
+                  <span>Klant Waarschuwingen</span>
+                </button>
+              )}
             </nav>
           </Card>
         </div>
@@ -569,6 +587,64 @@ export const SettingsPage: React.FC = () => {
 
             {activeTab === 'archive' && (
               <DocumentArchiveTab />
+            )}
+
+            {activeTab === 'warnings' && user?.role === 'admin' && (
+              <div className="space-y-6">
+                <div>
+                  <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">
+                    Klant Waarschuwingen Configuratie
+                  </h2>
+                  <p className="text-sm text-slate-500 dark:text-slate-400">
+                    Configureer in welke ERP modules waarschuwingen voor klanten worden weergegeven. Standaard zijn alle modules ingeschakeld.
+                  </p>
+                </div>
+
+                <div className="space-y-4">
+                  {(['crm', 'accounting', 'pos', 'workOrders', 'inventory', 'hrm', 'planning', 'reports', 'webshop', 'bookkeeping'] as WarningArea[]).map((area) => (
+                    <Card key={area} className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <h3 className="font-medium text-slate-900 dark:text-white">
+                            {getAreaDisplayName(area)}
+                          </h3>
+                          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+                            {warningConfig[area] 
+                              ? 'Waarschuwingen worden weergegeven in deze module'
+                              : 'Waarschuwingen worden niet weergegeven in deze module'}
+                          </p>
+                        </div>
+                        <label className="relative inline-flex items-center cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={warningConfig[area] ?? true}
+                            onChange={(e) => {
+                              const newConfig = { ...warningConfig, [area]: e.target.checked };
+                              setWarningConfig(newConfig);
+                              warningConfigService.updateWarningConfig(area, e.target.checked);
+                            }}
+                            className="sr-only peer"
+                          />
+                          <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 dark:peer-focus:ring-indigo-800 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-slate-600 peer-checked:bg-indigo-600"></div>
+                        </label>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+
+                <div className="flex justify-end gap-2 pt-4 border-t border-slate-200 dark:border-slate-700">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      warningConfigService.resetToDefault();
+                      setWarningConfig(warningConfigService.getWarningConfig());
+                      alert('Configuratie gereset naar standaard (alle modules ingeschakeld)');
+                    }}
+                  >
+                    Reset naar Standaard
+                  </Button>
+                </div>
+              </div>
             )}
 
             {activeTab === 'database' && (

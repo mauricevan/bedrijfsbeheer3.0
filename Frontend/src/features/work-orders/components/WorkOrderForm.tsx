@@ -3,6 +3,10 @@ import { Plus, Trash2, X, Search } from 'lucide-react';
 import { Input } from '@/components/common/Input';
 import { Button } from '@/components/common/Button';
 import { Combobox } from '@/components/common/Combobox';
+import { CustomerWarningIndicator } from '@/components/common/CustomerWarningIndicator';
+import { CustomerWarningModal } from '@/components/common/CustomerWarningModal';
+import { useCustomerWarningDisplay } from '@/hooks/useCustomerWarningDisplay';
+import { customerWarningService } from '@/features/crm/services/customerWarningService';
 import type { WorkOrder, WorkOrderMaterial, CreateWorkOrderInput } from '../types';
 import type { InventoryItem } from '@/features/inventory/types/inventory.types';
 import { useCRM } from '@/features/crm/hooks/useCRM';
@@ -20,6 +24,14 @@ export const WorkOrderForm: React.FC<WorkOrderFormProps> = ({ workOrder, onSubmi
   const { customers } = useCRM();
   const { items: inventoryItems, categories, suppliers } = useInventory();
   const { employees } = useHRM();
+  const {
+    checkAndShowWarning,
+    showModal,
+    warningNotes,
+    customerId: warningCustomerId,
+    acknowledgeWarning,
+  } = useCustomerWarningDisplay();
+  const [hasWarnings, setHasWarnings] = useState(false);
   
   const [formData, setFormData] = useState({
     title: '',
@@ -122,6 +134,21 @@ export const WorkOrderForm: React.FC<WorkOrderFormProps> = ({ workOrder, onSubmi
     setMaterialLocationFilter('');
     setMaterialStockFilter('all');
   };
+
+  useEffect(() => {
+    const checkCustomerWarnings = async () => {
+      if (formData.customerId) {
+        const hasWarns = await customerWarningService.hasActiveWarnings(formData.customerId);
+        setHasWarnings(hasWarns);
+        if (hasWarns) {
+          checkAndShowWarning(formData.customerId, 'workOrders');
+        }
+      } else {
+        setHasWarnings(false);
+      }
+    };
+    checkCustomerWarnings();
+  }, [formData.customerId, checkAndShowWarning]);
 
   useEffect(() => {
     if (workOrder) {
@@ -245,13 +272,23 @@ export const WorkOrderForm: React.FC<WorkOrderFormProps> = ({ workOrder, onSubmi
           <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
             Klant
           </label>
-          <Combobox
-            options={customerOptions}
-            value={formData.customerId}
-            onChange={(value) => setFormData({ ...formData, customerId: value })}
-            placeholder="Selecteer klant"
-            searchPlaceholder="Zoek klant..."
-          />
+          <div className="flex items-center gap-2">
+            <div className="flex-1">
+              <Combobox
+                options={customerOptions}
+                value={formData.customerId}
+                onChange={(value) => setFormData({ ...formData, customerId: value })}
+                placeholder="Selecteer klant"
+                searchPlaceholder="Zoek klant..."
+              />
+            </div>
+            {formData.customerId && hasWarnings && (
+              <CustomerWarningIndicator
+                hasWarnings={true}
+                onClick={() => checkAndShowWarning(formData.customerId, 'workOrders')}
+              />
+            )}
+          </div>
         </div>
         <div>
           <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
@@ -560,6 +597,16 @@ export const WorkOrderForm: React.FC<WorkOrderFormProps> = ({ workOrder, onSubmi
           {workOrder ? 'Bijwerken' : 'Aanmaken'}
         </Button>
       </div>
+
+      {/* Warning Modal */}
+      {warningCustomerId && (
+        <CustomerWarningModal
+          isOpen={showModal}
+          onAcknowledge={acknowledgeWarning}
+          customerName={customers.find(c => c.id === warningCustomerId)?.name || 'Onbekende klant'}
+          warningNotes={warningNotes}
+        />
+      )}
     </form>
   );
 };

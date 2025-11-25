@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { usePOS } from '../hooks/usePOS';
 import { CartDisplay } from '../components/CartDisplay';
 import { ProductSelector } from '../components/ProductSelector';
@@ -6,6 +6,11 @@ import { NumberPad } from '../components/NumberPad';
 import { PaymentModal } from '../components/PaymentModal';
 import { Button } from '@/components/common/Button';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
+import { CustomerWarningIndicator } from '@/components/common/CustomerWarningIndicator';
+import { CustomerWarningModal } from '@/components/common/CustomerWarningModal';
+import { useCustomerWarningDisplay } from '@/hooks/useCustomerWarningDisplay';
+import { customerWarningService } from '@/features/crm/services/customerWarningService';
+import { useCRM } from '@/features/crm/hooks/useCRM';
 import { useToast } from '@/context/ToastContext';
 import { ShoppingBag, FileText } from 'lucide-react';
 import type { PaymentMethod } from '../types';
@@ -14,8 +19,10 @@ export const POSPage: React.FC = () => {
   const {
     cart,
     mode,
+    customerId,
     totals,
     setMode,
+    setCustomerId,
     addToCart,
     increaseQuantity,
     decreaseQuantity,
@@ -24,10 +31,34 @@ export const POSPage: React.FC = () => {
     processPayment,
   } = usePOS();
 
+  const { customers } = useCRM();
   const { showToast } = useToast();
+  const {
+    checkAndShowWarning,
+    showModal,
+    warningNotes,
+    customerId: warningCustomerId,
+    acknowledgeWarning,
+  } = useCustomerWarningDisplay();
+  const [hasWarnings, setHasWarnings] = useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [viewMode, setViewMode] = useState<'products' | 'manual'>('products');
+
+  useEffect(() => {
+    const checkCustomerWarnings = async () => {
+      if (mode === 'b2b' && customerId) {
+        const hasWarns = await customerWarningService.hasActiveWarnings(customerId);
+        setHasWarnings(hasWarns);
+        if (hasWarns) {
+          checkAndShowWarning(customerId, 'pos');
+        }
+      } else {
+        setHasWarnings(false);
+      }
+    };
+    checkCustomerWarnings();
+  }, [mode, customerId, checkAndShowWarning]);
 
   const handleCheckout = () => {
     if (cart.length === 0) {
@@ -88,6 +119,33 @@ export const POSPage: React.FC = () => {
           </Button>
         </div>
       </div>
+
+      {/* Customer Selection for B2B Mode */}
+      {mode === 'b2b' && (
+        <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-700">
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+            Klant selecteren (B2B)
+          </label>
+          <div className="flex items-center gap-2">
+            <select
+              value={customerId}
+              onChange={(e) => setCustomerId(e.target.value)}
+              className="flex-1 px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+            >
+              <option value="">Selecteer klant</option>
+              {customers.map(customer => (
+                <option key={customer.id} value={customer.id}>{customer.name}</option>
+              ))}
+            </select>
+            {customerId && hasWarnings && (
+              <CustomerWarningIndicator
+                hasWarnings={true}
+                onClick={() => checkAndShowWarning(customerId, 'pos')}
+              />
+            )}
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 flex flex-col gap-4">
@@ -157,6 +215,16 @@ export const POSPage: React.FC = () => {
         cancelText="Cancel"
         type="warning"
       />
+
+      {/* Warning Modal */}
+      {warningCustomerId && (
+        <CustomerWarningModal
+          isOpen={showModal}
+          onAcknowledge={acknowledgeWarning}
+          customerName={customers.find(c => c.id === warningCustomerId)?.name || 'Onbekende klant'}
+          warningNotes={warningNotes}
+        />
+      )}
     </div>
   );
 };

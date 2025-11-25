@@ -1,3 +1,11 @@
+export interface CustomerWarningNote {
+  id: string;
+  note: string;
+  createdAt: string;
+  createdBy: string;
+  isActive: boolean;
+}
+
 export interface Customer {
   id: string;
   name: string;
@@ -16,6 +24,7 @@ export interface Customer {
   paymentTerms?: number;
   outstandingBalance?: number;
   notes?: string;
+  warningNotes?: CustomerWarningNote[];
   source?: string;
   since?: string;
   tags?: string[];

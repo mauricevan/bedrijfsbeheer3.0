@@ -1,7 +1,10 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Edit, Trash2, Mail, Phone, Building2, Users, Eye } from 'lucide-react';
 import { Card } from '@/components/common/Card';
 import { EmptyState } from '@/components/common/EmptyState';
+import { CustomerWarningIndicator } from '@/components/common/CustomerWarningIndicator';
+import { useCustomerWarningDisplay } from '@/hooks/useCustomerWarningDisplay';
+import { customerWarningService } from '../services/customerWarningService';
 import type { Customer } from '../types/crm.types';
 
 interface CustomerListProps {
@@ -13,6 +16,20 @@ interface CustomerListProps {
 
 
 export const CustomerList: React.FC<CustomerListProps> = ({ customers, onEdit, onDelete, onViewDetails }) => {
+  const [customerWarnings, setCustomerWarnings] = useState<Record<string, boolean>>({});
+  const { checkAndShowWarning } = useCustomerWarningDisplay();
+
+  useEffect(() => {
+    const checkWarnings = async () => {
+      const warnings: Record<string, boolean> = {};
+      for (const customer of customers) {
+        warnings[customer.id] = await customerWarningService.hasActiveWarnings(customer.id);
+      }
+      setCustomerWarnings(warnings);
+    };
+    checkWarnings();
+  }, [customers]);
+
   if (customers.length === 0) {
     return (
       <EmptyState
@@ -36,7 +53,15 @@ export const CustomerList: React.FC<CustomerListProps> = ({ customers, onEdit, o
         <Card key={customer.id} className="hover:shadow-lg transition-shadow">
           <div className="flex justify-between items-start mb-3">
             <div className="flex-1">
-              <h3 className="font-semibold text-slate-900 dark:text-white">{customer.name}</h3>
+              <div className="flex items-center gap-2">
+                <h3 className="font-semibold text-slate-900 dark:text-white">{customer.name}</h3>
+                {customerWarnings[customer.id] && (
+                  <CustomerWarningIndicator
+                    hasWarnings={true}
+                    onClick={() => checkAndShowWarning(customer.id, 'crm')}
+                  />
+                )}
+              </div>
               {customer.company && (
                 <p className="text-sm text-slate-500 dark:text-slate-400 flex items-center gap-1 mt-1">
                   <Building2 className="h-3 w-3" />

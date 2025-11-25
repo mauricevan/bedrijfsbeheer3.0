@@ -2,6 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Plus, Trash2, X } from 'lucide-react';
 import { Input } from '@/components/common/Input';
 import { Button } from '@/components/common/Button';
+import { CustomerWarningIndicator } from '@/components/common/CustomerWarningIndicator';
+import { CustomerWarningModal } from '@/components/common/CustomerWarningModal';
+import { useCustomerWarningDisplay } from '@/hooks/useCustomerWarningDisplay';
+import { customerWarningService } from '@/features/crm/services/customerWarningService';
 import type { Invoice, LineItem, LaborItem, CreateInvoiceInput } from '../types';
 import type { InventoryItem } from '@/features/inventory/types/inventory.types';
 import { useCRM } from '@/features/crm/hooks/useCRM';
@@ -17,6 +21,15 @@ interface InvoiceFormProps {
 export const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onSubmit, onCancel, isLoading }) => {
   const { customers } = useCRM();
   const { items: inventoryItems } = useInventory();
+  const {
+    checkAndShowWarning,
+    showModal,
+    warningNotes,
+    customerId: warningCustomerId,
+    acknowledgeWarning,
+  } = useCustomerWarningDisplay();
+  const [hasWarnings, setHasWarnings] = useState(false);
+  
   const [formData, setFormData] = useState({
     customerId: '',
     issueDate: new Date().toISOString().split('T')[0],
@@ -45,6 +58,21 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onSubmit, onC
       setLaborItems(invoice.labor || []);
     }
   }, [invoice]);
+
+  useEffect(() => {
+    const checkCustomerWarnings = async () => {
+      if (formData.customerId) {
+        const hasWarns = await customerWarningService.hasActiveWarnings(formData.customerId);
+        setHasWarnings(hasWarns);
+        if (hasWarns) {
+          checkAndShowWarning(formData.customerId, 'accounting');
+        }
+      } else {
+        setHasWarnings(false);
+      }
+    };
+    checkCustomerWarnings();
+  }, [formData.customerId, checkAndShowWarning]);
 
   const calculateTotals = () => {
     const itemsSubtotal = lineItems.reduce((sum, item) => sum + item.total, 0);
@@ -162,17 +190,25 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onSubmit, onC
           <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
             Klant *
           </label>
-          <select
-            value={formData.customerId}
-            onChange={(e) => setFormData({ ...formData, customerId: e.target.value })}
-            className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
-            required
-          >
-            <option value="">Selecteer klant</option>
-            {customers.map(customer => (
-              <option key={customer.id} value={customer.id}>{customer.name}</option>
-            ))}
-          </select>
+          <div className="flex items-center gap-2">
+            <select
+              value={formData.customerId}
+              onChange={(e) => setFormData({ ...formData, customerId: e.target.value })}
+              className="flex-1 px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+              required
+            >
+              <option value="">Selecteer klant</option>
+              {customers.map(customer => (
+                <option key={customer.id} value={customer.id}>{customer.name}</option>
+              ))}
+            </select>
+            {formData.customerId && (
+              <CustomerWarningIndicator
+                hasWarnings={hasWarnings}
+                onClick={() => checkAndShowWarning(formData.customerId, 'accounting')}
+              />
+            )}
+          </div>
         </div>
         <div>
           <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
@@ -449,6 +485,16 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onSubmit, onC
           {invoice ? 'Bijwerken' : 'Aanmaken'}
         </Button>
       </div>
+
+      {/* Warning Modal */}
+      {warningCustomerId && (
+        <CustomerWarningModal
+          isOpen={showModal}
+          onAcknowledge={acknowledgeWarning}
+          customerName={customers.find(c => c.id === warningCustomerId)?.name || 'Onbekende klant'}
+          warningNotes={warningNotes}
+        />
+      )}
     </form>
   );
 };

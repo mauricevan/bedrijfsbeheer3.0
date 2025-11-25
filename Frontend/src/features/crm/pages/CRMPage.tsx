@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Users, Plus, TrendingUp, CheckSquare, Search, BarChart3, FileText } from 'lucide-react';
 import { Card } from '@/components/common/Card';
 import { Button } from '@/components/common/Button';
@@ -6,8 +6,11 @@ import { Modal } from '@/components/common/Modal';
 import { Input } from '@/components/common/Input';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import { SkeletonList } from '@/components/common/SkeletonList';
+import { CustomerWarningModal } from '@/components/common/CustomerWarningModal';
 import { useCRM } from '../hooks/useCRM';
 import { useToast } from '@/context/ToastContext';
+import { useCustomerWarningDisplay } from '@/hooks/useCustomerWarningDisplay';
+import { customerWarningService } from '../services/customerWarningService';
 import {
   CustomerList,
   CustomerForm,
@@ -49,6 +52,13 @@ export const CRMPage: React.FC = () => {
     deleteTask,
   } = useCRM();
   const { showToast } = useToast();
+  const {
+    checkAndShowWarning,
+    showModal,
+    warningNotes,
+    customerId: warningCustomerId,
+    acknowledgeWarning,
+  } = useCustomerWarningDisplay();
 
   const [activeTab, setActiveTab] = useState<'customers' | 'leads' | 'interactions' | 'tasks' | 'analytics' | 'documents'>('customers');
   const [showDocumentUploadModal, setShowDocumentUploadModal] = useState(false);
@@ -698,6 +708,16 @@ export const CRMPage: React.FC = () => {
           }}
         />
       </Modal>
+
+      {/* Customer Warning Modal */}
+      {warningCustomerId && (
+        <CustomerWarningModal
+          isOpen={showModal}
+          onAcknowledge={acknowledgeWarning}
+          customerName={customers.find(c => c.id === warningCustomerId)?.name || 'Onbekende klant'}
+          warningNotes={warningNotes}
+        />
+      )}
     </div>
   );
 };

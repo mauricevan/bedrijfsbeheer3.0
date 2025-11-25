@@ -1,7 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { ArrowLeft, TrendingUp, TrendingDown, Minus, DollarSign, FileText, Calendar, User, StickyNote } from 'lucide-react';
+import { ArrowLeft, TrendingUp, TrendingDown, Minus, DollarSign, FileText, Calendar, User, StickyNote, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/common/Button';
+import { CustomerWarningIndicator } from '@/components/common/CustomerWarningIndicator';
+import { CustomerWarningModal } from '@/components/common/CustomerWarningModal';
+import { useCustomerWarningDisplay } from '@/hooks/useCustomerWarningDisplay';
 import { customerDashboardService } from '../../services/customerDashboardService';
+import { customerWarningService } from '../../services/customerWarningService';
 import type { CustomerDashboard } from '../../types/crm.types';
 
 interface CustomerDetailViewProps {
@@ -15,10 +19,35 @@ export const CustomerDetailView: React.FC<CustomerDetailViewProps> = ({
 }) => {
   const [dashboard, setDashboard] = useState<CustomerDashboard | null>(null);
   const [loading, setLoading] = useState(true);
+  const [warningNotes, setWarningNotes] = useState<any[]>([]);
+  const {
+    checkAndShowWarning,
+    showModal,
+    warningNotes: modalWarningNotes,
+    customerId: modalCustomerId,
+    acknowledgeWarning,
+  } = useCustomerWarningDisplay();
 
   useEffect(() => {
     loadDashboard();
+    loadWarningNotes();
   }, [customerId]);
+
+  useEffect(() => {
+    // Check and show warning when component mounts or customer changes
+    if (dashboard?.customer) {
+      checkAndShowWarning(customerId, 'crm');
+    }
+  }, [customerId, dashboard, checkAndShowWarning]);
+
+  const loadWarningNotes = async () => {
+    try {
+      const notes = await customerWarningService.getActiveWarningNotes(customerId);
+      setWarningNotes(notes);
+    } catch (error) {
+      console.error('Failed to load warning notes:', error);
+    }
+  };
 
   const loadDashboard = async () => {
     setLoading(true);
@@ -71,7 +100,13 @@ export const CustomerDetailView: React.FC<CustomerDetailViewProps> = ({
             Terug
           </Button>
           <div>
-            <h2 className="text-2xl font-bold text-slate-900 dark:text-white">{customer.name}</h2>
+            <div className="flex items-center gap-2">
+              <h2 className="text-2xl font-bold text-slate-900 dark:text-white">{customer.name}</h2>
+              <CustomerWarningIndicator
+                hasWarnings={warningNotes.length > 0}
+                onClick={() => checkAndShowWarning(customerId, 'crm')}
+              />
+            </div>
             <p className="text-sm text-slate-500 dark:text-slate-400">
               {customer.company && `${customer.company} • `}
               {customer.email}
@@ -206,6 +241,29 @@ export const CustomerDetailView: React.FC<CustomerDetailViewProps> = ({
         </div>
       </div>
 
+      {/* Warning Notes */}
+      {warningNotes.length > 0 && (
+        <div className="bg-white dark:bg-slate-900 p-6 rounded-xl border-2 border-red-200 dark:border-red-800">
+          <div className="flex items-center gap-2 mb-4">
+            <AlertTriangle className="h-5 w-5 text-red-600 dark:text-red-400" fill="currentColor" />
+            <h3 className="text-lg font-semibold text-red-600 dark:text-red-400">Waarschuwingsnotities</h3>
+          </div>
+          <div className="space-y-2">
+            {warningNotes.map((note) => (
+              <div
+                key={note.id}
+                className="p-4 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800"
+              >
+                <p className="text-sm font-medium text-slate-900 dark:text-white">{note.note}</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                  Toegevoegd op: {new Date(note.createdAt).toLocaleDateString('nl-NL')}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Customer Notes */}
       {customer.notes && (
         <div className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-700">
@@ -330,6 +388,16 @@ export const CustomerDetailView: React.FC<CustomerDetailViewProps> = ({
           </p>
         )}
       </div>
+
+      {/* Warning Modal */}
+      {dashboard?.customer && (
+        <CustomerWarningModal
+          isOpen={showModal}
+          onAcknowledge={acknowledgeWarning}
+          customerName={dashboard.customer.name}
+          warningNotes={modalWarningNotes}
+        />
+      )}
     </div>
   );
 };

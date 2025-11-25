@@ -1,8 +1,11 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useEffect } from 'react';
 import { FileText, Edit, Trash2 } from 'lucide-react';
 import { Card } from '@/components/common/Card';
 import { Button } from '@/components/common/Button';
 import { EmptyState } from '@/components/common/EmptyState';
+import { CustomerWarningIndicator } from '@/components/common/CustomerWarningIndicator';
+import { useCustomerWarningDisplay } from '@/hooks/useCustomerWarningDisplay';
+import { customerWarningService } from '@/features/crm/services/customerWarningService';
 import { WorkflowDetailModal } from './WorkflowDetailModal';
 import type { Quote } from '../types';
 
@@ -33,6 +36,21 @@ export const QuotesSection: React.FC<QuotesSectionProps> = React.memo(({
 }) => {
   const [selectedQuote, setSelectedQuote] = useState<Quote | null>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
+  const [customerWarnings, setCustomerWarnings] = useState<Record<string, boolean>>({});
+  const { checkAndShowWarning } = useCustomerWarningDisplay();
+
+  useEffect(() => {
+    const checkWarnings = async () => {
+      const warnings: Record<string, boolean> = {};
+      for (const quote of quotes) {
+        if (quote.customerId) {
+          warnings[quote.customerId] = await customerWarningService.hasActiveWarnings(quote.customerId);
+        }
+      }
+      setCustomerWarnings(warnings);
+    };
+    checkWarnings();
+  }, [quotes]);
   const handleEdit = useCallback((quote: Quote) => {
     onEdit(quote);
   }, [onEdit]);
@@ -99,7 +117,15 @@ export const QuotesSection: React.FC<QuotesSectionProps> = React.memo(({
                        'Concept'}
                     </span>
                   </div>
-                  <p className="text-sm text-slate-600 dark:text-slate-300">{quote.customerName}</p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm text-slate-600 dark:text-slate-300">{quote.customerName}</p>
+                    {quote.customerId && customerWarnings[quote.customerId] && (
+                      <CustomerWarningIndicator
+                        hasWarnings={true}
+                        onClick={() => quote.customerId && checkAndShowWarning(quote.customerId, 'accounting')}
+                      />
+                    )}
+                  </div>
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                     Geldig tot: {new Date(quote.validUntil).toLocaleDateString('nl-NL')}
                   </p>
